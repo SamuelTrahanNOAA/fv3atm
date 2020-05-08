@@ -3320,6 +3320,9 @@ module GFS_typedefs
     if(satmedmf .and. isatmedmf==0) then
       write(0,*) 'FLAG: satmedmf and isatedmf=0 so pbl not generic'
       Model%flag_for_pbl_generic_tend=.false.
+    elseif(satmedmf .and. isatmedmf==1) then
+      write(0,*) 'FLAG: satmedmf and isatedmf=1 so pbl not generic'
+      Model%flag_for_pbl_generic_tend=.false.
     else if(hybedmf) then
       write(0,*) 'FLAG: hybedmf so pbl not generic'
       Model%flag_for_pbl_generic_tend=.false.
