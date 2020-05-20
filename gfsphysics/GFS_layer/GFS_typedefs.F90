@@ -687,6 +687,11 @@ module GFS_typedefs
     real(kind=kind_phys) :: tf
     real(kind=kind_phys) :: tcr
     real(kind=kind_phys) :: tcrf
+
+    integer              :: num_dfi_radar
+    real (kind=kind_phys) :: fh_dfi_radar(5)
+    integer              :: ix_dfi_radar(4) = -1
+
 !
     logical              :: effr_in            !< eg to turn on ffective radii for MG
     logical              :: microp_uniform
@@ -1234,6 +1239,8 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: phy_myj_a1u(:)     => null()  ! 
     real (kind=kind_phys), pointer :: phy_myj_a1t(:)     => null()  ! 
     real (kind=kind_phys), pointer :: phy_myj_a1q(:)     => null()  ! 
+
+    real (kind=kind_phys), pointer :: dfi_radar_tten(:,:,:) => null()          !
 #endif
 
     contains
@@ -2816,6 +2823,7 @@ module GFS_typedefs
     logical              :: mg_do_ice_gmao  = .false.           !< set .true. to turn on gmao ice formulation
     logical              :: mg_do_liq_liu   = .true.            !< set .true. to turn on liu liquid treatment
 
+    real(kind=kind_phys) :: fh_dfi_radar(5) = -2e10
 
     !--- Thompson microphysical parameters
     logical              :: ltaerosol      = .false.            !< flag for aerosol version
@@ -3076,7 +3084,7 @@ module GFS_typedefs
 !  max and min lon and lat for critical relative humidity
     integer :: max_lon=5000, max_lat=2000, min_lon=192, min_lat=94
     real(kind=kind_phys) :: rhcmax = 0.9999999               !< max critical rel. hum.
-
+    integer :: itime
 !--- stochastic physics control parameters
     logical :: do_sppt      = .false.
     logical :: use_zmtnblck = .false.
@@ -3184,7 +3192,9 @@ module GFS_typedefs
                                max_lon, max_lat, min_lon, min_lat, rhcmax,                  &
                                phys_version,                                                &
                           !--- aerosol scavenging factors ('name:value' string array)
-                               fscav_aero
+                               fscav_aero,                                                  &
+                          !--- (DFI) time ranges with radar-prescribed microphysics tendencies
+                               fh_dfi_radar
 
 !--- other parameters 
     integer :: nctp    =  0                !< number of cloud types in CS scheme
@@ -3244,6 +3254,19 @@ module GFS_typedefs
 #endif
     Model%fhzero           = fhzero
     Model%ldiag3d          = ldiag3d
+
+    Model%fh_dfi_radar     = fh_dfi_radar
+    Model%num_dfi_radar    = 0
+
+    do i=1,4
+       if(fh_dfi_radar(i)>-1e10 .and. fh_dfi_radar(i+1)>-1e10) then
+          Model%num_dfi_radar = Model%num_dfi_radar+1
+          Model%ix_dfi_radar(i) = Model%num_dfi_radar
+       else
+          Model%ix_dfi_radar(i) = -1
+       endif
+    enddo
+
 !
 !VAY-ugwp  --- set some GW-related switches
 !
@@ -4831,6 +4854,13 @@ module GFS_typedefs
       Tbd%icsdsw = zero
       Tbd%icsdlw = zero
     endif
+
+#ifdef CCPP
+    nullify(Tbd%dfi_radar_tten)
+    if(Model%num_dfi_radar>0) then
+       allocate(Tbd%dfi_radar_tten(IM,Model%levs,Model%num_dfi_radar))
+    endif
+#endif
 
 !--- ozone and stratosphere h2o needs
     ! DH* oz_coeff is set to zero if both ozphys options are false,
