@@ -794,12 +794,12 @@ subroutine atmos_model_exchange_phase_1 (Atmos, rc)
     !--- begin
     if (present(rc)) rc = ESMF_SUCCESS
 
-    !--- if coupled, exchange coupled fields
-    if( IPD_Control%cplchm ) then
-      ! -- export fields to chemistry
-      call update_atmos_chemistry('export', rc=localrc)
-      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__, rcToReturn=rc)) return
-    endif
+    ! !--- if coupled, exchange coupled fields
+    ! if( IPD_Control%cplchm ) then
+    !   ! -- export fields to chemistry
+    !   call update_atmos_chemistry('export', rc=localrc)
+    !   if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+    ! endif
 
  end subroutine atmos_model_exchange_phase_1
 ! </SUBROUTINE>
@@ -1118,25 +1118,25 @@ subroutine update_atmos_chemistry(state, rc)
   select case (trim(state))
     case ('import')
       !--- retrieve references to allocated memory for each field
-      call cplFieldGet(state,'inst_tracer_mass_frac', farrayPtr4d=q, rc=localrc)
-      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-        line=__LINE__, file=__FILE__, rcToReturn=rc)) return
-      call cplFieldGet(state,'inst_tracer_up_surface_flx', &
-        farrayPtr3d=qu, rc=localrc)
-      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-        line=__LINE__, file=__FILE__, rcToReturn=rc)) return
-      call cplFieldGet(state,'inst_tracer_down_surface_flx', &
-        farrayPtr4d=qd, rc=localrc)
-      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-        line=__LINE__, file=__FILE__, rcToReturn=rc)) return
-      call cplFieldGet(state,'inst_tracer_clmn_mass_dens', &
-        farrayPtr3d=qm, rc=localrc)
-      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-        line=__LINE__, file=__FILE__, rcToReturn=rc)) return
-      call cplFieldGet(state,'inst_tracer_anth_biom_flx', &
-        farrayPtr3d=qb, rc=localrc)
-      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-        line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+      ! call cplFieldGet(state,'inst_tracer_mass_frac', farrayPtr4d=q, rc=localrc)
+      ! if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+      !   line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+      ! call cplFieldGet(state,'inst_tracer_up_surface_flx', &
+      !   farrayPtr3d=qu, rc=localrc)
+      ! if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+      !   line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+      ! call cplFieldGet(state,'inst_tracer_down_surface_flx', &
+      !   farrayPtr4d=qd, rc=localrc)
+      ! if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+      !   line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+      ! call cplFieldGet(state,'inst_tracer_clmn_mass_dens', &
+      !   farrayPtr3d=qm, rc=localrc)
+      ! if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+      !   line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+      ! call cplFieldGet(state,'inst_tracer_anth_biom_flx', &
+      !   farrayPtr3d=qb, rc=localrc)
+      ! if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+      !   line=__LINE__, file=__FILE__, rcToReturn=rc)) return
 
       !--- do not import tracer concentrations by default
       ntb = nt + 1
