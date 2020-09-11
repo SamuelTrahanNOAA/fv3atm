@@ -2114,13 +2114,6 @@
   dimensions = (horizontal_dimension,adjusted_vertical_layer_dimension_for_radiation,14,3)
   type = real
   kind = kind_phys
-[buffer_ebu]
-  standard_name = chem_buffer_ebu
-  long_name = chemistry buffer of ebu
-  units = various
-  dimensions = (horizontal_dimension,vertical_dimension_plus_one,1,7)
-  type = real
-  kind = kind_phys
 [nwfa2d]
   standard_name = tendency_of_water_friendly_aerosols_at_surface
   long_name = instantaneous water-friendly sfc aerosol source
