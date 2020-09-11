@@ -512,6 +512,7 @@ module FV3GFS_io_mod
     integer :: id_restart
     integer :: nvar_o2, nvar_s2m, nvar_s2o, nvar_s3
     integer :: nvar_oro_ls_ss
+    integer :: nvar_s2mp, nvar_s3mp,isnow
     integer :: nvar_dust, nvar_emi,nvar_emi2, nvar_gbbepx, nvar_modis
 #ifdef CCPP
     integer :: nvar_s2r
