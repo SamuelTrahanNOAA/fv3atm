@@ -3004,8 +3004,7 @@ module GFS_typedefs
     logical              :: cplflx         = .false.         !< default no cplflx collection
     logical              :: cplwav         = .false.         !< default no cplwav collection
     logical              :: cplwav2atm     = .false.         !< default no cplwav2atm coupling
-    logical              :: cplchm         = .true.         !< default cplchm collection
-!    logical              :: cplchm         = .false.         !< default no cplchm collection
+    logical              :: cplchm         = .false.         !< default no cplchm collection
     logical              :: cplchm_rad_opt = .false.         !< default no cplchm radiation feedback
 
 !--- integrated dynamics through earth's atmosphere
@@ -3173,8 +3172,7 @@ module GFS_typedefs
     logical              :: ras            = .false.                  !< flag for ras convection scheme
     logical              :: flipv          = .true.                   !< flag for vertical direction flip (ras)
                                                                       !< .true. implies surface at k=1
-    logical              :: trans_trac     = .true.                  !< flag for convective transport of tracers (RAS, CS, or SAMF)
-!    logical              :: trans_trac     = .false.                  !< flag for convective transport of tracers (RAS, CS, or SAMF)
+    logical              :: trans_trac     = .false.                  !< flag for convective transport of tracers (RAS, CS, or SAMF)
     logical              :: old_monin      = .false.                  !< flag for diff monin schemes
     logical              :: cnvgwd         = .false.                  !< flag for conv gravity wave drag
     integer              :: gwd_opt        =  1                       !< flag for configuring gwd scheme
