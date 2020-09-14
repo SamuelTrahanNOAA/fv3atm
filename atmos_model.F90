@@ -831,11 +831,11 @@ subroutine atmos_model_exchange_phase_2 (Atmos, rc)
     if (present(rc)) rc = ESMF_SUCCESS
 
     !--- if coupled, exchange coupled fields
-    if( IPD_Control%cplchm ) then
+!    if( IPD_Control%cplchm ) then
       ! -- import fields from chemistry
-      call update_atmos_chemistry('import', rc=localrc)
-      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__, rcToReturn=rc)) return
-    endif
+!      call update_atmos_chemistry('import', rc=localrc)
+!      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__, rcToReturn=rc)) return
+!    endif
 
  end subroutine atmos_model_exchange_phase_2
 ! </SUBROUTINE>
