@@ -547,11 +547,19 @@ module FV3GFS_io_mod
     nvar_o2  = 19
     nvar_oro_ls_ss = 10
     nvar_s2o = 18
-    nvar_dust = 5
-    nvar_emi  = 10
-    nvar_emi2 = 3
-    nvar_gbbepx  = 5
-    nvar_modis   = 13
+    if(Model%cplchm) then
+      nvar_dust = 5
+      nvar_emi  = 10
+      nvar_emi2 = 3
+      nvar_gbbepx  = 5
+      nvar_modis   = 13
+    else
+      nvar_dust = 0
+      nvar_emi  = 0
+      nvar_emi2 = 0
+      nvar_gbbepx  = 0
+      nvar_modis   = 0
+    endif
 #ifdef CCPP
     if (Model%lsm == Model%lsm_ruc .and. warm_start) then
       if(Model%rdlai) then
@@ -669,6 +677,8 @@ module FV3GFS_io_mod
     !--- deallocate containers and free restart container
     deallocate(oro_name2, oro_var2)
     call free_restart_type(Oro_restart)
+
+    if_cplchm: if(model%cplchm) then
 
 #ifdef FENGSHA_DUST_DATA
     if (.not. allocated(dust_name)) then
@@ -862,6 +872,8 @@ module FV3GFS_io_mod
 
     call free_restart_type(gbbepx_restart)
 #endif
+
+    end if if_cplchm
 
 #ifdef FIRE_OPT_MODIS
     if (.not. allocated(modis_name)) then
