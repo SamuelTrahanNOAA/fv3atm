@@ -1037,7 +1037,10 @@ module GFS_typedefs
     integer              :: nseed_g         !< cellular automata seed frequency    
     logical              :: do_ca           !< cellular automata main switch
     logical              :: ca_sgs          !< switch for sgs ca
-    logical              :: ca_global       !< switch for global ca
+    logical              :: ca_global_any   !< flag is true if any ca_global switch is true
+    logical              :: ca_global       !< switch for global ca application to atmospheric fields
+    logical              :: ca_global_chem  !< switch for global ca application to chemistry
+    logical              :: ca_global_emis  !< switch for global ca application to chemistry emissions
     logical              :: ca_smooth       !< switch for gaussian spatial filter
     integer              :: iseed_ca        !< seed for random number generation in ca scheme
     integer              :: nspinup         !< number of iterations to spin up the ca
@@ -1587,6 +1590,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: tdomip (:)     => null()   !< dominant accumulated sleet type
     real (kind=kind_phys), pointer :: tdoms  (:)     => null()   !< dominant accumulated snow type
 
+    real (kind=kind_phys), pointer :: emis_mul (:)   => null() ! 
     real (kind=kind_phys), pointer :: ca1      (:)   => null() ! 
     real (kind=kind_phys), pointer :: ca2      (:)   => null() !
     real (kind=kind_phys), pointer :: ca3      (:)   => null() ! 
@@ -2685,7 +2689,7 @@ module GFS_typedefs
     Coupling%sfcnsw = clear_val
     Coupling%sfcdlw = clear_val
 
-    if (Model%cplflx .or. Model%do_sppt .or. Model%cplchm .or. Model%ca_global) then
+    if (Model%cplflx .or. Model%do_sppt .or. Model%cplchm .or. Model%ca_global_any) then
       allocate (Coupling%rain_cpl (IM))
       allocate (Coupling%snow_cpl (IM))
       Coupling%rain_cpl = clear_val
@@ -2863,7 +2867,7 @@ module GFS_typedefs
     endif
 
     !--- stochastic physics option
-    if (Model%do_sppt .or. Model%ca_global)then
+    if (Model%do_sppt .or. Model%ca_global_any)then
       allocate (Coupling%sppt_wts  (IM,Model%levs))
       Coupling%sppt_wts = clear_val
     endif
@@ -3370,6 +3374,8 @@ module GFS_typedefs
     logical              :: do_ca          = .false.
     logical              :: ca_sgs         = .false.
     logical              :: ca_global      = .false.
+    logical              :: ca_global_chem = .false.
+    logical              :: ca_global_emis = .false.
     logical              :: ca_smooth      = .false.
     real(kind=kind_phys) :: nthresh        = 0.0
     real                 :: ca_amplitude   = 500.
@@ -3549,8 +3555,8 @@ module GFS_typedefs
                                z0fac, e0fac,                                                &
                           !--- cellular automata
                                nca, ncells, nlives, nca_g, ncells_g, nlives_g, nfracseed,   &
-                               nseed, nseed_g, nthresh, do_ca,                              &
-                               ca_sgs, ca_global,iseed_ca,ca_smooth,                        &
+                               nseed, nseed_g, nthresh, do_ca, ca_global_emis,              &
+                               ca_sgs, ca_global,ca_global_chem,iseed_ca,ca_smooth,         &
                                nspinup,ca_amplitude,nsmooth,ca_closure,ca_entr,ca_trigger,  & 
                           !--- IAU
                                iau_delthrs,iaufhrs,iau_inc_files,iau_filter_increments,     &
@@ -4168,6 +4174,9 @@ module GFS_typedefs
     Model%nseed            = nseed
     Model%nseed_g          = nseed_g
     Model%ca_global        = ca_global
+    Model%ca_global_chem   = ca_global_chem
+    Model%ca_global_emis   = ca_global_emis
+    Model%ca_global_any    = ca_global .or. ca_global_chem .or. ca_global_emis
     Model%do_ca            = do_ca
     Model%ca_sgs           = ca_sgs
     Model%iseed_ca         = iseed_ca
@@ -5284,6 +5293,8 @@ module GFS_typedefs
       print *, ' nseed_g           : ', Model%nseed_g
       print *, ' nseed             : ', Model%nseed
       print *, ' ca_global         : ', Model%ca_global
+      print *, ' ca_global_chem    : ', Model%ca_global_chem
+      print *, ' ca_global_emis    : ', Model%ca_global_emis
       print *, ' ca_sgs            : ', Model%ca_sgs
       print *, ' do_ca             : ', Model%do_ca
       print *, ' iseed_ca          : ', Model%iseed_ca
@@ -5573,7 +5584,7 @@ module GFS_typedefs
       Tbd%dsnow_cpl = clear_val
     endif
 
-    if (Model%do_sppt .or. Model%ca_global) then
+    if (Model%do_sppt .or. Model%ca_global_any) then
       allocate (Tbd%dtdtr     (IM,Model%levs))
       allocate (Tbd%dtotprcp  (IM))
       allocate (Tbd%dcnvprcp  (IM))
@@ -5861,6 +5872,7 @@ module GFS_typedefs
     allocate (Diag%shum_wts(IM,Model%levs))
     allocate (Diag%zmtnblck(IM))    
     allocate (Diag%ca1      (IM))
+    allocate (Diag%emis_mul (IM))
     allocate (Diag%ca2      (IM))
     allocate (Diag%ca3      (IM))
 
@@ -6196,6 +6208,7 @@ module GFS_typedefs
 !
     if (Model%do_ca) then
       Diag%ca1      = zero
+      Diag%emis_mul = 1.0
       Diag%ca2      = zero
       Diag%ca3      = zero
       Diag%ca_deep  = zero
