@@ -1116,7 +1116,25 @@ module GFS_typedefs
     integer              :: ntrac           !< number of tracers
 #ifdef CCPP
     integer              :: ntracp1         !< number of tracers plus one
+    integer              :: ntracp100       !< number of tracers plus one hundred
     integer              :: nqrimef         !< tracer index for mass weighted rime factor
+
+    integer, pointer :: idx4d(:,:) => null()   !< index in outermost dimension of dq4dt
+    integer :: ndq4dt               !< size of outermost dimension of dq4dt
+
+    ! Indices within second dimension of idx4d:
+    integer :: ncause               !< maximum value of the below cause_ variables
+    integer :: cause_pbl            !< tracer changes caused by PBL scheme
+    integer :: cause_dcnv           !< tracer changes caused by deep convection scheme
+    integer :: cause_scnv           !< tracer changes caused by shallow convection scheme
+    integer :: cause_mp             !< tracer changes caused by microphysics scheme
+    integer :: cause_prod_loss      !< tracer changes caused by ozone production and loss
+    integer :: cause_ozmix          !< tracer changes caused by ozone mixing ratio
+    integer :: cause_temp              !< tracer changes caused by temperature
+    integer :: cause_overhead_ozone !< tracer changes caused by overhead ozone column
+    integer :: cause_physics        !< tracer changes caused by physics schemes
+    integer :: cause_non_physics    !< tracer changes caused by everything except physics schemes
+
 #endif
     integer              :: ntqv            !< tracer index for water vapor (specific humidity)
     integer              :: ntoz            !< tracer index for ozone mixing ratio
@@ -1595,10 +1613,18 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: sppt_wts(:,:)  => null()   !<
     real (kind=kind_phys), pointer :: shum_wts(:,:)  => null()   !<
     real (kind=kind_phys), pointer :: zmtnblck(:)    => null()   !<mountain blocking evel
+
+    ! Basic 3d tendencies from ldiag3d:
     real (kind=kind_phys), pointer :: du3dt (:,:,:)  => null()   !< u momentum change due to physics
     real (kind=kind_phys), pointer :: dv3dt (:,:,:)  => null()   !< v momentum change due to physics
     real (kind=kind_phys), pointer :: dt3dt (:,:,:)  => null()   !< temperature change due to physics
-    real (kind=kind_phys), pointer :: dq3dt (:,:,:)  => null()   !< moisture change due to physics
+
+    ! dq4dt/idx4dt: Multitudenous 3d tendencies in a 4D array: (i,k,0:ntrac,ncause)
+    ! Sparse in outermost two dimensions. idx4d(-99:ntrac,ncause) maps to dq4dt 
+    ! outer dimension index. That dimension is zero-based, and element 0 is always
+    ! allocated if qdiag3d=.true. and ldiag3d=.true.
+    real (kind=kind_phys), pointer :: dq4dt (:,:,:) => null()    !< tracer changes due to physics
+
     real (kind=kind_phys), pointer :: refdmax (:)    => null()   !< max hourly 1-km agl reflectivity
     real (kind=kind_phys), pointer :: refdmax263k(:) => null()   !< max hourly -10C reflectivity
     real (kind=kind_phys), pointer :: t02max  (:)    => null()   !< max hourly 2m T
@@ -3596,6 +3622,8 @@ module GFS_typedefs
     integer :: ncnvcld3d = 0       !< number of convective 3d clouds fields
 
 
+    logical :: have_pbl, have_dcnv, have_scnv, have_mp, have_oz_phys
+
 !--- read in the namelist
 #ifdef INTERNAL_FILE_NML
     Model%input_nml_file => input_nml_file
@@ -4244,6 +4272,7 @@ module GFS_typedefs
     Model%ntrac            = size(tracer_names)
 #ifdef CCPP
     Model%ntracp1          = Model%ntrac + 1
+    Model%ntracp100        = Model%ntrac + 100
 #endif
     allocate (Model%tracer_names(Model%ntrac))
     Model%tracer_names(:)  = tracer_names(:)
@@ -4323,6 +4352,57 @@ module GFS_typedefs
         endif
       enddo
     endif
+
+    ! Tracer diagnostics indices and dimension size, which must be in
+    ! Model to be forwarded to the right places.
+    Model%ncause           = 10
+    Model%cause_pbl = 1
+    Model%cause_dcnv = 2
+    Model%cause_scnv = 3
+    Model%cause_mp = 4
+    Model%cause_prod_loss = 5
+    Model%cause_ozmix = 6
+    Model%cause_temp = 7
+    Model%cause_overhead_ozone = 8
+    Model%cause_physics = 9
+    Model%cause_non_physics = 10
+
+    ! Last index of outermost dimension of dq4dt
+    Model%ndq4dt = 0
+    allocate(Model%idx4d(Model%ntracp100,1:Model%ncause))
+    Model%idx4d = 1 ! unused indices MUST be 1
+
+    if(qdiag3d) then
+       Model%ndq4dt = 1
+       ! Flags used to turn on or off tracer "causes"
+       have_pbl = .true.
+       have_dcnv = Model%ras .or. Model%cscnv .or. Model%do_deep .or. &
+            Model%hwrf_samfdeep
+       have_scnv = Model%shal_cnv
+       have_mp = Model%imp_physics>0
+       have_oz_phys = Model%oz_phys .or. Model%oz_phys_2015
+       
+       ! Increment idq4dt and fill idx4d:
+
+       call fill_idx4d(Model%ndq4dt,Model%idx4d,Model%ntqv,Model%cause_pbl,have_pbl)
+       call fill_idx4d(Model%ndq4dt,Model%idx4d,Model%ntqv,Model%cause_dcnv,have_dcnv)
+       call fill_idx4d(Model%ndq4dt,Model%idx4d,Model%ntqv,Model%cause_scnv,have_scnv)
+       call fill_idx4d(Model%ndq4dt,Model%idx4d,Model%ntqv,Model%cause_mp,have_mp)
+       call fill_idx4d(Model%ndq4dt,Model%idx4d,Model%ntqv,Model%cause_physics,.true.)
+       call fill_idx4d(Model%ndq4dt,Model%idx4d,Model%ntqv,Model%cause_non_physics,.true.)
+
+       call fill_idx4d(Model%ndq4dt,Model%idx4d,Model%ntoz,Model%cause_pbl,have_pbl .and. have_oz_phys)
+       call fill_idx4d(Model%ndq4dt,Model%idx4d,Model%ntoz,Model%cause_prod_loss,have_oz_phys)
+       call fill_idx4d(Model%ndq4dt,Model%idx4d,Model%ntoz,Model%cause_ozmix,have_oz_phys)
+       call fill_idx4d(Model%ndq4dt,Model%idx4d,Model%ntoz,Model%cause_temp,have_oz_phys)
+       call fill_idx4d(Model%ndq4dt,Model%idx4d,Model%ntoz,Model%cause_overhead_ozone,have_oz_phys)
+       call fill_idx4d(Model%ndq4dt,Model%idx4d,Model%ntoz,Model%cause_physics,.true.)
+       call fill_idx4d(Model%ndq4dt,Model%idx4d,Model%ntoz,Model%cause_non_physics,.true.)
+
+       print *,'dq4dt_qv_pbl index: ',Model%idx4d(Model%ntqv,Model%cause_pbl)
+       print *,'ndq4dt: ',Model%ndq4dt
+       
+    end if
 
 #ifdef CCPP
     ! To ensure that these values match what's in the physics,
@@ -5724,6 +5804,22 @@ module GFS_typedefs
 
   end subroutine radtend_create
 
+  subroutine fill_idx4d(ndq4dt,idx4d,itrac,icause,flag)
+    implicit none
+    integer, intent(inout) :: ndq4dt
+    integer, intent(out) :: idx4d(:,:)
+    integer, intent(in) :: itrac
+    integer, intent(in) :: icause
+    logical, intent(in) :: flag
+
+    if(icause>0 .and. flag .and. itrac>0) then
+       print *,'keep: ',itrac,icause,flag
+       ndq4dt = ndq4dt+1
+       idx4d(100+itrac,icause) = ndq4dt
+    else
+       print *,'discard: ',itrac,icause,flag
+    endif
+  end subroutine fill_idx4d
 
 !----------------
 ! GFS_diag%create
@@ -5735,6 +5831,8 @@ module GFS_typedefs
 
 !
     logical, save :: linit
+
+    logical :: have_pbl, have_dcnv, have_scnv, have_mp, have_oz_phys
 
     !--- Radiation
     allocate (Diag%fluxr   (IM,Model%nfxr))
@@ -5856,7 +5954,13 @@ module GFS_typedefs
       allocate (Diag%dv3dt  (IM,Model%levs,8))
       allocate (Diag%dt3dt  (IM,Model%levs,11))
       if (Model%qdiag3d) then
-        allocate (Diag%dq3dt  (IM,Model%levs,13))
+#ifdef CCPP
+        allocate(Diag%dq4dt(1:IM,1:Model%levs,0:Model%ndq4dt)) ! note 0-based dimension
+        Diag%dq4dt = clear_val
+#else
+        allocate(Diag%dq4dt(IM,Model%levs,13))
+        Diag%dq4dt = clear_val
+#endif
       endif
 !--- needed to allocate GoCart coupling fields
 !     allocate (Diag%upd_mf (IM,Model%levs))
@@ -6211,7 +6315,7 @@ module GFS_typedefs
       Diag%dv3dt    = zero
       Diag%dt3dt    = zero
       if (Model%qdiag3d) then
-         Diag%dq3dt    = zero
+         Diag%dq4dt    = zero
       endif
 !     Diag%upd_mf   = zero
 !     Diag%dwn_mf   = zero

@@ -2728,14 +2728,6 @@ module FV3GFS_io_mod
                used=send_data(Diag(idx)%id, var3, Time, is_in=is_in, js_in=js_in, ks_in=1) 
              endif
            enddo
-           !--- dq3dt variables
-           do num = 1,5+Mdl_parms%pl_coeff
-             write(xtra,'(i1)') num
-             if (trim(Diag(idx)%name) == 'dq3dt_'//trim(xtra)) then
-               var3(1:nx,1:ny,1:levs) = RESHAPE(Gfs_diag%dq3dt(1:ngptc,levs:1-1,num:num), (/nx,ny,levs/))
-               used=send_data(Diag(idx)%id, var3, Time, is_in=is_in, js_in=js_in, ks_in=1) 
-             endif
-           enddo
            !--- du3dt and dv3dt variables
            do num = 1,4
              write(xtra,'(i1)') num

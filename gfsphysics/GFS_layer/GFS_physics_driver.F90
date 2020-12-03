@@ -306,8 +306,8 @@ module module_physics_driver
 !!    - accumulate surface state variable tendencies and set the instantaneous values for output
 !!    - accumulate the temperature tendency due to the PBL scheme in dt3dt(:,:,3), subtracting out the radiative heating rate if necessary
 !!    - accumulate the u, v tendencies due to the PBL in du3dt(:,:,1:2) and dv3dt(:,:,1:2)
-!!    - accumulate the water vapor tendency due to the PBL in dq3dt(:,:,1)
-!!    - accumulate the ozone tendency in dq3dt(:,:,5)
+!!    - accumulate the water vapor tendency due to the PBL in dq4dt(:,:,1)
+!!    - accumulate the ozone tendency in dq4dt(:,:,5)
 !!  .
 !!  ## Calculate the state variable tendencies due to orographic gravity wave drag and Rayleigh damping.
 !!   - Based on the variable nmtvr, unpack orographic gravity wave varibles from the hprime array
@@ -319,7 +319,7 @@ module module_physics_driver
 !!  ## Apply tendencies to the state variables calculated so far.
 !!  ## Calculate and apply the tendency of ozone.
 !!   - Call the convective adjustment scheme for IDEA
-!!   - Call 'ozphys_2015' or 'ozphys' depending on the value of pl_coeff, updating the ozone tracer within and outputing the tendency of ozone in dq3dt(:,:,6)
+!!   - Call 'ozphys_2015' or 'ozphys' depending on the value of pl_coeff, updating the ozone tracer within and outputing the tendency of ozone in dq4dt(:,:,6)
 !!   - Call 'h2ophys' if necessary ("adaptation of NRL H2O phys for stratosphere and mesophere")
 !!  .
 !!  ## Prepare input variables for physics routines that update the state variables within their subroutines.
@@ -350,7 +350,7 @@ module module_physics_driver
 !!   - Zero out 'cld1d' (cloud work function calculated in non-RAS, non-Chikira-Sugiyama schemes)
 !!   - Update tracers in the tracer array (gq0) due to convective transport (RAS, CS only) from the 'clw' array
 !!   - Calculate accumulated surface convective precip. for this physics time step (rainc)
-!!   - If necessary, accumulate cloud work function, convective precipitation, and convective mass fluxes; accumulate dt3dt(:,:,4), dq3dt(:,:,2), du3dt(:,:,3), dv3dt(:,:,3) as change in state variables due to deep convection
+!!   - If necessary, accumulate cloud work function, convective precipitation, and convective mass fluxes; accumulate dt3dt(:,:,4), dq4dt(:,:,2), du3dt(:,:,3), dv3dt(:,:,3) as change in state variables due to deep convection
 !!   - If PDF-based clouds are active and Zhao-Carr microphysics, save convective cloud cover and water in 'phy_f3d' array
 !!    - otherwise, if non-PDF-based clouds and the "convective cloudiness enhancement" is active, save convective cloud water in 'phy_f3d' array
 !!  .
@@ -372,7 +372,7 @@ module module_physics_driver
 !!    - for the Tiedtke scheme (imfshalcnv == 0), find the top level where shallow convection must stratosphere
 !!     - if using Moorthi's approach to stratus, call 'shalcv'
 !!     - otherwise, call 'shalcvt3'
-!!     - save the change in T and q due to shallow convection in dt3dt(:,:,5) and dq3dt(:,:,3); reset dtdt and dqdt to the updated values of T, q after shallow Convection
+!!     - save the change in T and q due to shallow convection in dt3dt(:,:,5) and dq4dt(:,:,3); reset dtdt and dqdt to the updated values of T, q after shallow Convection
 !!     - if 'clw' is not partitioned into ice/water, set 'clw(ice)' to zero
 !!   - If SHOC is active (and shocaftcnv)
 !!    - if Morrison et al. scheme: set 'skip_macro' and fill cloud droplet number concentration arrays from the input tracer array
@@ -411,7 +411,7 @@ module module_physics_driver
 !!    - else, set clw(1),(2) from updated values; set phy_f3d(:,:,1) to cloud cover from previous time step + convective cloud water from convective scheme
 !!    - call 'm_micro_driver'; updates water vapor, temperature, droplet number concentrations, cloud cover
 !!   - Combine large scale and convective precip.
-!!   - For diagnostics, accumulate total surface precipitation and accumulate change in T and q due to microphysics in dt3dt(:,:,6) and dq3dt(:,:,4)
+!!   - For diagnostics, accumulate total surface precipitation and accumulate change in T and q due to microphysics in dt3dt(:,:,6) and dq4dt(:,:,4)
 !!  .
 !!  ## Determine the precipitation type and update land surface properties if necessary.
 !!   - If 'cal_pre', diagnose the surface precipitation type
@@ -563,7 +563,7 @@ module module_physics_driver
            dqdt
 
       real(kind=kind_phys), dimension(size(Grid%xlon,1),Model%levs,oz_coeff+5) ::  &
-           dq3dt_loc
+           dq4dt_loc
 
 !  mg, sfc perts
       real (kind=kind_phys), dimension(size(Grid%xlon,1)) :: &
@@ -3383,15 +3383,15 @@ module module_physics_driver
                             Stateout%gq0(1,1,ntoz),                  &
                             Stateout%gt0, oz_pres, Statein%prsl,     &
                             Tbd%ozpl, oz_coeff, del, Model%ldiag3d,  &
-                            dq3dt_loc(1,1,6), me)
+                            dq4dt_loc(1,1,6), me)
 !*## CCPP ##
 !          if (Model%ldiag3d) then
 !            do k=1,levs
 !              do i=1,im
-!                Diag%dq3dt(i,k,6) = dq3dt_loc(i,k,6)
-!                Diag%dq3dt(i,k,7) = dq3dt_loc(i,k,7)
-!                Diag%dq3dt(i,k,8) = dq3dt_loc(i,k,8)
-!                Diag%dq3dt(i,k,9) = dq3dt_loc(i,k,9)
+!                Diag%dq4dt(i,k,6) = dq4dt_loc(i,k,6)
+!                Diag%dq4dt(i,k,7) = dq4dt_loc(i,k,7)
+!                Diag%dq4dt(i,k,8) = dq4dt_loc(i,k,8)
+!                Diag%dq4dt(i,k,9) = dq4dt_loc(i,k,9)
 !              enddo
 !            enddo
 !          endif
@@ -3402,15 +3402,15 @@ module module_physics_driver
                        Stateout%gq0(1,1,ntoz),                    &
                        Stateout%gt0, oz_pres, Statein%prsl,       &
                        Tbd%ozpl, oz_coeff, del, Model%ldiag3d,    &
-                       dq3dt_loc(1,1,6), me)
+                       dq4dt_loc(1,1,6), me)
 !*## CCPP ##
 !          if (Model%ldiag3d) then
 !            do k=1,levs
 !              do i=1,im
-!                Diag%dq3dt(i,k,6) = dq3dt_loc(i,k,6)
-!                Diag%dq3dt(i,k,7) = dq3dt_loc(i,k,7)
-!                Diag%dq3dt(i,k,8) = dq3dt_loc(i,k,8)
-!                Diag%dq3dt(i,k,9) = dq3dt_loc(i,k,9)
+!                Diag%dq4dt(i,k,6) = dq4dt_loc(i,k,6)
+!                Diag%dq4dt(i,k,7) = dq4dt_loc(i,k,7)
+!                Diag%dq4dt(i,k,8) = dq4dt_loc(i,k,8)
+!                Diag%dq4dt(i,k,9) = dq4dt_loc(i,k,9)
 !              enddo
 !            enddo
 !          endif
@@ -3423,7 +3423,7 @@ module module_physics_driver
         call h2ophys (ix, im, levs, levh2o, dtp, Stateout%gq0(1,1,1),  &
                       Stateout%gq0(1,1,1), h2o_pres, Statein%prsl,     &
                       Tbd%h2opl, h2o_coeff, Model%ldiag3d,             &
-                      dq3dt_loc(1,1,1), me)
+                      dq4dt_loc(1,1,1), me)
 !*## CCPP ##
       endif
 
@@ -4147,7 +4147,7 @@ module module_physics_driver
           do k=1,levs
             do i=1,im
               Diag%dt3dt(i,k,4) = Diag%dt3dt(i,k,4) + (Stateout%gt0(i,k)-dtdt(i,k)) * frain
-!             Diag%dq3dt(i,k,2) = Diag%dq3dt(i,k,2) + (Stateout%gq0(i,k,1)-dqdt(i,k,1)) * frain
+!             Diag%dq4dt(i,k,2) = Diag%dq4dt(i,k,2) + (Stateout%gq0(i,k,1)-dqdt(i,k,1)) * frain
               Diag%du3dt(i,k,3) = Diag%du3dt(i,k,3) + (Stateout%gu0(i,k)-dudt(i,k)) * frain
               Diag%dv3dt(i,k,3) = Diag%dv3dt(i,k,3) + (Stateout%gv0(i,k)-dvdt(i,k)) * frain
 
@@ -4547,7 +4547,7 @@ module module_physics_driver
             do k=1,levs
               do i=1,im
                 Diag%dt3dt(i,k,5) = Diag%dt3dt(i,k,5) + (Stateout%gt0(i,k)  -dtdt(i,k))   * frain
-!               Diag%dq3dt(i,k,3) = Diag%dq3dt(i,k,3) + (Stateout%gq0(i,k,1)-dqdt(i,k,1)) * frain
+!               Diag%dq4dt(i,k,3) = Diag%dq4dt(i,k,3) + (Stateout%gq0(i,k,1)-dqdt(i,k,1)) * frain
               enddo
             enddo
           endif
@@ -4797,7 +4797,7 @@ module module_physics_driver
 !            do k=1,levs
 !              do i=1,im
 !                Diag%dt3dt(i,k,8) = Diag%dt3dt(i,k,8) + (Stateout%gt0(i,k)  -dtdt(i,k)  ) * frain
-!!                Diag%dq3dt(i,k,2) = Diag%dq3dt(i,k,2) + (Stateout%gq0(i,k,1)-dqdt(i,k,1)) * frain
+!!                Diag%dq4dt(i,k,2) = Diag%dq4dt(i,k,2) + (Stateout%gq0(i,k,1)-dqdt(i,k,1)) * frain
 !              enddo
 !            enddo
 !          endif
@@ -5598,7 +5598,7 @@ module module_physics_driver
           do k=1,levs
             do i=1,im
               Diag%dt3dt(i,k,6) = Diag%dt3dt(i,k,6) + (Stateout%gt0(i,k)-dtdt(i,k)) * frain
-!             Diag%dq3dt(i,k,4) = Diag%dq3dt(i,k,4) + (Stateout%gq0(i,k,1)-dqdt(i,k,1)) * frain
+!             Diag%dq4dt(i,k,4) = Diag%dq4dt(i,k,4) + (Stateout%gq0(i,k,1)-dqdt(i,k,1)) * frain
             enddo
           enddo
         endif

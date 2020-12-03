@@ -4187,6 +4187,90 @@
   units = count
   dimensions = ()
   type = integer
+[ntracp100]
+  standard_name = number_of_tracers_plus_one_hundred
+  long_name = number of tracers plus one_hundred
+  units = count
+  dimensions = ()
+  type = integer
+[ncause]
+  standard_name = number_of_possible_causes_of_tracer_changes
+  long_name = number of possible causes of tracer changes
+  units = count
+  dimensions = ()
+  type = integer
+[idx4d]
+  standard_name = dq4dt_outer_index
+  long_name = index in outer dimension of dq4dt of a tracer-cause pair
+  units = index
+  dimensions = (number_of_tracers_plus_one_hundred,number_of_causes)
+  type = integer
+[ndq4dt]
+  standard_name = dq4dt_outer_index_max
+  long_name = highest index used in outer dimension of dq4dt
+  units = count
+  dimensions = ()
+  type = integer
+[cause_pbl]
+  standard_name = cause_pbl
+  long_name = tracer changes caused by PBL scheme
+  units = index
+  dimensions = ()
+  type = integer
+[cause_dcnv]
+  standard_name = cause_dcnv
+  long_name = tracer changes caused by deep convection scheme
+  units = index
+  dimensions = ()
+  type = integer
+[cause_scnv]
+  standard_name = cause_scnv
+  long_name = tracer changes caused by shallow convection scheme
+  units = index
+  dimensions = ()
+  type = integer
+[cause_mp]
+  standard_name = cause_mp
+  long_name = tracer changes caused by microphysics scheme
+  units = index
+  dimensions = ()
+  type = integer
+[cause_prod_loss]
+  standard_name = cause_prod_loss
+  long_name = tracer changes caused by ozone production and loss
+  units = index
+  dimensions = ()
+  type = integer
+[cause_ozmix]
+  standard_name = cause_ozmix
+  long_name = tracer changes caused by ozone mixing ratio
+  units = index
+  dimensions = ()
+  type = integer
+[cause_temp]
+  standard_name = cause_temp
+  long_name = tracer changes caused by temperature
+  units = index
+  dimensions = ()
+  type = integer
+[cause_overhead_ozone]
+  standard_name = cause_overhead_ozone
+  long_name = tracer changes caused by overhead ozone column
+  units = index
+  dimensions = ()
+  type = integer
+[cause_physics]
+  standard_name = cause_physics
+  long_name = tracer changes caused by physics schemes
+  units = index
+  dimensions = ()
+  type = integer
+[cause_non_physics]
+  standard_name = cause_non_physics
+  long_name = tracer changes caused by everything except physics schemes
+  units = index
+  dimensions = ()
+  type = integer
 [ntqv]
   standard_name = index_for_water_vapor
   long_name = tracer index for water vapor (specific humidity)
@@ -6623,7 +6707,15 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D)
-[dq3dt(:,:,1)]
+[dq4dt]
+  standard_name = diagnostic_tracer_tendencies
+  long_name = diagnostic tracer tendencies
+  units = various
+  dimensions = (horizontal_loop_extent,vertical_dimension,dq4dt_outer_index_max)
+  type = real
+  kind = kind_phys
+  active = (flag_diagnostics_3D .and. flag_tracer_diagnostics_3D)
+[dq4dt(:,:,dq4dt_outer_index(index_for_water_vapor+100,cause_pbl))]
   standard_name = cumulative_change_in_water_vapor_specific_humidity_due_to_PBL
   long_name = cumulative change in water vapor specific humidity due to PBL
   units = kg kg-1
@@ -6631,7 +6723,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D .and. flag_tracer_diagnostics_3D)
-[dq3dt(:,:,2)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_water_vapor+100,cause_dcnv))]
   standard_name = cumulative_change_in_water_vapor_specific_humidity_due_to_deep_convection
   long_name = cumulative change in water vapor specific humidity due to deep convection
   units = kg kg-1
@@ -6639,7 +6731,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D .and. flag_tracer_diagnostics_3D)
-[dq3dt(:,:,3)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_water_vapor+100,cause_scnv))]
   standard_name = cumulative_change_in_water_vapor_specific_humidity_due_to_shallow_convection
   long_name = cumulative change in water vapor specific humidity due to shallow convection
   units = kg kg-1
@@ -6647,7 +6739,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D .and. flag_tracer_diagnostics_3D)
-[dq3dt(:,:,4)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_water_vapor+100,cause_mp))]
   standard_name = cumulative_change_in_water_vapor_specific_humidity_due_to_microphysics
   long_name = cumulative change in water vapor specific humidity due to microphysics
   units = kg kg-1
@@ -6655,7 +6747,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D .and. flag_tracer_diagnostics_3D)
-[dq3dt(:,:,5)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_ozone+100,cause_pbl))]
   standard_name = cumulative_change_in_ozone_mixing_ratio_due_to_PBL
   long_name = cumulative change in ozone mixing ratio due to PBL
   units = kg kg-1
@@ -6663,7 +6755,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D .and. flag_tracer_diagnostics_3D)
-[dq3dt(:,:,6)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_ozone+100,cause_prod_loss))]
   standard_name = cumulative_change_in_ozone_concentration_due_to_production_and_loss_rate
   long_name = cumulative change in ozone concentration due to production and loss rate
   units = kg kg-1
@@ -6671,7 +6763,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D .and. flag_tracer_diagnostics_3D)
-[dq3dt(:,:,7)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_ozone+100,cause_ozmix))]
   standard_name = cumulative_change_in_ozone_concentration_due_to_ozone_mixing_ratio
   long_name = cumulative change in ozone concentration due to ozone mixing ratio
   units = kg kg-1
@@ -6679,7 +6771,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D .and. flag_tracer_diagnostics_3D)
-[dq3dt(:,:,8)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_ozone+100,cause_temp))]
   standard_name = cumulative_change_in_ozone_concentration_due_to_temperature
   long_name = cumulative change in ozone concentration due to temperature
   units = kg kg-1
@@ -6687,7 +6779,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D .and. flag_tracer_diagnostics_3D)
-[dq3dt(:,:,9)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_ozone+100,cause_overhead_ozone))]
   standard_name = cumulative_change_in_ozone_concentration_due_to_overhead_ozone_column
   long_name = cumulative change in ozone concentration due to overhead ozone column
   units = kg kg-1
@@ -6695,7 +6787,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D .and. flag_tracer_diagnostics_3D)
-[dq3dt(:,:,10)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_water_vapor+100,cause_physics))]
   standard_name = cumulative_change_in_water_vapor_specific_humidity_due_to_physics
   long_name = cumulative change in water vapor specific humidity due to physics
   units = kg kg-1
@@ -6703,7 +6795,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D .and. flag_tracer_diagnostics_3D)
-[dq3dt(:,:,11)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_ozone+100,cause_physics))]
   standard_name = cumulative_change_in_ozone_concentration_due_to_physics
   long_name = cumulative change in ozone concentration due to physics
   units = kg kg-1
@@ -6711,7 +6803,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D .and. flag_tracer_diagnostics_3D)
-[dq3dt(:,:,12)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_water_vapor+100,cause_non_physics))]
   standard_name = cumulative_change_in_water_vapor_specific_humidity_due_to_non_physics_processes
   long_name = cumulative change in water vapor specific humidity due to non-physics processes
   units = kg kg-1
@@ -6719,7 +6811,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D .and. flag_tracer_diagnostics_3D)
-[dq3dt(:,:,13)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_ozone+100,cause_non_physics))]
   standard_name = cumulative_change_in_ozone_concentration_due_to_non_physics_processes
   long_name = cumulative change in ozone_concentration due to non-physics processes
   units = kg kg-1

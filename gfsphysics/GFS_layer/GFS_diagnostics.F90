@@ -98,7 +98,7 @@ module GFS_diagnostics
     type(GFS_init_type),          intent(in)    :: Init_parm
 
 !--- local variables
-    integer :: idt, idx, num, nb, nblks, NFXR
+    integer :: idt, idx, num, nb, nblks, NFXR, idq4dt
     character(len=2) :: xtra
     real(kind=kind_phys), parameter :: cn_one = 1._kind_phys
     real(kind=kind_phys), parameter :: cn_100 = 100._kind_phys
@@ -2647,162 +2647,219 @@ module GFS_diagnostics
 
 #ifdef CCPP
       if_qdiag3d: if(Model%qdiag3d) then
-        idx = idx + 1
-        ExtDiag(idx)%axes = 3
-        ExtDiag(idx)%name = 'dq3dt_pbl'
-        ExtDiag(idx)%desc = 'water vapor specific humidity tendency due to PBL'
-        ExtDiag(idx)%unit = 'kg kg-1 s-1'
-        ExtDiag(idx)%mod_name = 'gfs_phys'
-        ExtDiag(idx)%time_avg = .TRUE.
-        allocate (ExtDiag(idx)%data(nblks))
-        do nb = 1,nblks
-           ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dq3dt(:,:,1)
-        enddo
+        print *,'if(Model%qdiag3d)...'
+        idq4dt = Model%idx4d(100+Model%ntqv,Model%cause_pbl)
+        if(idq4dt>0) then
+           print *,'register dq4dt_qv_pbl'
+           idx = idx + 1
+           ExtDiag(idx)%axes = 3
+           ExtDiag(idx)%name = 'dq4dt_qv_pbl'
+           ExtDiag(idx)%desc = 'water vapor specific humidity tendency due to PBL'
+           ExtDiag(idx)%unit = 'kg kg-1 s-1'
+           ExtDiag(idx)%mod_name = 'gfs_phys'
+           ExtDiag(idx)%time_avg = .TRUE.
+           allocate (ExtDiag(idx)%data(nblks))
+           do nb = 1,nblks
+              ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dq4dt(:,:,idq4dt)
+           enddo
+        else
+           print *,'ERROR: dq4dt_qv_pbl not available.'
+        endif
 
-        idx = idx + 1
-        ExtDiag(idx)%axes = 3
-        ExtDiag(idx)%name = 'dq3dt_deepcnv'
-        ExtDiag(idx)%desc = 'water vapor specific humidity tendency due to deep convection'
-        ExtDiag(idx)%unit = 'kg kg-1 s-1'
-        ExtDiag(idx)%mod_name = 'gfs_phys'
-        ExtDiag(idx)%time_avg = .TRUE.
-        allocate (ExtDiag(idx)%data(nblks))
-        do nb = 1,nblks
-           ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dq3dt(:,:,2)
-        enddo
+        idq4dt = Model%idx4d(Model%ntqv+100,Model%cause_dcnv)
+        if(idq4dt>0) then
+           print *,'register dq4dt_qv_deepcnv'
+           idx = idx + 1
+           ExtDiag(idx)%axes = 3
+           ExtDiag(idx)%name = 'dq4dt_qv_deepcnv'
+           ExtDiag(idx)%desc = 'water vapor specific humidity tendency due to deep convection'
+           ExtDiag(idx)%unit = 'kg kg-1 s-1'
+           ExtDiag(idx)%mod_name = 'gfs_phys'
+           ExtDiag(idx)%time_avg = .TRUE.
+           allocate (ExtDiag(idx)%data(nblks))
+           do nb = 1,nblks
+              ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dq4dt(:,:,idq4dt)
+           enddo
+        endif
 
-        idx = idx + 1
-        ExtDiag(idx)%axes = 3
-        ExtDiag(idx)%name = 'dq3dt_shalcnv'
-        ExtDiag(idx)%desc = 'water vapor specific humidity tendency due to shallow convection'
-        ExtDiag(idx)%unit = 'kg kg-1 s-1'
-        ExtDiag(idx)%mod_name = 'gfs_phys'
-        ExtDiag(idx)%time_avg = .TRUE.
-        allocate (ExtDiag(idx)%data(nblks))
-        do nb = 1,nblks
-           ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dq3dt(:,:,3)
-        enddo
+        idq4dt = Model%idx4d(Model%ntqv+100,Model%cause_scnv)
+        if(idq4dt>0) then
+           print *,'register dq4dt_qv_shalcnv'
+           idx = idx + 1
+           ExtDiag(idx)%axes = 3
+           ExtDiag(idx)%name = 'dq4dt_qv_shalcnv'
+           ExtDiag(idx)%desc = 'water vapor specific humidity tendency due to shallow convection'
+           ExtDiag(idx)%unit = 'kg kg-1 s-1'
+           ExtDiag(idx)%mod_name = 'gfs_phys'
+           ExtDiag(idx)%time_avg = .TRUE.
+           allocate (ExtDiag(idx)%data(nblks))
+           do nb = 1,nblks
+              ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dq4dt(:,:,idq4dt)
+           enddo
+        endif
 
-        idx = idx + 1
-        ExtDiag(idx)%axes = 3
-        ExtDiag(idx)%name = 'dq3dt_mp'
-        ExtDiag(idx)%desc = 'water vapor specific humidity tendency due to microphysics'
-        ExtDiag(idx)%unit = 'kg kg-1 s-1'
-        ExtDiag(idx)%mod_name = 'gfs_phys'
-        ExtDiag(idx)%time_avg = .TRUE.
-        allocate (ExtDiag(idx)%data(nblks))
-        do nb = 1,nblks
-           ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dq3dt(:,:,4)
-        enddo
+        idq4dt = Model%idx4d(Model%ntqv+100,Model%cause_mp)
+        if(idq4dt>0) then
+           print *,'register dq4dt_qv_mp'
+           idx = idx + 1
+           ExtDiag(idx)%axes = 3
+           ExtDiag(idx)%name = 'dq4dt_qv_mp'
+           ExtDiag(idx)%desc = 'water vapor specific humidity tendency due to microphysics'
+           ExtDiag(idx)%unit = 'kg kg-1 s-1'
+           ExtDiag(idx)%mod_name = 'gfs_phys'
+           ExtDiag(idx)%time_avg = .TRUE.
+           allocate (ExtDiag(idx)%data(nblks))
+           do nb = 1,nblks
+              ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dq4dt(:,:,idq4dt)
+           enddo
+        endif
 
-        idx = idx + 1
-        ExtDiag(idx)%axes = 3
-        ExtDiag(idx)%name = 'dq3dt_o3pbl'
-        ExtDiag(idx)%desc = 'ozone mixing ratio tendency due to PBL'
-        ExtDiag(idx)%unit = 'kg kg-1 s-1'
-        ExtDiag(idx)%mod_name = 'gfs_phys'
-        ExtDiag(idx)%time_avg = .TRUE.
-        allocate (ExtDiag(idx)%data(nblks))
-        do nb = 1,nblks
-           ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dq3dt(:,:,5)
-        enddo
+        idq4dt = Model%idx4d(Model%ntoz+100,Model%cause_pbl)
+        if(idq4dt>0) then
+           print *,'register dq4dt_o3_pbl'
+           idx = idx + 1
+           ExtDiag(idx)%axes = 3
+           ExtDiag(idx)%name = 'dq4dt_o3_pbl'
+           ExtDiag(idx)%desc = 'ozone mixing ratio tendency due to PBL'
+           ExtDiag(idx)%unit = 'kg kg-1 s-1'
+           ExtDiag(idx)%mod_name = 'gfs_phys'
+           ExtDiag(idx)%time_avg = .TRUE.
+           allocate (ExtDiag(idx)%data(nblks))
+           do nb = 1,nblks
+              ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dq4dt(:,:,idq4dt)
+           enddo
+        endif
 
-        idx = idx + 1
-        ExtDiag(idx)%axes = 3
-        ExtDiag(idx)%name = 'dq3dt_o3prodloss'
-        ExtDiag(idx)%desc = 'ozone concentration tendency due to production and loss rate'
-        ExtDiag(idx)%unit = 'kg kg-1 s-1'
-        ExtDiag(idx)%mod_name = 'gfs_phys'
-        ExtDiag(idx)%time_avg = .TRUE.
-        allocate (ExtDiag(idx)%data(nblks))
-        do nb = 1,nblks
-           ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dq3dt(:,:,6)
-        enddo
+        idq4dt = Model%idx4d(Model%ntoz+100,Model%cause_prod_loss)
+        if(idq4dt>0) then
+           print *,'register dq4dt_o3_prodloss'
+           idx = idx + 1
+           ExtDiag(idx)%axes = 3
+           ExtDiag(idx)%name = 'dq4dt_o3_prodloss'
+           ExtDiag(idx)%desc = 'ozone concentration tendency due to production and loss rate'
+           ExtDiag(idx)%unit = 'kg kg-1 s-1'
+           ExtDiag(idx)%mod_name = 'gfs_phys'
+           ExtDiag(idx)%time_avg = .TRUE.
+           allocate (ExtDiag(idx)%data(nblks))
+           do nb = 1,nblks
+              ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dq4dt(:,:,idq4dt)
+           enddo
+        endif
 
-        idx = idx + 1
-        ExtDiag(idx)%axes = 3
-        ExtDiag(idx)%name = 'dq3dt_o3mix'
-        ExtDiag(idx)%desc = 'ozone concentration tendency due to ozone mixing ratio'
-        ExtDiag(idx)%unit = 'kg kg-1 s-1'
-        ExtDiag(idx)%mod_name = 'gfs_phys'
-        ExtDiag(idx)%time_avg = .TRUE.
-        allocate (ExtDiag(idx)%data(nblks))
-        do nb = 1,nblks
-           ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dq3dt(:,:,7)
-        enddo
+        idq4dt = Model%idx4d(Model%ntoz+100,Model%cause_ozmix)
+        if(idq4dt>0) then
+           print *,'register dq4dt_o3_o3mix'
+           idx = idx + 1
+           ExtDiag(idx)%axes = 3
+           ExtDiag(idx)%name = 'dq4dt_o3_o3mix'
+           ExtDiag(idx)%desc = 'ozone concentration tendency due to ozone mixing ratio'
+           ExtDiag(idx)%unit = 'kg kg-1 s-1'
+           ExtDiag(idx)%mod_name = 'gfs_phys'
+           ExtDiag(idx)%time_avg = .TRUE.
+           allocate (ExtDiag(idx)%data(nblks))
+           do nb = 1,nblks
+              ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dq4dt(:,:,idq4dt)
+           enddo
+        endif
 
-        idx = idx + 1
-        ExtDiag(idx)%axes = 3
-        ExtDiag(idx)%name = 'dq3dt_o3temp'
-        ExtDiag(idx)%desc = 'ozone concentration tendency due to temperature'
-        ExtDiag(idx)%unit = 'kg kg-1 s-1'
-        ExtDiag(idx)%mod_name = 'gfs_phys'
-        ExtDiag(idx)%time_avg = .TRUE.
-        allocate (ExtDiag(idx)%data(nblks))
-        do nb = 1,nblks
-           ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dq3dt(:,:,8)
-        enddo
+        idq4dt = Model%idx4d(Model%ntoz+100,Model%cause_temp)
+        if(idq4dt>0) then
+           print *,'register dq4dt_o3_temp'
+           idx = idx + 1
+           ExtDiag(idx)%axes = 3
+           ExtDiag(idx)%name = 'dq4dt_o3_temp'
+           ExtDiag(idx)%desc = 'ozone concentration tendency due to temperature'
+           ExtDiag(idx)%unit = 'kg kg-1 s-1'
+           ExtDiag(idx)%mod_name = 'gfs_phys'
+           ExtDiag(idx)%time_avg = .TRUE.
+           allocate (ExtDiag(idx)%data(nblks))
+           do nb = 1,nblks
+              ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dq4dt(:,:,idq4dt)
+           enddo
+        else
+           print *,'ERROR: dq4dt_o3_temp not available.'
+        endif
 
-        idx = idx + 1
-        ExtDiag(idx)%axes = 3
-        ExtDiag(idx)%name = 'dq3dt_o3column'
-        ExtDiag(idx)%desc = 'ozone concentration tendency due to overhead ozone column'
-        ExtDiag(idx)%unit = 'kg kg-1 s-1'
-        ExtDiag(idx)%mod_name = 'gfs_phys'
-        ExtDiag(idx)%time_avg = .TRUE.
-        allocate (ExtDiag(idx)%data(nblks))
-        do nb = 1,nblks
-           ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dq3dt(:,:,9)
-        enddo
+        idq4dt = Model%idx4d(Model%ntoz+100,Model%cause_overhead_ozone)
+        if(idq4dt>0) then
+           print *,'register dq4dt_o3_o3column'
+           idx = idx + 1
+           ExtDiag(idx)%axes = 3
+           ExtDiag(idx)%name = 'dq4dt_o3_o3column'
+           ExtDiag(idx)%desc = 'ozone concentration tendency due to overhead ozone column'
+           ExtDiag(idx)%unit = 'kg kg-1 s-1'
+           ExtDiag(idx)%mod_name = 'gfs_phys'
+           ExtDiag(idx)%time_avg = .TRUE.
+           allocate (ExtDiag(idx)%data(nblks))
+           do nb = 1,nblks
+              ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dq4dt(:,:,idq4dt)
+           enddo
+        endif
+
+        idq4dt = Model%idx4d(Model%ntqv+100,Model%cause_physics)
+        if(idq4dt>0) then
+           print *,'register dq4dt_qv_phys'
+           idx = idx + 1
+           ExtDiag(idx)%axes = 3
+           ExtDiag(idx)%name = 'dq4dt_qv_phys'
+           ExtDiag(idx)%desc = 'water vapor specific humidity tendency due to physics'
+           ExtDiag(idx)%unit = 'kg kg-1 s-1'
+           ExtDiag(idx)%mod_name = 'gfs_phys'
+           ExtDiag(idx)%time_avg = .TRUE.
+           allocate (ExtDiag(idx)%data(nblks))
+           do nb = 1,nblks
+              ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dq4dt(:,:,idq4dt)
+           enddo
+        endif
+
+        idq4dt = Model%idx4d(Model%ntoz+100,Model%cause_physics)
+        if(idq4dt>0) then
+           print *,'register dq4dt_o3_phys'
+           idx = idx + 1
+           ExtDiag(idx)%axes = 3
+           ExtDiag(idx)%name = 'dq4dt_o3_phys'
+           ExtDiag(idx)%desc = 'ozone concentration tendency due to physics'
+           ExtDiag(idx)%unit = 'kg kg-1 s-1'
+           ExtDiag(idx)%mod_name = 'gfs_phys'
+           ExtDiag(idx)%time_avg = .TRUE.
+           allocate (ExtDiag(idx)%data(nblks))
+           do nb = 1,nblks
+              ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dq4dt(:,:,idq4dt)
+           enddo
+        endif
+
+        idq4dt = Model%idx4d(Model%ntqv+100,Model%cause_non_physics)
+        if(idq4dt>0) then
+           print *,'register dq4dt_qv_nophys'
+           idx = idx + 1
+           ExtDiag(idx)%axes = 3
+           ExtDiag(idx)%name = 'dq4dt_qv_nophys'
+           ExtDiag(idx)%desc = 'water vapor specific humidity tendency due to non-physics processes'
+           ExtDiag(idx)%unit = 'kg kg-1 s-1'
+           ExtDiag(idx)%mod_name = 'gfs_dyn'
+           ExtDiag(idx)%time_avg = .TRUE.
+           allocate (ExtDiag(idx)%data(nblks))
+           do nb = 1,nblks
+              ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dq4dt(:,:,idq4dt)
+           enddo
+        endif
+
+        idq4dt = Model%idx4d(Model%ntoz+100,Model%cause_non_physics)
+        if(idq4dt>0) then
+           print *,'register dq4dt_o3_nophys'
+           idx = idx + 1
+           ExtDiag(idx)%axes = 3
+           ExtDiag(idx)%name = 'dq4dt_o3_nophys'
+           ExtDiag(idx)%desc = 'ozone concentration tendency due to non-physics processes'
+           ExtDiag(idx)%unit = 'kg kg-1 s-1'
+           ExtDiag(idx)%mod_name = 'gfs_dyn'
+           ExtDiag(idx)%time_avg = .TRUE.
+           allocate (ExtDiag(idx)%data(nblks))
+           do nb = 1,nblks
+              ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dq4dt(:,:,idq4dt)
+           enddo
+        endif
       end if if_qdiag3d
-
-      idx = idx + 1
-      ExtDiag(idx)%axes = 3
-      ExtDiag(idx)%name = 'dq3dt_phys'
-      ExtDiag(idx)%desc = 'water vapor specific humidity tendency due to physics'
-      ExtDiag(idx)%unit = 'kg kg-1 s-1'
-      ExtDiag(idx)%mod_name = 'gfs_phys'
-      ExtDiag(idx)%time_avg = .TRUE.
-      allocate (ExtDiag(idx)%data(nblks))
-      do nb = 1,nblks
-        ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dq3dt(:,:,10)
-      enddo
-
-      idx = idx + 1
-      ExtDiag(idx)%axes = 3
-      ExtDiag(idx)%name = 'dq3dt_o3phys'
-      ExtDiag(idx)%desc = 'ozone concentration tendency due to physics'
-      ExtDiag(idx)%unit = 'kg kg-1 s-1'
-      ExtDiag(idx)%mod_name = 'gfs_phys'
-      ExtDiag(idx)%time_avg = .TRUE.
-      allocate (ExtDiag(idx)%data(nblks))
-      do nb = 1,nblks
-        ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dq3dt(:,:,11)
-      enddo
-
-      idx = idx + 1
-      ExtDiag(idx)%axes = 3
-      ExtDiag(idx)%name = 'dq3dt_nophys'
-      ExtDiag(idx)%desc = 'water vapor specific humidity tendency due to non-physics processes'
-      ExtDiag(idx)%unit = 'kg kg-1 s-1'
-      ExtDiag(idx)%mod_name = 'gfs_dyn'
-      ExtDiag(idx)%time_avg = .TRUE.
-      allocate (ExtDiag(idx)%data(nblks))
-      do nb = 1,nblks
-        ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dq3dt(:,:,12)
-      enddo
-
-      idx = idx + 1
-      ExtDiag(idx)%axes = 3
-      ExtDiag(idx)%name = 'dq3dt_o3nophys'
-      ExtDiag(idx)%desc = 'ozone concentration tendency due to non-physics processes'
-      ExtDiag(idx)%unit = 'kg kg-1 s-1'
-      ExtDiag(idx)%mod_name = 'gfs_dyn'
-      ExtDiag(idx)%time_avg = .TRUE.
-      allocate (ExtDiag(idx)%data(nblks))
-      do nb = 1,nblks
-        ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dq3dt(:,:,13)
-      enddo
 
 #endif
     end if if_ldiag3d
@@ -2812,7 +2869,7 @@ module GFS_diagnostics
 !rab      write (xtra,'(I1)') num 
 !rab      idx = idx + 1
 !rab      ExtDiag(idx)%axes = 3
-!rab      ExtDiag(idx)%name = 'dq3dt_'//trim(xtra)
+!rab      ExtDiag(idx)%name = 'dq4dt_'//trim(xtra)
 !rab      ExtDiag(idx)%desc = 'moisture change due to physics '//trim(xtra)//''
 !rab      ExtDiag(idx)%unit = 'XXX'
 !rab      ExtDiag(idx)%mod_name = 'gfs_phys'

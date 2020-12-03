@@ -260,6 +260,7 @@ subroutine update_atmos_radiation_physics (Atmos)
 #ifdef CCPP
     integer :: ierr
 #endif
+    integer :: dq4dt_qv_idx, dq4dt_oz_idx
 
     if (mpp_pe() == mpp_root_pe() .and. debug) write(6,*) "statein driver"
 !--- get atmospheric state from the dynamic core
@@ -329,12 +330,21 @@ subroutine update_atmos_radiation_physics (Atmos)
                                               + (IPD_Data(nb)%Statein%tgrs - IPD_Data(nb)%Stateout%gt0)
         enddo
         if (IPD_Control%qdiag3d) then
-          do nb = 1,Atm_block%nblks
-            IPD_Data(nb)%Intdiag%dq3dt(:,:,12) = IPD_Data(nb)%Intdiag%dq3dt(:,:,12) &
-                  + (IPD_Data(nb)%Statein%qgrs(:,:,IPD_Control%ntqv) - IPD_Data(nb)%Stateout%gq0(:,:,IPD_Control%ntqv))
-            IPD_Data(nb)%Intdiag%dq3dt(:,:,13) = IPD_Data(nb)%Intdiag%dq3dt(:,:,13) &
-                  + (IPD_Data(nb)%Statein%qgrs(:,:,IPD_Control%ntoz) - IPD_Data(nb)%Stateout%gq0(:,:,IPD_Control%ntoz))
-          enddo
+          dq4dt_qv_idx = IPD_Control%idx4d(IPD_Control%ntqv+100,IPD_Control%cause_non_physics)
+          if(dq4dt_qv_idx>0) then
+            do nb = 1,Atm_block%nblks
+              IPD_Data(nb)%Intdiag%dq4dt(:,:,dq4dt_qv_idx) = IPD_Data(nb)%Intdiag%dq4dt(:,:,dq4dt_qv_idx) &
+                   + (IPD_Data(nb)%Statein%qgrs(:,:,IPD_Control%ntqv) - IPD_Data(nb)%Stateout%gq0(:,:,IPD_Control%ntqv))
+            enddo
+          endif
+
+          dq4dt_oz_idx = IPD_Control%idx4d(IPD_Control%ntoz+100,IPD_Control%cause_non_physics)
+          if(dq4dt_oz_idx>0) then
+            do nb = 1,Atm_block%nblks
+              IPD_Data(nb)%Intdiag%dq4dt(:,:,dq4dt_oz_idx) = IPD_Data(nb)%Intdiag%dq4dt(:,:,dq4dt_oz_idx) &
+                   + (IPD_Data(nb)%Statein%qgrs(:,:,IPD_Control%ntoz) - IPD_Data(nb)%Stateout%gq0(:,:,IPD_Control%ntoz))
+            enddo
+          endif
         endif
       endif
 
