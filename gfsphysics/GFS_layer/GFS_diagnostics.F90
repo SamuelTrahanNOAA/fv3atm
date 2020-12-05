@@ -41,32 +41,108 @@ module GFS_diagnostics
     type(data_subtype), dimension(:), allocatable :: data
    end type GFS_externaldiag_type
 
+  type dq4dt_tracer_label
+    character(len=20) :: name
+    character(len=44) :: desc
+    character(len=32) :: unit
+  end type dq4dt_tracer_label
+
+  type dq4dt_cause_label
+    character(len=20) :: name
+    character(len=44) :: desc
+    logical :: time_avg
+    character(len=20) :: mod_name
+  end type dq4dt_cause_label
+
+  type(dq4dt_tracer_label), allocatable :: tracer_labels(:)
+  type(dq4dt_cause_label), allocatable :: cause_labels(:)
+   
   !--- public data type ---
   public  GFS_externaldiag_type
 
   !--- public interfaces ---
   public  GFS_externaldiag_populate
- 
+
   CONTAINS
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+    subroutine allocate_dq4dt_labels_and_causes(ntrac,ncause)
+      implicit none
+      integer, intent(in) :: ntrac,ncause
+      integer :: i
+      
+      allocate(tracer_labels(ntrac))
+      allocate(cause_labels(ncause))
+
+      tracer_labels(1)%name = 'unallocated'
+      tracer_labels(1)%desc = 'unallocated tracer'
+      tracer_labels(1)%unit = 'kg kg-1 s-1'
+      
+      do i=2,ntrac
+        tracer_labels(i)%name = 'unknown'
+        tracer_labels(i)%desc = 'unspecified tracer'
+        tracer_labels(i)%unit = 'kg kg-1 s-1'
+      enddo
+      do i=1,ncause
+        cause_labels(i)%name = 'unknown'
+        cause_labels(i)%desc = 'unspecified tendency'
+        cause_labels(i)%time_avg = .true.
+        cause_labels(i)%mod_name = 'gfs_phys'
+      enddo
+    end subroutine allocate_dq4dt_labels_and_causes
+    
+    subroutine label_dq4dt_tracer(itrac,name,desc,unit)
+      implicit none
+      integer, intent(in) :: itrac
+      character(len=*), intent(in) :: name, desc
+      character(len=*), optional, intent(in) :: unit
+
+      if(itrac<2) then
+         ! Special index 1 is for unallocated tracers
+         return
+      endif
+      
+      tracer_labels(itrac)%name = name
+      tracer_labels(itrac)%desc = desc
+      if(present(unit)) then
+         tracer_labels(itrac)%unit=unit
+      else
+         tracer_labels(itrac)%unit='kg kg-1 s-1'
+      endif
+    end subroutine label_dq4dt_tracer
+
+    subroutine label_dq4dt_cause(icause,name,desc,mod_name,time_avg)
+      implicit none
+      integer, intent(in) :: icause
+      character(len=*), intent(in) :: name, desc
+      character(len=*), optional, intent(in) :: mod_name
+      logical, optional, intent(in) :: time_avg
+
+      cause_labels(icause)%name=name
+      cause_labels(icause)%desc=desc
+      if(present(mod_name)) then
+        cause_labels(icause)%mod_name = mod_name
+      else
+        cause_labels(icause)%mod_name = "gfs_phys"
+      endif
+      if(present(time_avg)) then
+        cause_labels(icause)%time_avg = time_avg
+      else
+        cause_labels(icause)%time_avg = .true.
+      endif
+    end subroutine label_dq4dt_cause
+    
  ! Helper function for GFS_externaldiag_populate to handle the massive dq4dt(:,:,idx4d(:,:)) array
-    subroutine add_dq4dt(ExtDiag,IntDiag,idx,nblks,idx4d,itrac,icause, &
-                         name_trac,name_cause,desc,mod_name,unit,time_avg)
+    subroutine add_dq4dt(ExtDiag,IntDiag,idx,nblks,idx4d,itrac,icause,desc,unit)
     implicit none
     type(GFS_externaldiag_type),  intent(inout) :: ExtDiag(:)
     type(GFS_diag_type),          intent(in)    :: IntDiag(:)
     integer, intent(in) :: nblks, itrac, icause
     integer, intent(inout) :: idx
-    character(len=*), intent(in) :: name_trac,name_cause
     integer :: idx4d(:,:)
-    
-    real(kind=kind_phys), pointer :: dq4dt(:,:,:) ! might be null
-    character(len=*), optional, intent(in) :: unit, mod_name, desc
-    logical, optional, intent(in) :: time_avg
-
-    ! Assumption: dq4dt is null iff all(idx4d <= 1)
+    real(kind=kind_phys), pointer :: dq4dt(:,:,:) ! Assumption: dq4dt is null iff all(idx4d <= 1)
+    character(len=*), intent(in), optional :: desc, unit
     
     integer :: idq4dt, nb
 
@@ -74,26 +150,18 @@ module GFS_diagnostics
     if(idq4dt>1) then
        idx = idx + 1
        ExtDiag(idx)%axes = 3
-       ExtDiag(idx)%name = 'dq4dt_'//name_trac//'_'//name_cause
+       ExtDiag(idx)%name = 'dq4dt_'//trim(tracer_labels(itrac)%name)//'_'//trim(cause_labels(icause)%name)
+       ExtDiag(idx)%mod_name = cause_labels(icause)%mod_name
+       ExtDiag(idx)%time_avg = cause_labels(icause)%time_avg
        if(present(desc)) then
           ExtDiag(idx)%desc = desc
        else
-          ExtDiag(idx)%desc = ExtDiag(idx)%name
+          ExtDiag(idx)%desc = trim(tracer_labels(itrac)%desc)//' '//trim(tracer_labels(icause)%desc)
        endif
        if(present(unit)) then
-          ExtDiag(idx)%unit = unit
+          ExtDiag(idx)%unit = trim(unit)
        else
-          ExtDiag(idx)%unit = 'kg kg-1 s-1'
-       endif
-       if(present(mod_name)) then
-          ExtDiag(idx)%mod_name = mod_name
-       else
-          ExtDiag(idx)%mod_name = 'gfs_phys'
-       endif
-       if(present(time_avg)) then
-          ExtDiag(idx)%time_avg = time_avg
-       else
-          ExtDiag(idx)%time_avg = .TRUE.
+          ExtDiag(idx)%unit = trim(tracer_labels(itrac)%unit)
        endif
        allocate (ExtDiag(idx)%data(nblks))
        do nb = 1,nblks
@@ -2698,37 +2766,39 @@ module GFS_diagnostics
 
 #ifdef CCPP
       if_qdiag3d: if(Model%qdiag3d) then
-        print *,'if(Model%qdiag3d)...'
+        call allocate_dq4dt_labels_and_causes(Model%ntracp100,Model%ncause)
 
-        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,100+Model%ntqv,Model%cause_pbl, &
-             'qv','pbl','water vapor specific humidity tendency due to PBL')
-        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,100+Model%ntqv,Model%cause_dcnv, &
-             'qv','deepcnv', 'water vapor specific humidity tendency due to deep convection')
-        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,100+Model%ntqv,Model%cause_scnv, &
-             'qv','shalcnv','water vapor specific humidity tendency due to shallow convection')
-        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,100+Model%ntqv,Model%cause_mp, &
-             'qv','mp','water vapor specific humidity tendency due to microphysics')
+        call label_dq4dt_tracer(100+Model%ntqv,'qv','water vapor specific humidity')
+        call label_dq4dt_tracer(100+Model%ntoz,'o3','ozone concentration')
 
-        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,100+Model%ntoz,Model%cause_pbl, &
-             'o3','pbl','ozone mixing ratio tendency due to PBL')
-        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,100+Model%ntoz,Model%cause_prod_loss, &
-             'o3','prodloss','ozone concentration tendency due to production and loss rate')
-        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,100+Model%ntoz,Model%cause_ozmix, &
-             'o3','o3mix','ozone concentration tendency due to ozone mixing ratio')
-        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,100+Model%ntoz,Model%cause_temp, &
-             'o3','temp','ozone concentration tendency due to temperature')
-        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,100+Model%ntoz,Model%cause_overhead_ozone, &
-             'o3','o3column','ozone concentration tendency due to overhead ozone column')
+        call label_dq4dt_cause(Model%cause_pbl,'pbl','tendency due to PBL')
+        call label_dq4dt_cause(Model%cause_dcnv,'deepcnv','tendency due to deep convection')
+        call label_dq4dt_cause(Model%cause_scnv,'shalcnv','tendency due to shallow convection')
+        call label_dq4dt_cause(Model%cause_mp,'mp','tendency due to microphysics')
+        call label_dq4dt_cause(Model%cause_prod_loss,'prodloss','tendency due to production and loss rate')
+        call label_dq4dt_cause(Model%cause_ozmix,'o3mix','tendency due to ozone mixing ratio')
+        call label_dq4dt_cause(Model%cause_temp,'temp','tendency due to temperature')
+        call label_dq4dt_cause(Model%cause_overhead_ozone,'o3column','tendency due to overhead ozone column')
+        call label_dq4dt_cause(Model%cause_physics,'phys','tendency due to physics')
+        call label_dq4dt_cause(Model%cause_non_physics,'nophys','tendency due to non-physics processes', &
+                               mod_name='gfs_dyn')
 
-        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,100+Model%ntqv,Model%cause_physics, &
-             'qv','phys','water vapor specific humidity tendency due to physics')
-        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,100+Model%ntoz,Model%cause_physics, &
-             'o3','phys','ozone concentration tendency due to physics')
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,100+Model%ntqv,Model%cause_pbl)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,100+Model%ntqv,Model%cause_dcnv)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,100+Model%ntqv,Model%cause_scnv)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,100+Model%ntqv,Model%cause_mp)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,100+Model%ntqv,Model%cause_physics)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,100+Model%ntqv,Model%cause_non_physics)
 
-        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,100+Model%ntqv,Model%cause_non_physics, &
-             'qv','nophys','water vapor specific humidity tendency due to physics','gfs_dyn')
-        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,100+Model%ntoz,Model%cause_non_physics, &
-             'o3','nophys','ozone concentration tendency due to non-physics processes','gfs_dyn')
+        if(Model%ntoz>0) then
+          call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,100+Model%ntoz,Model%cause_pbl)
+          call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,100+Model%ntoz,Model%cause_prod_loss)
+          call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,100+Model%ntoz,Model%cause_ozmix)
+          call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,100+Model%ntoz,Model%cause_temp)
+          call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,100+Model%ntoz,Model%cause_overhead_ozone)
+          call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,100+Model%ntoz,Model%cause_physics)
+          call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,100+Model%ntoz,Model%cause_non_physics)
+        endif
       end if if_qdiag3d
 
 #endif

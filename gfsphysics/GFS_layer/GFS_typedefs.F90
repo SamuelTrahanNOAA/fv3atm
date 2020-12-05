@@ -4399,9 +4399,6 @@ module GFS_typedefs
        call fill_idx4d(Model%ndq4dt,Model%idx4d,Model%ntoz,Model%cause_physics,.true.)
        call fill_idx4d(Model%ndq4dt,Model%idx4d,Model%ntoz,Model%cause_non_physics,.true.)
 
-       print *,'dq4dt_qv_pbl index: ',Model%idx4d(Model%ntqv,Model%cause_pbl)
-       print *,'ndq4dt: ',Model%ndq4dt
-       
     end if
 
 #ifdef CCPP
@@ -5813,11 +5810,8 @@ module GFS_typedefs
     logical, intent(in) :: flag
 
     if(icause>0 .and. flag .and. itrac>0) then
-       print *,'keep: ',itrac,icause,flag
        ndq4dt = ndq4dt+1
        idx4d(100+itrac,icause) = ndq4dt
-    else
-       print *,'discard: ',itrac,icause,flag
     endif
   end subroutine fill_idx4d
 
@@ -5955,7 +5949,7 @@ module GFS_typedefs
       allocate (Diag%dt3dt  (IM,Model%levs,11))
       if (Model%qdiag3d) then
 #ifdef CCPP
-        allocate(Diag%dq4dt(1:IM,1:Model%levs,0:Model%ndq4dt)) ! note 0-based dimension
+         allocate(Diag%dq4dt(1:IM,1:Model%levs,0:Model%ndq4dt)) ! note 0-based dimension
         Diag%dq4dt = clear_val
 #else
         allocate(Diag%dq4dt(IM,Model%levs,13))
