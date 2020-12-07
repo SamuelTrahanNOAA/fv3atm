@@ -4259,6 +4259,36 @@
   units = index
   dimensions = ()
   type = integer
+[cause_longwave]
+  standard_name = cause_longwave
+  long_name = tracer changes caused by long wave radiation
+  units = index
+  dimensions = ()
+  type = integer
+[cause_shortwave]
+  standard_name = cause_shortwave
+  long_name = tracer changes caused by short wave radiation
+  units = index
+  dimensions = ()
+  type = integer
+[cause_orographic_gwd]
+  standard_name = cause_orographic_gwd
+  long_name = tracer changes caused by orographic gravity wave drag
+  units = index
+  dimensions = ()
+  type = integer
+[cause_rayleigh_damping]
+  standard_name = cause_rayleigh_damping
+  long_name = tracer changes caused by Rayleigh damping
+  units = index
+  dimensions = ()
+  type = integer
+[cause_convective_gwd]
+  standard_name = cause_convective_gwd
+  long_name = tracer changes caused by convective gravity wave drag
+  units = index
+  dimensions = ()
+  type = integer
 [cause_physics]
   standard_name = cause_physics
   long_name = tracer changes caused by physics schemes
@@ -4268,6 +4298,24 @@
 [cause_non_physics]
   standard_name = cause_non_physics
   long_name = tracer changes caused by everything except physics schemes
+  units = index
+  dimensions = ()
+  type = integer
+[index_for_temperature]
+  standard_name = index_for_temperature
+  long_name = index in idx4d of temperature field
+  units = index
+  dimensions = ()
+  type = integer
+[index_for_x_wind]
+  standard_name = index_for_x_wind
+  long_name = index in idx4d of x wind field
+  units = index
+  dimensions = ()
+  type = integer
+[index_for_y_wind]
+  standard_name = index_for_y_wind
+  long_name = index in idx4d of x wind field
   units = index
   dimensions = ()
   type = integer
@@ -6492,7 +6540,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-[du3dt(:,:,1)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_x_wind,cause_pbl))]
   standard_name = cumulative_change_in_x_wind_due_to_PBL
   long_name = cumulative change in x wind due to PBL
   units = m s-1
@@ -6500,7 +6548,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D)
-[du3dt(:,:,2)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_x_wind,cause_orographic_gwd))]
   standard_name = cumulative_change_in_x_wind_due_to_orographic_gravity_wave_drag
   long_name = cumulative change in x wind due to orographic gravity wave drag
   units = m s-1
@@ -6508,7 +6556,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D)
-[du3dt(:,:,3)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_x_wind,cause_dcnv))]
   standard_name = cumulative_change_in_x_wind_due_to_deep_convection
   long_name = cumulative change in x wind due to deep convection
   units = m s-1
@@ -6516,7 +6564,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D)
-[du3dt(:,:,4)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_x_wind,cause_convective_gwd))]
   standard_name = cumulative_change_in_x_wind_due_to_convective_gravity_wave_drag
   long_name = cumulative change in x wind due to convective gravity wave drag
   units = m s-1
@@ -6524,7 +6572,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D)
-[du3dt(:,:,5)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_x_wind,cause_rayleigh_damping))]
   standard_name = cumulative_change_in_x_wind_due_to_rayleigh_damping
   long_name = cumulative change in x wind due to Rayleigh damping
   units = m s-1
@@ -6532,7 +6580,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D)
-[du3dt(:,:,6)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_x_wind,cause_scnv))]
   standard_name = cumulative_change_in_x_wind_due_to_shallow_convection
   long_name = cumulative change in x wind due to shallow convection
   units = m s-1
@@ -6540,7 +6588,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D)
-[du3dt(:,:,7)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_x_wind,cause_physics))]
   standard_name = cumulative_change_in_x_wind_due_to_physics
   long_name = cumulative change in x wind due to physics
   units = m s-1
@@ -6548,7 +6596,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D)
-[du3dt(:,:,8)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_x_wind,cause_non_physics))]
   standard_name = cumulative_change_in_x_wind_due_to_non_physics_processes
   long_name = cumulative change in x wind due to non-physics processes
   units = m s-1
@@ -6556,7 +6604,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D)
-[dv3dt(:,:,1)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_y_wind,cause_pbl))]
   standard_name = cumulative_change_in_y_wind_due_to_PBL
   long_name = cumulative change in y wind due to PBL
   units = m s-1
@@ -6564,7 +6612,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D)
-[dv3dt(:,:,2)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_y_wind,cause_orographic_gwd))]
   standard_name = cumulative_change_in_y_wind_due_to_orographic_gravity_wave_drag
   long_name = cumulative change in y wind due to orographic gravity wave drag
   units = m s-1
@@ -6572,7 +6620,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D)
-[dv3dt(:,:,3)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_y_wind,cause_dcnv))]
   standard_name = cumulative_change_in_y_wind_due_to_deep_convection
   long_name = cumulative change in y wind due to deep convection
   units = m s-1
@@ -6580,14 +6628,14 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D)
-[dv3dt(:,:,4)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_y_wind,cause_convective_gwd))]
   standard_name = cumulative_change_in_y_wind_due_to_convective_gravity_wave_drag
   long_name = cumulative change in y wind due to convective gravity wave drag
   units = m s-1
   dimensions = (horizontal_loop_extent,vertical_dimension)
   type = real
   kind = kind_phys
-[dv3dt(:,:,5)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_y_wind,cause_rayleigh_damping))]
   standard_name = cumulative_change_in_y_wind_due_to_rayleigh_damping
   long_name = cumulative change in y wind due to Rayleigh damping
   units = m s-1
@@ -6595,7 +6643,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D)
-[dv3dt(:,:,6)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_y_wind,cause_scnv))]
   standard_name = cumulative_change_in_y_wind_due_to_shallow_convection
   long_name = cumulative change in y wind due to shallow convection
   units = m s-1
@@ -6603,7 +6651,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D)
-[dv3dt(:,:,7)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_y_wind,cause_physics))]
   standard_name = cumulative_change_in_y_wind_due_to_physics
   long_name = cumulative change in y wind due to physics
   units = m s-1
@@ -6611,7 +6659,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D)
-[dv3dt(:,:,8)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_y_wind,cause_non_physics))]
   standard_name = cumulative_change_in_y_wind_due_to_non_physics_processes
   long_name = cumulative change in y wind due to non-physics processes
   units = m s-1
@@ -6619,7 +6667,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D)
-[dt3dt(:,:,1)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_temperature,cause_longwave))]
   standard_name = cumulative_change_in_temperature_due_to_longwave_radiation
   long_name = cumulative change in temperature due to longwave radiation
   units = K
@@ -6627,7 +6675,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D)
-[dt3dt(:,:,2)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_temperature,cause_shortwave))]
   standard_name = cumulative_change_in_temperature_due_to_shortwave_radiation
   long_name = cumulative change in temperature due to shortwave radiation
   units = K
@@ -6635,7 +6683,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D)
-[dt3dt(:,:,3)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_temperature,cause_pbl))]
   standard_name = cumulative_change_in_temperature_due_to_PBL
   long_name = cumulative change in temperature due to PBL
   units = K
@@ -6643,7 +6691,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D)
-[dt3dt(:,:,4)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_temperature,cause_dcnv))]
   standard_name = cumulative_change_in_temperature_due_to_deep_convection
   long_name = cumulative change in temperature due to deep convection
   units = K
@@ -6651,7 +6699,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D)
-[dt3dt(:,:,5)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_temperature,cause_scnv))]
   standard_name = cumulative_change_in_temperature_due_to_shallow_convection
   long_name = cumulative change in temperature due to shallow convection
   units = K
@@ -6659,7 +6707,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D)
-[dt3dt(:,:,6)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_temperature,cause_mp))]
   standard_name = cumulative_change_in_temperature_due_to_microphysics
   long_name = cumulative change in temperature due to microphysics
   units = K
@@ -6667,7 +6715,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D)
-[dt3dt(:,:,7)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_temperature,cause_orographic_gwd))]
   standard_name = cumulative_change_in_temperature_due_to_orographic_gravity_wave_drag
   long_name = cumulative change in temperature due to orographic gravity wave drag
   units = K
@@ -6675,7 +6723,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D)
-[dt3dt(:,:,8)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_temperature,cause_rayleigh_damping))]
   standard_name = cumulative_change_in_temperature_due_to_rayleigh_damping
   long_name = cumulative change in temperature due to Rayleigh damping
   units = K
@@ -6683,7 +6731,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D)
-[dt3dt(:,:,9)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_temperature,cause_convective_gwd))]
   standard_name = cumulative_change_in_temperature_due_to_convective_gravity_wave_drag
   long_name = cumulative change in temperature due to convective gravity wave drag
   units = K
@@ -6691,7 +6739,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D)
-[dt3dt(:,:,10)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_temperature,cause_physics))]
   standard_name = cumulative_change_in_temperature_due_to_physics
   long_name = cumulative change in temperature due to physics
   units = K
@@ -6699,7 +6747,7 @@
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D)
-[dt3dt(:,:,11)]
+[dq4dt(:,:,dq4dt_outer_index(index_for_temperature,cause_non_physics))]
   standard_name = cumulative_change_in_temperature_due_to_non_physics_processes
   long_name = cumulative change in temperature due to non-physics processed
   units = K
@@ -6708,8 +6756,8 @@
   kind = kind_phys
   active = (flag_diagnostics_3D)
 [dq4dt]
-  standard_name = diagnostic_tracer_tendencies
-  long_name = diagnostic tracer tendencies
+  standard_name = diagnostic_3d_tendencies
+  long_name = diagnostic 3d tendencies for tracers and other fields
   units = various
   dimensions = (horizontal_loop_extent,vertical_dimension,dq4dt_outer_index_max)
   type = real

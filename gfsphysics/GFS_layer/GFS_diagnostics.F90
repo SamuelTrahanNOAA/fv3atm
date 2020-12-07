@@ -2439,6 +2439,7 @@ module GFS_diagnostics
 
 !--- three-dimensional variables that need to be handled special when writing
     if_ldiag3d: if(Model%ldiag3d) then
+#ifndef CCPP
       idx = idx + 1
       ExtDiag(idx)%axes = 3
       ExtDiag(idx)%name = 'dt3dt_lw'
@@ -2763,7 +2764,8 @@ module GFS_diagnostics
       do nb = 1,nblks
          ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dv3dt(:,:,8)
       enddo
-
+#endif
+      
 #ifdef CCPP
       if_qdiag3d: if(Model%qdiag3d) then
         call allocate_dq4dt_labels_and_causes(Model%ntracp100,Model%ncause)
@@ -2782,6 +2784,41 @@ module GFS_diagnostics
         call label_dq4dt_cause(Model%cause_physics,'phys','tendency due to physics')
         call label_dq4dt_cause(Model%cause_non_physics,'nophys','tendency due to non-physics processes', &
                                mod_name='gfs_dyn')
+
+        call label_dq4dt_cause(Model%cause_longwave,'lw','tendency due to long wave radiation')
+        call label_dq4dt_cause(Model%cause_shortwave,'sw','tendency due to short wave radiation')
+        call label_dq4dt_cause(Model%cause_orographic_gwd,'orogwd','tendency due to orographic gravity wave drag')
+        call label_dq4dt_cause(Model%cause_rayleigh_damping,'rdamp','tendency due to Rayleigh damping')
+        call label_dq4dt_cause(Model%cause_convective_gwd,'cnvgwd','tendency due to convective gravity wave drag')
+
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,Model%index_for_temperature,Model%cause_longwave)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,Model%index_for_temperature,Model%cause_shortwave)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,Model%index_for_temperature,Model%cause_pbl)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,Model%index_for_temperature,Model%cause_dcnv)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,Model%index_for_temperature,Model%cause_scnv)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,Model%index_for_temperature,Model%cause_mp)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,Model%index_for_temperature,Model%cause_orographic_gwd)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,Model%index_for_temperature,Model%cause_rayleigh_damping)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,Model%index_for_temperature,Model%cause_convective_gwd)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,Model%index_for_temperature,Model%cause_physics)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,Model%index_for_temperature,Model%cause_non_physics)
+
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,Model%index_for_x_wind,Model%cause_pbl)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,Model%index_for_y_wind,Model%cause_pbl)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,Model%index_for_x_wind,Model%cause_orographic_gwd)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,Model%index_for_y_wind,Model%cause_orographic_gwd)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,Model%index_for_x_wind,Model%cause_dcnv)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,Model%index_for_y_wind,Model%cause_dcnv)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,Model%index_for_x_wind,Model%cause_convective_gwd)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,Model%index_for_y_wind,Model%cause_convective_gwd)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,Model%index_for_x_wind,Model%cause_rayleigh_damping)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,Model%index_for_y_wind,Model%cause_rayleigh_damping)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,Model%index_for_x_wind,Model%cause_scnv)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,Model%index_for_y_wind,Model%cause_scnv)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,Model%index_for_x_wind,Model%cause_physics)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,Model%index_for_y_wind,Model%cause_physics)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,Model%index_for_x_wind,Model%cause_non_physics)
+        call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,Model%index_for_y_wind,Model%cause_non_physics)
 
         call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,100+Model%ntqv,Model%cause_pbl)
         call add_dq4dt(ExtDiag,IntDiag,idx,nblks,Model%idx4d,100+Model%ntqv,Model%cause_dcnv)

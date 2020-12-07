@@ -1122,18 +1122,28 @@ module GFS_typedefs
     integer, pointer :: idx4d(:,:) => null()   !< index in outermost dimension of dq4dt
     integer :: ndq4dt               !< size of outermost dimension of dq4dt
 
-    ! Indices within second dimension of idx4d:
-    integer :: ncause               !< maximum value of the below cause_ variables
-    integer :: cause_pbl            !< tracer changes caused by PBL scheme
-    integer :: cause_dcnv           !< tracer changes caused by deep convection scheme
-    integer :: cause_scnv           !< tracer changes caused by shallow convection scheme
-    integer :: cause_mp             !< tracer changes caused by microphysics scheme
-    integer :: cause_prod_loss      !< tracer changes caused by ozone production and loss
-    integer :: cause_ozmix          !< tracer changes caused by ozone mixing ratio
-    integer :: cause_temp              !< tracer changes caused by temperature
-    integer :: cause_overhead_ozone !< tracer changes caused by overhead ozone column
-    integer :: cause_physics        !< tracer changes caused by physics schemes
-    integer :: cause_non_physics    !< tracer changes caused by everything except physics schemes
+    ! Indices within inner dimension of idx4d for things that are not tracers:
+    integer :: index_for_temperature  !< temperature in idx4d
+    integer :: index_for_x_wind       !< x wind in idx4d
+    integer :: index_for_y_wind       !< y wind in idx4d
+
+    ! Indices within outer dimension of idx4d:
+    integer :: ncause                 !< maximum value of the below cause_ variables
+    integer :: cause_pbl              !< tracer changes caused by PBL scheme
+    integer :: cause_dcnv             !< tracer changes caused by deep convection scheme
+    integer :: cause_scnv             !< tracer changes caused by shallow convection scheme
+    integer :: cause_mp               !< tracer changes caused by microphysics scheme
+    integer :: cause_prod_loss        !< tracer changes caused by ozone production and loss
+    integer :: cause_ozmix            !< tracer changes caused by ozone mixing ratio
+    integer :: cause_temp             !< tracer changes caused by temperature
+    integer :: cause_longwave         !< tracer changes caused by long wave radiation
+    integer :: cause_shortwave        !< tracer changes caused by short wave radiation
+    integer :: cause_orographic_gwd   !< tracer changes caused by orographic gravity wave drag
+    integer :: cause_rayleigh_damping !< tracer changes caused by Rayleigh damping
+    integer :: cause_convective_gwd   !< tracer changes caused by convective gravity wave drag
+    integer :: cause_overhead_ozone   !< tracer changes caused by overhead ozone column
+    integer :: cause_physics          !< tracer changes caused by physics schemes
+    integer :: cause_non_physics      !< tracer changes caused by everything except physics schemes
 
 #endif
     integer              :: ntqv            !< tracer index for water vapor (specific humidity)
@@ -1614,10 +1624,12 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: shum_wts(:,:)  => null()   !<
     real (kind=kind_phys), pointer :: zmtnblck(:)    => null()   !<mountain blocking evel
 
+#ifndef CCPP
     ! Basic 3d tendencies from ldiag3d:
     real (kind=kind_phys), pointer :: du3dt (:,:,:)  => null()   !< u momentum change due to physics
     real (kind=kind_phys), pointer :: dv3dt (:,:,:)  => null()   !< v momentum change due to physics
     real (kind=kind_phys), pointer :: dt3dt (:,:,:)  => null()   !< temperature change due to physics
+#endif
 
     ! dq4dt/idx4dt: Multitudenous 3d tendencies in a 4D array: (i,k,0:ntrac,ncause)
     ! Sparse in outermost two dimensions. idx4d(-99:ntrac,ncause) maps to dq4dt 
@@ -4355,7 +4367,7 @@ module GFS_typedefs
 
     ! Tracer diagnostics indices and dimension size, which must be in
     ! Model to be forwarded to the right places.
-    Model%ncause           = 10
+    Model%ncause           = 15
     Model%cause_pbl = 1
     Model%cause_dcnv = 2
     Model%cause_scnv = 3
@@ -4364,12 +4376,21 @@ module GFS_typedefs
     Model%cause_ozmix = 6
     Model%cause_temp = 7
     Model%cause_overhead_ozone = 8
-    Model%cause_physics = 9
-    Model%cause_non_physics = 10
+    Model%cause_longwave = 9
+    Model%cause_shortwave = 10
+    Model%cause_orographic_gwd = 11
+    Model%cause_rayleigh_damping = 12
+    Model%cause_convective_gwd = 13
+    Model%cause_physics = 14
+    Model%cause_non_physics = 15
+
+    Model%index_for_temperature = 10
+    Model%index_for_x_wind = 11
+    Model%index_for_y_wind = 12
 
     ! Last index of outermost dimension of dq4dt
     Model%ndq4dt = 0
-    allocate(Model%idx4d(Model%ntracp100,1:Model%ncause))
+    allocate(Model%idx4d(Model%ntracp100,Model%ncause))
     Model%idx4d = 1 ! unused indices MUST be 1
 
     if(qdiag3d) then
@@ -5944,9 +5965,12 @@ module GFS_typedefs
     
     !--- 3D diagnostics
     if (Model%ldiag3d) then
+#ifndef CCPP
+       
       allocate (Diag%du3dt  (IM,Model%levs,8))
       allocate (Diag%dv3dt  (IM,Model%levs,8))
       allocate (Diag%dt3dt  (IM,Model%levs,11))
+#endif
       if (Model%qdiag3d) then
 #ifdef CCPP
          allocate(Diag%dq4dt(1:IM,1:Model%levs,0:Model%ndq4dt)) ! note 0-based dimension
@@ -6305,11 +6329,17 @@ module GFS_typedefs
 !    if(Model%me == Model%master) print *,'in diag_phys_zero, totprcpb set to 0,kdt=',Model%kdt
 
     if (Model%ldiag3d) then
+#ifndef CCPP
       Diag%du3dt    = zero
       Diag%dv3dt    = zero
       Diag%dt3dt    = zero
+#endif
       if (Model%qdiag3d) then
+#ifdef CCPP
          Diag%dq4dt    = zero
+#else
+         Diag%dq3dt    = zero
+#endif
       endif
 !     Diag%upd_mf   = zero
 !     Diag%dwn_mf   = zero
