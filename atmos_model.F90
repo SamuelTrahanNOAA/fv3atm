@@ -260,7 +260,7 @@ subroutine update_atmos_radiation_physics (Atmos)
 #ifdef CCPP
     integer :: ierr
 #endif
-    integer :: idq4dt
+    integer :: idtend
 
     if (mpp_pe() == mpp_root_pe() .and. debug) write(6,*) "statein driver"
 !--- get atmospheric state from the dynamic core
@@ -322,43 +322,43 @@ subroutine update_atmos_radiation_physics (Atmos)
       ! due to anything else than physics)
       if (IPD_Control%ldiag3d) then
 #ifdef CCPP
-        idq4dt = IPD_Control%idx4d(IPD_Control%index_for_x_wind,IPD_Control%cause_non_physics)
-        if(idq4dt>1) then
+        idtend = IPD_Control%dtidx(IPD_Control%index_for_x_wind,IPD_Control%index_for_cause_non_physics)
+        if(idtend>1) then
           do nb = 1,Atm_block%nblks
-            IPD_Data(nb)%Intdiag%dq4dt(:,:,idq4dt) = IPD_Data(nb)%Intdiag%dq4dt(:,:,idq4dt) &
+            IPD_Data(nb)%Intdiag%dtend(:,:,idtend) = IPD_Data(nb)%Intdiag%dtend(:,:,idtend) &
                  + (IPD_Data(nb)%Statein%ugrs - IPD_Data(nb)%Stateout%gu0)
           enddo
         endif
 
-        idq4dt = IPD_Control%idx4d(IPD_Control%index_for_y_wind,IPD_Control%cause_non_physics)
-        if(idq4dt>1) then
+        idtend = IPD_Control%dtidx(IPD_Control%index_for_y_wind,IPD_Control%index_for_cause_non_physics)
+        if(idtend>1) then
           do nb = 1,Atm_block%nblks
-            IPD_Data(nb)%Intdiag%dq4dt(:,:,idq4dt) = IPD_Data(nb)%Intdiag%dq4dt(:,:,idq4dt) &
+            IPD_Data(nb)%Intdiag%dtend(:,:,idtend) = IPD_Data(nb)%Intdiag%dtend(:,:,idtend) &
                  + (IPD_Data(nb)%Statein%vgrs - IPD_Data(nb)%Stateout%gv0)
           enddo
         endif
 
-        idq4dt = IPD_Control%idx4d(IPD_Control%index_for_temperature,IPD_Control%cause_non_physics)
-        if(idq4dt>1) then
+        idtend = IPD_Control%dtidx(IPD_Control%index_for_temperature,IPD_Control%index_for_cause_non_physics)
+        if(idtend>1) then
           do nb = 1,Atm_block%nblks
-            IPD_Data(nb)%Intdiag%dq4dt(:,:,idq4dt) = IPD_Data(nb)%Intdiag%dq4dt(:,:,idq4dt) &
+            IPD_Data(nb)%Intdiag%dtend(:,:,idtend) = IPD_Data(nb)%Intdiag%dtend(:,:,idtend) &
                  + (IPD_Data(nb)%Statein%tgrs - IPD_Data(nb)%Stateout%gt0)
           enddo
         endif
 
         if (IPD_Control%qdiag3d) then
-          idq4dt = IPD_Control%idx4d(IPD_Control%ntqv+100,IPD_Control%cause_non_physics)
-          if(idq4dt>0) then
+          idtend = IPD_Control%dtidx(IPD_Control%ntqv+100,IPD_Control%index_for_cause_non_physics)
+          if(idtend>0) then
             do nb = 1,Atm_block%nblks
-              IPD_Data(nb)%Intdiag%dq4dt(:,:,idq4dt) = IPD_Data(nb)%Intdiag%dq4dt(:,:,idq4dt) &
+              IPD_Data(nb)%Intdiag%dtend(:,:,idtend) = IPD_Data(nb)%Intdiag%dtend(:,:,idtend) &
                    + (IPD_Data(nb)%Statein%qgrs(:,:,IPD_Control%ntqv) - IPD_Data(nb)%Stateout%gq0(:,:,IPD_Control%ntqv))
             enddo
           endif
 
-          idq4dt = IPD_Control%idx4d(IPD_Control%ntoz+100,IPD_Control%cause_non_physics)
-          if(idq4dt>0) then
+          idtend = IPD_Control%dtidx(IPD_Control%ntoz+100,IPD_Control%index_for_cause_non_physics)
+          if(idtend>0) then
             do nb = 1,Atm_block%nblks
-              IPD_Data(nb)%Intdiag%dq4dt(:,:,idq4dt) = IPD_Data(nb)%Intdiag%dq4dt(:,:,idq4dt) &
+              IPD_Data(nb)%Intdiag%dtend(:,:,idtend) = IPD_Data(nb)%Intdiag%dtend(:,:,idtend) &
                    + (IPD_Data(nb)%Statein%qgrs(:,:,IPD_Control%ntoz) - IPD_Data(nb)%Stateout%gq0(:,:,IPD_Control%ntoz))
             enddo
           endif
