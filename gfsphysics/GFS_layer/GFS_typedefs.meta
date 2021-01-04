@@ -4209,7 +4209,7 @@
   standard_name = dtend_outer_index
   long_name = index in outer dimension of dtend of a tracer-cause pair
   units = index
-  dimensions = (number_of_tracers_plus_one_hundred,number_of_causes)
+  dimensions = (number_of_tracers_plus_one_hundred,number_of_possible_causes_of_tracer_changes)
   type = integer
 [ndtend]
   standard_name = dtend_outer_index_max
@@ -4309,19 +4309,19 @@
   type = integer
 [index_for_temperature]
   standard_name = index_for_temperature
-  long_name = index in dtidx of temperature field
+  long_name = index in dtidx first dimension of temperature field
   units = index
   dimensions = ()
   type = integer
 [index_for_x_wind]
   standard_name = index_for_x_wind
-  long_name = index in dtidx of x wind field
+  long_name = index in dtidx first dimension of x wind field
   units = index
   dimensions = ()
   type = integer
 [index_for_y_wind]
   standard_name = index_for_y_wind
-  long_name = index in dtidx of x wind field
+  long_name = index in dtidx first dimension of x wind field
   units = index
   dimensions = ()
   type = integer
@@ -6546,221 +6546,6 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-[dtend(:,:,dtend_outer_index(index_for_x_wind,index_for_cause_pbl))]
-  standard_name = cumulative_change_in_x_wind_due_to_PBL
-  long_name = cumulative change in x wind due to PBL
-  units = m s-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_x_wind,index_for_cause_orographic_gwd))]
-  standard_name = cumulative_change_in_x_wind_due_to_orographic_gravity_wave_drag
-  long_name = cumulative change in x wind due to orographic gravity wave drag
-  units = m s-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_x_wind,index_for_cause_dcnv))]
-  standard_name = cumulative_change_in_x_wind_due_to_deep_convection
-  long_name = cumulative change in x wind due to deep convection
-  units = m s-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_x_wind,index_for_cause_convective_gwd))]
-  standard_name = cumulative_change_in_x_wind_due_to_convective_gravity_wave_drag
-  long_name = cumulative change in x wind due to convective gravity wave drag
-  units = m s-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_x_wind,index_for_cause_rayleigh_damping))]
-  standard_name = cumulative_change_in_x_wind_due_to_rayleigh_damping
-  long_name = cumulative change in x wind due to Rayleigh damping
-  units = m s-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_x_wind,index_for_cause_scnv))]
-  standard_name = cumulative_change_in_x_wind_due_to_shallow_convection
-  long_name = cumulative change in x wind due to shallow convection
-  units = m s-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_x_wind,index_for_cause_physics))]
-  standard_name = cumulative_change_in_x_wind_due_to_physics
-  long_name = cumulative change in x wind due to physics
-  units = m s-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_x_wind,index_for_cause_non_physics))]
-  standard_name = cumulative_change_in_x_wind_due_to_non_physics_processes
-  long_name = cumulative change in x wind due to non-physics processes
-  units = m s-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_y_wind,index_for_cause_pbl))]
-  standard_name = cumulative_change_in_y_wind_due_to_PBL
-  long_name = cumulative change in y wind due to PBL
-  units = m s-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_y_wind,index_for_cause_orographic_gwd))]
-  standard_name = cumulative_change_in_y_wind_due_to_orographic_gravity_wave_drag
-  long_name = cumulative change in y wind due to orographic gravity wave drag
-  units = m s-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_y_wind,index_for_cause_dcnv))]
-  standard_name = cumulative_change_in_y_wind_due_to_deep_convection
-  long_name = cumulative change in y wind due to deep convection
-  units = m s-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_y_wind,index_for_cause_convective_gwd))]
-  standard_name = cumulative_change_in_y_wind_due_to_convective_gravity_wave_drag
-  long_name = cumulative change in y wind due to convective gravity wave drag
-  units = m s-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-[dtend(:,:,dtend_outer_index(index_for_y_wind,index_for_cause_rayleigh_damping))]
-  standard_name = cumulative_change_in_y_wind_due_to_rayleigh_damping
-  long_name = cumulative change in y wind due to Rayleigh damping
-  units = m s-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_y_wind,index_for_cause_scnv))]
-  standard_name = cumulative_change_in_y_wind_due_to_shallow_convection
-  long_name = cumulative change in y wind due to shallow convection
-  units = m s-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_y_wind,index_for_cause_physics))]
-  standard_name = cumulative_change_in_y_wind_due_to_physics
-  long_name = cumulative change in y wind due to physics
-  units = m s-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_y_wind,index_for_cause_non_physics))]
-  standard_name = cumulative_change_in_y_wind_due_to_non_physics_processes
-  long_name = cumulative change in y wind due to non-physics processes
-  units = m s-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_temperature,index_for_cause_longwave))]
-  standard_name = cumulative_change_in_temperature_due_to_longwave_radiation
-  long_name = cumulative change in temperature due to longwave radiation
-  units = K
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_temperature,index_for_cause_shortwave))]
-  standard_name = cumulative_change_in_temperature_due_to_shortwave_radiation
-  long_name = cumulative change in temperature due to shortwave radiation
-  units = K
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_temperature,index_for_cause_pbl))]
-  standard_name = cumulative_change_in_temperature_due_to_PBL
-  long_name = cumulative change in temperature due to PBL
-  units = K
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_temperature,index_for_cause_dcnv))]
-  standard_name = cumulative_change_in_temperature_due_to_deep_convection
-  long_name = cumulative change in temperature due to deep convection
-  units = K
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_temperature,index_for_cause_scnv))]
-  standard_name = cumulative_change_in_temperature_due_to_shallow_convection
-  long_name = cumulative change in temperature due to shallow convection
-  units = K
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_temperature,index_for_cause_mp))]
-  standard_name = cumulative_change_in_temperature_due_to_microphysics
-  long_name = cumulative change in temperature due to microphysics
-  units = K
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_temperature,index_for_cause_orographic_gwd))]
-  standard_name = cumulative_change_in_temperature_due_to_orographic_gravity_wave_drag
-  long_name = cumulative change in temperature due to orographic gravity wave drag
-  units = K
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_temperature,index_for_cause_rayleigh_damping))]
-  standard_name = cumulative_change_in_temperature_due_to_rayleigh_damping
-  long_name = cumulative change in temperature due to Rayleigh damping
-  units = K
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_temperature,index_for_cause_convective_gwd))]
-  standard_name = cumulative_change_in_temperature_due_to_convective_gravity_wave_drag
-  long_name = cumulative change in temperature due to convective gravity wave drag
-  units = K
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_temperature,index_for_cause_physics))]
-  standard_name = cumulative_change_in_temperature_due_to_physics
-  long_name = cumulative change in temperature due to physics
-  units = K
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_temperature,index_for_cause_non_physics))]
-  standard_name = cumulative_change_in_temperature_due_to_non_physics_processes
-  long_name = cumulative change in temperature due to non-physics processed
-  units = K
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D)
 [dtend]
   standard_name = diagnostic_3d_tendencies
   long_name = diagnostic 3d tendencies for tracers and other fields
@@ -6768,111 +6553,7 @@
   dimensions = (horizontal_loop_extent,vertical_dimension,dtend_outer_index_max)
   type = real
   kind = kind_phys
-  active = (flag_diagnostics_3D .and. flag_tracer_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_water_vapor+100,index_for_cause_pbl))]
-  standard_name = cumulative_change_in_water_vapor_specific_humidity_due_to_PBL
-  long_name = cumulative change in water vapor specific humidity due to PBL
-  units = kg kg-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D .and. flag_tracer_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_water_vapor+100,index_for_cause_dcnv))]
-  standard_name = cumulative_change_in_water_vapor_specific_humidity_due_to_deep_convection
-  long_name = cumulative change in water vapor specific humidity due to deep convection
-  units = kg kg-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D .and. flag_tracer_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_water_vapor+100,index_for_cause_scnv))]
-  standard_name = cumulative_change_in_water_vapor_specific_humidity_due_to_shallow_convection
-  long_name = cumulative change in water vapor specific humidity due to shallow convection
-  units = kg kg-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D .and. flag_tracer_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_water_vapor+100,index_for_cause_mp))]
-  standard_name = cumulative_change_in_water_vapor_specific_humidity_due_to_microphysics
-  long_name = cumulative change in water vapor specific humidity due to microphysics
-  units = kg kg-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D .and. flag_tracer_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_ozone+100,index_for_cause_pbl))]
-  standard_name = cumulative_change_in_ozone_mixing_ratio_due_to_PBL
-  long_name = cumulative change in ozone mixing ratio due to PBL
-  units = kg kg-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D .and. flag_tracer_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_ozone+100,index_for_cause_prod_loss))]
-  standard_name = cumulative_change_in_ozone_concentration_due_to_production_and_loss_rate
-  long_name = cumulative change in ozone concentration due to production and loss rate
-  units = kg kg-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D .and. flag_tracer_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_ozone+100,index_for_cause_ozmix))]
-  standard_name = cumulative_change_in_ozone_concentration_due_to_ozone_mixing_ratio
-  long_name = cumulative change in ozone concentration due to ozone mixing ratio
-  units = kg kg-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D .and. flag_tracer_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_ozone+100,index_for_cause_temp))]
-  standard_name = cumulative_change_in_ozone_concentration_due_to_temperature
-  long_name = cumulative change in ozone concentration due to temperature
-  units = kg kg-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D .and. flag_tracer_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_ozone+100,index_for_cause_overhead_ozone))]
-  standard_name = cumulative_change_in_ozone_concentration_due_to_overhead_ozone_column
-  long_name = cumulative change in ozone concentration due to overhead ozone column
-  units = kg kg-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D .and. flag_tracer_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_water_vapor+100,index_for_cause_physics))]
-  standard_name = cumulative_change_in_water_vapor_specific_humidity_due_to_physics
-  long_name = cumulative change in water vapor specific humidity due to physics
-  units = kg kg-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D .and. flag_tracer_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_ozone+100,index_for_cause_physics))]
-  standard_name = cumulative_change_in_ozone_concentration_due_to_physics
-  long_name = cumulative change in ozone concentration due to physics
-  units = kg kg-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D .and. flag_tracer_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_water_vapor+100,index_for_cause_non_physics))]
-  standard_name = cumulative_change_in_water_vapor_specific_humidity_due_to_non_physics_processes
-  long_name = cumulative change in water vapor specific humidity due to non-physics processes
-  units = kg kg-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D .and. flag_tracer_diagnostics_3D)
-[dtend(:,:,dtend_outer_index(index_for_ozone+100,index_for_cause_non_physics))]
-  standard_name = cumulative_change_in_ozone_concentration_due_to_non_physics_processes
-  long_name = cumulative change in ozone_concentration due to non-physics processes
-  units = kg kg-1
-  dimensions = (horizontal_loop_extent,vertical_dimension)
-  type = real
-  kind = kind_phys
-  active = (flag_diagnostics_3D .and. flag_tracer_diagnostics_3D)
+  active = (flag_diagnostics_3D)
 [refdmax]
   standard_name = maximum_reflectivity_at_1km_agl_over_maximum_hourly_time_interval
   long_name = maximum reflectivity at 1km agl over maximum hourly time interval

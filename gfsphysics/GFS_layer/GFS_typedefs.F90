@@ -1469,6 +1469,28 @@ module GFS_typedefs
       procedure :: create  => radtend_create   !<   allocate array data
   end type GFS_radtend_type
 
+
+!----------------------------------------------------------------
+! dtend_tracer_label
+!  Information about first dimension of dtidx
+!----------------------------------------------------------------
+  type dtend_tracer_label
+    character(len=20) :: name
+    character(len=44) :: desc
+    character(len=32) :: unit
+  end type dtend_tracer_label
+
+!----------------------------------------------------------------
+! dtend_cause_label
+!  Information about second dimension of dtidx
+!----------------------------------------------------------------
+  type dtend_cause_label
+    character(len=20) :: name
+    character(len=44) :: desc
+    logical :: time_avg
+    character(len=20) :: mod_name
+  end type dtend_cause_label
+
 !----------------------------------------------------------------
 ! GFS_diag_type
 !  internal diagnostic type used as arguments to gbphys and grrad 
@@ -1637,6 +1659,8 @@ module GFS_typedefs
     ! outer dimension index. That dimension is zero-based, and element 0 is always
     ! allocated if qdiag3d=.true. and ldiag3d=.true.
     real (kind=kind_phys), pointer :: dtend (:,:,:) => null()    !< tracer changes due to physics
+    type(dtend_tracer_label), pointer :: dtend_tracer_labels(:) => null() !< information about first dim of dtidx
+    type(dtend_cause_label), pointer :: dtend_cause_labels(:) => null() !< information about second dim of dtidx
 
     real (kind=kind_phys), pointer :: refdmax (:)    => null()   !< max hourly 1-km agl reflectivity
     real (kind=kind_phys), pointer :: refdmax263k(:) => null()   !< max hourly -10C reflectivity
@@ -3684,7 +3708,11 @@ module GFS_typedefs
     Model%fhzero           = fhzero
     Model%ldiag3d          = ldiag3d
     Model%qdiag3d          = qdiag3d
-    if (Model%qdiag3d .and. .not. Model%ldiag3d) then
+    if (ldiag3d .and. .not. lssav) then
+      write(0,*) 'Logic error in GFS_typedefs.F90: ldiag3d requires lssav'
+      stop
+    endif
+    if (qdiag3d .and. .not. ldiag3d) then
       write(0,*) 'Logic error in GFS_typedefs.F90: qdiag3d requires ldiag3d'
       stop
     endif
@@ -5839,17 +5867,90 @@ module GFS_typedefs
     endif
   end subroutine fill_dtidx
 
+
+  subroutine allocate_dtend_labels_and_causes(Diag,Model)
+    implicit none
+    type(GFS_diag_type), intent(inout) :: Diag
+    type(GFS_control_type), intent(in) :: Model
+    integer :: i
+    
+    allocate(Diag%dtend_tracer_labels(Model%ntrac))
+    allocate(Diag%dtend_cause_labels(Model%ncause))
+    
+    Diag%dtend_tracer_labels(1)%name = 'unallocated'
+    Diag%dtend_tracer_labels(1)%desc = 'unallocated tracer'
+    Diag%dtend_tracer_labels(1)%unit = 'kg kg-1 s-1'
+    
+    do i=2,Model%ntrac
+       Diag%dtend_tracer_labels(i)%name = 'unknown'
+       Diag%dtend_tracer_labels(i)%desc = 'unspecified tracer'
+       Diag%dtend_tracer_labels(i)%unit = 'kg kg-1 s-1'
+    enddo
+    do i=1,Model%ncause
+       Diag%dtend_cause_labels(i)%name = 'unknown'
+       Diag%dtend_cause_labels(i)%desc = 'unspecified tendency'
+       Diag%dtend_cause_labels(i)%time_avg = .true.
+       Diag%dtend_cause_labels(i)%mod_name = 'gfs_phys'
+    enddo
+  end subroutine allocate_dtend_labels_and_causes
+    
+  subroutine label_dtend_tracer(Diag,itrac,name,desc,unit)
+    implicit none
+    type(GFS_diag_type), intent(inout) :: Diag
+    integer, intent(in) :: itrac
+    character(len=*), intent(in) :: name, desc
+    character(len=*), optional, intent(in) :: unit
+    
+    if(itrac<2) then
+       ! Special index 1 is for unallocated tracers
+       return
+    endif
+    
+    Diag%dtend_tracer_labels(itrac)%name = name
+    Diag%dtend_tracer_labels(itrac)%desc = desc
+    if(present(unit)) then
+       Diag%dtend_tracer_labels(itrac)%unit=unit
+    else
+       Diag%dtend_tracer_labels(itrac)%unit='kg kg-1 s-1'
+    endif
+  end subroutine label_dtend_tracer
+  
+  subroutine label_dtend_cause(Diag,icause,name,desc,mod_name,time_avg)
+    implicit none
+    type(GFS_diag_type), intent(inout) :: Diag
+    integer, intent(in) :: icause
+    character(len=*), intent(in) :: name, desc
+    character(len=*), optional, intent(in) :: mod_name
+    logical, optional, intent(in) :: time_avg
+      
+    Diag%dtend_cause_labels(icause)%name=name
+    Diag%dtend_cause_labels(icause)%desc=desc
+    if(present(mod_name)) then
+       Diag%dtend_cause_labels(icause)%mod_name = mod_name
+    else
+       Diag%dtend_cause_labels(icause)%mod_name = "gfs_phys"
+    endif
+    if(present(time_avg)) then
+       Diag%dtend_cause_labels(icause)%time_avg = time_avg
+    else
+       Diag%dtend_cause_labels(icause)%time_avg = .true.
+    endif
+  end subroutine label_dtend_cause
+
 !----------------
 ! GFS_diag%create
 !----------------
   subroutine diag_create (Diag, IM, Model)
+    use parse_tracers,    only: get_tracer_index
     class(GFS_diag_type)               :: Diag
     integer,                intent(in) :: IM
     type(GFS_control_type), intent(in) :: Model
 
 !
     logical, save :: linit
-
+    character(len=20) :: namestr
+    character(len=44) :: descstr
+    integer :: ichem, itrac
     logical :: have_pbl, have_dcnv, have_scnv, have_mp, have_oz_phys
 
     !--- Radiation
@@ -5976,8 +6077,93 @@ module GFS_typedefs
 #endif
       if (Model%qdiag3d) then
 #ifdef CCPP
-         allocate(Diag%dtend(IM,Model%levs,Model%ndtend))
+        allocate(Diag%dtend(IM,Model%levs,Model%ndtend))
         Diag%dtend = clear_val
+        allocate(Diag%dtend_tracer_labels(Model%ntracp100))
+        allocate(Diag%dtend_cause_labels(Model%ncause))
+
+        call allocate_dtend_labels_and_causes(Diag,Model)
+
+        ! Default names of tracers just in case later code does not initialize them:
+        do itrac=1,Model%ntrac
+           write(namestr,'("tracer",I0)') itrac
+           write(descstr,'("tracer ",I0," of ",I0)') itrac, Model%ntrac
+           call label_dtend_tracer(Diag,100+itrac,trim(namestr),trim(descstr))
+        enddo
+
+        if(Model%ntchs>0) then
+           if(Model%ntchm>0) then
+              ! Chemical tracers are first so more specific tracer names
+              ! replace them. There is no straightforward way of getting
+              ! chemical tracer short names or descriptions, so we use
+              ! indices instead.
+              do ichem=Model%ntchs,Model%ntchs+Model%ntchm-1
+                 write(namestr,'("chem",I0)') ichem
+                 write(descstr,'("chemical tracer ",I0," of ",I0)') ichem, Model%ntchm
+                 call label_dtend_tracer(Diag,100+ichem,trim(namestr),trim(descstr))
+              enddo
+           endif
+
+           ! More specific chemical tracer names:
+           call label_dtend_tracer(Diag,100+Model%ntchs,'so2','sulfur dioxide concentration')
+           if(Model%ntchm>0) then
+              ! Need better descriptions of these.
+              call label_dtend_tracer(Diag,100+Model%ntchm+Model%ntchs-1,'pp10','pp10 concentration')
+
+              itrac=get_tracer_index(Model%tracer_names, 'DMS', Model%me, Model%master, Model%debug)
+              if(itrac>0) then
+                 call label_dtend_tracer(Diag,100+itrac,'DMS','DMS concentration')
+              endif
+              itrac=get_tracer_index(Model%tracer_names, 'msa', Model%me, Model%master, Model%debug)
+              if(itrac>0) then
+                 call label_dtend_tracer(Diag,100+itrac,'msa','msa concentration')
+              endif
+           endif
+        endif
+
+        call label_dtend_tracer(Diag,Model%index_for_temperature,'temp','temperature','K s-1')
+        call label_dtend_tracer(Diag,Model%index_for_x_wind,'u','x wind','m s-2')
+        call label_dtend_tracer(Diag,Model%index_for_y_wind,'v','y wind','m s-2')
+
+        ! Other tracer names. These were taken from GFS_typedefs.F90 with descriptions from GFS_typedefs.meta
+        call label_dtend_tracer(Diag,100+Model%ntqv,'qv','water vapor specific humidity')
+        call label_dtend_tracer(Diag,100+Model%ntoz,'o3','ozone concentration')
+        call label_dtend_tracer(Diag,100+Model%ntcw,'liq_wat','cloud condensate (or liquid water)')
+        call label_dtend_tracer(Diag,100+Model%ntiw,'ice_wat','ice water')
+        call label_dtend_tracer(Diag,100+Model%ntrw,'rainwat','rain water')
+        call label_dtend_tracer(Diag,100+Model%ntsw,'snowwat','snow water')
+        call label_dtend_tracer(Diag,100+Model%ntgl,'graupel','graupel')
+        call label_dtend_tracer(Diag,100+Model%ntclamt,'cld_amt','cloud amount integer')
+        call label_dtend_tracer(Diag,100+Model%ntlnc,'water_nc','liquid number concentration')
+        call label_dtend_tracer(Diag,100+Model%ntinc,'ice_nc','ice number concentration')
+        call label_dtend_tracer(Diag,100+Model%ntrnc,'rain_nc','rain number concentration')
+        call label_dtend_tracer(Diag,100+Model%ntsnc,'snow_nc','snow number concentration')
+        call label_dtend_tracer(Diag,100+Model%ntgnc,'graupel_nc','graupel number concentration')
+        call label_dtend_tracer(Diag,100+Model%ntke,'sgs_tke','turbulent kinetic energy')
+        call label_dtend_tracer(Diag,100+Model%nqrimef,'q_rimef','mass weighted rime factor')
+        call label_dtend_tracer(Diag,100+Model%ntwa,'liq_aero','number concentration of water-friendly aerosols')
+        call label_dtend_tracer(Diag,100+Model%ntia,'ice_aero','number concentration of ice-friendly aerosols')
+        call label_dtend_tracer(Diag,100+Model%nto,'o_ion','oxygen ion concentration')
+        call label_dtend_tracer(Diag,100+Model%nto2,'o2','oxygen concentration')
+
+        call label_dtend_cause(Diag,Model%index_for_cause_pbl,'pbl','tendency due to PBL')
+        call label_dtend_cause(Diag,Model%index_for_cause_dcnv,'deepcnv','tendency due to deep convection')
+        call label_dtend_cause(Diag,Model%index_for_cause_scnv,'shalcnv','tendency due to shallow convection')
+        call label_dtend_cause(Diag,Model%index_for_cause_mp,'mp','tendency due to microphysics')
+        call label_dtend_cause(Diag,Model%index_for_cause_prod_loss,'prodloss','tendency due to production and loss rate')
+        call label_dtend_cause(Diag,Model%index_for_cause_ozmix,'o3mix','tendency due to ozone mixing ratio')
+        call label_dtend_cause(Diag,Model%index_for_cause_temp,'temp','tendency due to temperature')
+        call label_dtend_cause(Diag,Model%index_for_cause_overhead_ozone,'o3column','tendency due to overhead ozone column')
+        call label_dtend_cause(Diag,Model%index_for_cause_physics,'phys','tendency due to physics')
+        call label_dtend_cause(Diag,Model%index_for_cause_non_physics,'nophys','tendency due to non-physics processes', &
+                               mod_name='gfs_dyn')
+
+        call label_dtend_cause(Diag,Model%index_for_cause_longwave,'lw','tendency due to long wave radiation')
+        call label_dtend_cause(Diag,Model%index_for_cause_shortwave,'sw','tendency due to short wave radiation')
+        call label_dtend_cause(Diag,Model%index_for_cause_orographic_gwd,'orogwd','tendency due to orographic gravity wave drag')
+        call label_dtend_cause(Diag,Model%index_for_cause_rayleigh_damping,'rdamp','tendency due to Rayleigh damping')
+        call label_dtend_cause(Diag,Model%index_for_cause_convective_gwd,'cnvgwd','tendency due to convective gravity wave drag')
+
 #else
         allocate(Diag%dtend(IM,Model%levs,13))
         Diag%dtend = clear_val
@@ -6333,14 +6519,14 @@ module GFS_typedefs
 
     if (Model%ldiag3d) then
 #ifndef CCPP
-      Diag%du3dt    = zero
-      Diag%dv3dt    = zero
-      Diag%dt3dt    = zero
+       Diag%dtend    = zero
+#else
+       Diag%du3dt    = zero
+       Diag%dv3dt    = zero
+       Diag%dt3dt    = zero
 #endif
       if (Model%qdiag3d) then
-#ifdef CCPP
-         Diag%dtend    = zero
-#else
+#ifndef CCPP
          Diag%dq3dt    = zero
 #endif
       endif

@@ -40,22 +40,6 @@ module GFS_diagnostics
     real(kind=kind_phys) :: cnvfac
     type(data_subtype), dimension(:), allocatable :: data
    end type GFS_externaldiag_type
-
-  type dtend_tracer_label
-    character(len=20) :: name
-    character(len=44) :: desc
-    character(len=32) :: unit
-  end type dtend_tracer_label
-
-  type dtend_cause_label
-    character(len=20) :: name
-    character(len=44) :: desc
-    logical :: time_avg
-    character(len=20) :: mod_name
-  end type dtend_cause_label
-
-  type(dtend_tracer_label), allocatable :: tracer_labels(:)
-  type(dtend_cause_label), allocatable :: cause_labels(:)
    
   !--- public data type ---
   public  GFS_externaldiag_type
@@ -66,72 +50,6 @@ module GFS_diagnostics
   CONTAINS
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    subroutine allocate_dtend_labels_and_causes(ntrac,ncause)
-      implicit none
-      integer, intent(in) :: ntrac,ncause
-      integer :: i
-      
-      allocate(tracer_labels(ntrac))
-      allocate(cause_labels(ncause))
-
-      tracer_labels(1)%name = 'unallocated'
-      tracer_labels(1)%desc = 'unallocated tracer'
-      tracer_labels(1)%unit = 'kg kg-1 s-1'
-      
-      do i=2,ntrac
-        tracer_labels(i)%name = 'unknown'
-        tracer_labels(i)%desc = 'unspecified tracer'
-        tracer_labels(i)%unit = 'kg kg-1 s-1'
-      enddo
-      do i=1,ncause
-        cause_labels(i)%name = 'unknown'
-        cause_labels(i)%desc = 'unspecified tendency'
-        cause_labels(i)%time_avg = .true.
-        cause_labels(i)%mod_name = 'gfs_phys'
-      enddo
-    end subroutine allocate_dtend_labels_and_causes
-    
-    subroutine label_dtend_tracer(itrac,name,desc,unit)
-      implicit none
-      integer, intent(in) :: itrac
-      character(len=*), intent(in) :: name, desc
-      character(len=*), optional, intent(in) :: unit
-
-      if(itrac<2) then
-         ! Special index 1 is for unallocated tracers
-         return
-      endif
-      
-      tracer_labels(itrac)%name = name
-      tracer_labels(itrac)%desc = desc
-      if(present(unit)) then
-         tracer_labels(itrac)%unit=unit
-      else
-         tracer_labels(itrac)%unit='kg kg-1 s-1'
-      endif
-    end subroutine label_dtend_tracer
-
-    subroutine label_dtend_cause(icause,name,desc,mod_name,time_avg)
-      implicit none
-      integer, intent(in) :: icause
-      character(len=*), intent(in) :: name, desc
-      character(len=*), optional, intent(in) :: mod_name
-      logical, optional, intent(in) :: time_avg
-
-      cause_labels(icause)%name=name
-      cause_labels(icause)%desc=desc
-      if(present(mod_name)) then
-        cause_labels(icause)%mod_name = mod_name
-      else
-        cause_labels(icause)%mod_name = "gfs_phys"
-      endif
-      if(present(time_avg)) then
-        cause_labels(icause)%time_avg = time_avg
-      else
-        cause_labels(icause)%time_avg = .true.
-      endif
-    end subroutine label_dtend_cause
     
  ! Helper function for GFS_externaldiag_populate to handle the massive dtend(:,:,dtidx(:,:)) array
     subroutine add_dtend(ExtDiag,IntDiag,idx,nblks,dtidx,itrac,icause,desc,unit)
@@ -150,23 +68,28 @@ module GFS_diagnostics
     if(idtend>1) then
        idx = idx + 1
        ExtDiag(idx)%axes = 3
-       ExtDiag(idx)%name = 'dtend_'//trim(tracer_labels(itrac)%name)//'_'//trim(cause_labels(icause)%name)
-       ExtDiag(idx)%mod_name = cause_labels(icause)%mod_name
-       ExtDiag(idx)%time_avg = cause_labels(icause)%time_avg
+       ExtDiag(idx)%name = 'dtend_'//trim(IntDiag(1)%dtend_tracer_labels(itrac)%name)//'_'//trim(IntDiag(1)%dtend_cause_labels(icause)%name)
+       ExtDiag(idx)%mod_name = IntDiag(1)%dtend_cause_labels(icause)%mod_name
+       ExtDiag(idx)%time_avg = IntDiag(1)%dtend_cause_labels(icause)%time_avg
        if(present(desc)) then
           ExtDiag(idx)%desc = desc
        else
-          ExtDiag(idx)%desc = trim(tracer_labels(itrac)%desc)//' '//trim(tracer_labels(icause)%desc)
+          ExtDiag(idx)%desc = trim(IntDiag(1)%dtend_tracer_labels(itrac)%desc)//' '//trim(IntDiag(1)%dtend_tracer_labels(icause)%desc)
        endif
        if(present(unit)) then
           ExtDiag(idx)%unit = trim(unit)
        else
-          ExtDiag(idx)%unit = trim(tracer_labels(itrac)%unit)
+          ExtDiag(idx)%unit = trim(IntDiag(1)%dtend_tracer_labels(itrac)%unit)
        endif
        allocate (ExtDiag(idx)%data(nblks))
        do nb = 1,nblks
           ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dtend(:,:,idtend)
        enddo
+308    format('LABEL ITRAC =',I3,' ICAUSE =',I3,' NAME = "',A,'"')
+       print 308,itrac,icause,trim(ExtDiag(idx)%name)
+    else
+309    format('SKIP  ITRAC =',I3,' ICAUSE =',I3,' WITH BAD IDTEND=',I3)
+       print 309,itrac,icause,idtend
     endif
   end subroutine add_dtend
   
@@ -200,7 +123,8 @@ module GFS_diagnostics
 !     ExtDiag%data(nb)%var3(:,:)   [real*8  ]   pointer to 3D data [=> null() for a 2D field] !
 !---------------------------------------------------------------------------------------------!
 
-      implicit none
+    use parse_tracers,    only: get_tracer_index
+    implicit none
 !
 !  ---  interface variables
     type(GFS_externaldiag_type),  intent(inout) :: ExtDiag(:)
@@ -217,12 +141,13 @@ module GFS_diagnostics
     type(GFS_init_type),          intent(in)    :: Init_parm
 
 !--- local variables
-    integer :: idt, idx, num, nb, nblks, NFXR, idtend
+    integer :: idt, idx, num, nb, nblks, NFXR, idtend, ichem, itrac
     character(len=2) :: xtra
     real(kind=kind_phys), parameter :: cn_one = 1._kind_phys
     real(kind=kind_phys), parameter :: cn_100 = 100._kind_phys
     real(kind=kind_phys), parameter :: cn_th  = 1000._kind_phys
     real(kind=kind_phys), parameter :: cn_hr  = 3600._kind_phys
+    character(len=30) :: namestr, descstr
 
     NFXR = Model%NFXR
     nblks = size(Statein)
@@ -2768,28 +2693,12 @@ module GFS_diagnostics
       
 #ifdef CCPP
       if_qdiag3d: if(Model%qdiag3d) then
-        call allocate_dtend_labels_and_causes(Model%ntracp100,Model%ncause)
 
-        call label_dtend_tracer(100+Model%ntqv,'qv','water vapor specific humidity')
-        call label_dtend_tracer(100+Model%ntoz,'o3','ozone concentration')
-
-        call label_dtend_cause(Model%index_for_cause_pbl,'pbl','tendency due to PBL')
-        call label_dtend_cause(Model%index_for_cause_dcnv,'deepcnv','tendency due to deep convection')
-        call label_dtend_cause(Model%index_for_cause_scnv,'shalcnv','tendency due to shallow convection')
-        call label_dtend_cause(Model%index_for_cause_mp,'mp','tendency due to microphysics')
-        call label_dtend_cause(Model%index_for_cause_prod_loss,'prodloss','tendency due to production and loss rate')
-        call label_dtend_cause(Model%index_for_cause_ozmix,'o3mix','tendency due to ozone mixing ratio')
-        call label_dtend_cause(Model%index_for_cause_temp,'temp','tendency due to temperature')
-        call label_dtend_cause(Model%index_for_cause_overhead_ozone,'o3column','tendency due to overhead ozone column')
-        call label_dtend_cause(Model%index_for_cause_physics,'phys','tendency due to physics')
-        call label_dtend_cause(Model%index_for_cause_non_physics,'nophys','tendency due to non-physics processes', &
-                               mod_name='gfs_dyn')
-
-        call label_dtend_cause(Model%index_for_cause_longwave,'lw','tendency due to long wave radiation')
-        call label_dtend_cause(Model%index_for_cause_shortwave,'sw','tendency due to short wave radiation')
-        call label_dtend_cause(Model%index_for_cause_orographic_gwd,'orogwd','tendency due to orographic gravity wave drag')
-        call label_dtend_cause(Model%index_for_cause_rayleigh_damping,'rdamp','tendency due to Rayleigh damping')
-        call label_dtend_cause(Model%index_for_cause_convective_gwd,'cnvgwd','tendency due to convective gravity wave drag')
+        do itrac=1,Model%ntrac
+           call add_dtend(ExtDiag,IntDiag,idx,nblks,Model%dtidx,100+itrac,Model%index_for_cause_physics)
+           call add_dtend(ExtDiag,IntDiag,idx,nblks,Model%dtidx,100+itrac,Model%index_for_cause_non_physics)
+           call add_dtend(ExtDiag,IntDiag,idx,nblks,Model%dtidx,100+itrac,Model%index_for_cause_mp)
+        enddo
 
         call add_dtend(ExtDiag,IntDiag,idx,nblks,Model%dtidx,Model%index_for_temperature,Model%index_for_cause_longwave)
         call add_dtend(ExtDiag,IntDiag,idx,nblks,Model%dtidx,Model%index_for_temperature,Model%index_for_cause_shortwave)
@@ -2823,9 +2732,6 @@ module GFS_diagnostics
         call add_dtend(ExtDiag,IntDiag,idx,nblks,Model%dtidx,100+Model%ntqv,Model%index_for_cause_pbl)
         call add_dtend(ExtDiag,IntDiag,idx,nblks,Model%dtidx,100+Model%ntqv,Model%index_for_cause_dcnv)
         call add_dtend(ExtDiag,IntDiag,idx,nblks,Model%dtidx,100+Model%ntqv,Model%index_for_cause_scnv)
-        call add_dtend(ExtDiag,IntDiag,idx,nblks,Model%dtidx,100+Model%ntqv,Model%index_for_cause_mp)
-        call add_dtend(ExtDiag,IntDiag,idx,nblks,Model%dtidx,100+Model%ntqv,Model%index_for_cause_physics)
-        call add_dtend(ExtDiag,IntDiag,idx,nblks,Model%dtidx,100+Model%ntqv,Model%index_for_cause_non_physics)
 
         if(Model%ntoz>0) then
           call add_dtend(ExtDiag,IntDiag,idx,nblks,Model%dtidx,100+Model%ntoz,Model%index_for_cause_pbl)
@@ -2833,8 +2739,6 @@ module GFS_diagnostics
           call add_dtend(ExtDiag,IntDiag,idx,nblks,Model%dtidx,100+Model%ntoz,Model%index_for_cause_ozmix)
           call add_dtend(ExtDiag,IntDiag,idx,nblks,Model%dtidx,100+Model%ntoz,Model%index_for_cause_temp)
           call add_dtend(ExtDiag,IntDiag,idx,nblks,Model%dtidx,100+Model%ntoz,Model%index_for_cause_overhead_ozone)
-          call add_dtend(ExtDiag,IntDiag,idx,nblks,Model%dtidx,100+Model%ntoz,Model%index_for_cause_physics)
-          call add_dtend(ExtDiag,IntDiag,idx,nblks,Model%dtidx,100+Model%ntoz,Model%index_for_cause_non_physics)
         endif
       end if if_qdiag3d
 

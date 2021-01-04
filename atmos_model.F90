@@ -260,7 +260,7 @@ subroutine update_atmos_radiation_physics (Atmos)
 #ifdef CCPP
     integer :: ierr
 #endif
-    integer :: idtend
+    integer :: idtend, itrac
 
     if (mpp_pe() == mpp_root_pe() .and. debug) write(6,*) "statein driver"
 !--- get atmospheric state from the dynamic core
@@ -347,21 +347,15 @@ subroutine update_atmos_radiation_physics (Atmos)
         endif
 
         if (IPD_Control%qdiag3d) then
-          idtend = IPD_Control%dtidx(IPD_Control%ntqv+100,IPD_Control%index_for_cause_non_physics)
-          if(idtend>0) then
-            do nb = 1,Atm_block%nblks
-              IPD_Data(nb)%Intdiag%dtend(:,:,idtend) = IPD_Data(nb)%Intdiag%dtend(:,:,idtend) &
-                   + (IPD_Data(nb)%Statein%qgrs(:,:,IPD_Control%ntqv) - IPD_Data(nb)%Stateout%gq0(:,:,IPD_Control%ntqv))
-            enddo
-          endif
-
-          idtend = IPD_Control%dtidx(IPD_Control%ntoz+100,IPD_Control%index_for_cause_non_physics)
-          if(idtend>0) then
-            do nb = 1,Atm_block%nblks
-              IPD_Data(nb)%Intdiag%dtend(:,:,idtend) = IPD_Data(nb)%Intdiag%dtend(:,:,idtend) &
-                   + (IPD_Data(nb)%Statein%qgrs(:,:,IPD_Control%ntoz) - IPD_Data(nb)%Stateout%gq0(:,:,IPD_Control%ntoz))
-            enddo
-          endif
+          do itrac=1,IPD_Control%ntrac
+            idtend = IPD_Control%dtidx(itrac+100,IPD_Control%index_for_cause_non_physics)
+            if(idtend>1) then
+              do nb = 1,Atm_block%nblks
+                IPD_Data(nb)%Intdiag%dtend(:,:,idtend) = IPD_Data(nb)%Intdiag%dtend(:,:,idtend) &
+                     + (IPD_Data(nb)%Statein%qgrs(:,:,itrac) - IPD_Data(nb)%Stateout%gq0(:,:,itrac))
+              enddo
+            endif
+          enddo
         endif
 #else
         do nb = 1,Atm_block%nblks
