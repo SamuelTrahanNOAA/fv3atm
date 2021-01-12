@@ -1655,9 +1655,8 @@ module GFS_typedefs
 #endif
 
     ! dtend/dtidxt: Multitudenous 3d tendencies in a 4D array: (i,k,0:ntrac,ncause)
-    ! Sparse in outermost two dimensions. dtidx(-99:ntrac,ncause) maps to dtend 
-    ! outer dimension index. That dimension is zero-based, and element 0 is always
-    ! allocated if qdiag3d=.true. and ldiag3d=.true.
+    ! Sparse in outermost two dimensions. dtidx(1:100+ntrac,ncause) maps to dtend 
+    ! outer dimension index.
     real (kind=kind_phys), pointer :: dtend (:,:,:) => null()    !< tracer changes due to physics
     type(dtend_tracer_label), pointer :: dtend_tracer_labels(:) => null() !< information about first dim of dtidx
     type(dtend_cause_label), pointer :: dtend_cause_labels(:) => null() !< information about second dim of dtidx
@@ -5874,7 +5873,7 @@ module GFS_typedefs
     type(GFS_control_type), intent(in) :: Model
     integer :: i
     
-    allocate(Diag%dtend_tracer_labels(Model%ntrac))
+    allocate(Diag%dtend_tracer_labels(Model%ntracp100))
     allocate(Diag%dtend_cause_labels(Model%ncause))
     
     Diag%dtend_tracer_labels(1)%name = 'unallocated'
@@ -6518,7 +6517,7 @@ module GFS_typedefs
 !    if(Model%me == Model%master) print *,'in diag_phys_zero, totprcpb set to 0,kdt=',Model%kdt
 
     if (Model%ldiag3d) then
-#ifndef CCPP
+#ifdef CCPP
        Diag%dtend    = zero
 #else
        Diag%du3dt    = zero
