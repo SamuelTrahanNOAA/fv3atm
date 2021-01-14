@@ -4435,20 +4435,49 @@ module GFS_typedefs
        
        ! Increment idtend and fill dtidx:
 
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%ntqv,Model%index_for_cause_pbl,have_pbl)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%ntqv,Model%index_for_cause_dcnv,have_dcnv)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%ntqv,Model%index_for_cause_scnv,have_scnv)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%ntqv,Model%index_for_cause_mp,have_mp)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%ntqv,Model%index_for_cause_physics,.true.)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%ntqv,Model%index_for_cause_non_physics,.true.)
+       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_temperature,Model%index_for_cause_longwave)
+       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_temperature,Model%index_for_cause_shortwave)
+       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_temperature,Model%index_for_cause_pbl,have_pbl)
+       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_temperature,Model%index_for_cause_dcnv,have_dcnv)
+       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_temperature,Model%index_for_cause_scnv,have_scnv)
+       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_temperature,Model%index_for_cause_mp,have_mp)
+       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_temperature,Model%index_for_cause_orographic_gwd)
+       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_temperature,Model%index_for_cause_rayleigh_damping)
+       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_temperature,Model%index_for_cause_convective_gwd)
+       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_temperature,Model%index_for_cause_physics)
+       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_temperature,Model%index_for_cause_non_physics)
 
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%ntoz,Model%index_for_cause_pbl,have_pbl .and. have_oz_phys)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%ntoz,Model%index_for_cause_prod_loss,have_oz_phys)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%ntoz,Model%index_for_cause_ozmix,have_oz_phys)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%ntoz,Model%index_for_cause_temp,have_oz_phys)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%ntoz,Model%index_for_cause_overhead_ozone,have_oz_phys)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%ntoz,Model%index_for_cause_physics,.true.)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%ntoz,Model%index_for_cause_non_physics,.true.)
+       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_x_wind,Model%index_for_cause_pbl,have_pbl)
+       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_y_wind,Model%index_for_cause_pbl,have_pbl)
+       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_x_wind,Model%index_for_cause_orographic_gwd)
+       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_y_wind,Model%index_for_cause_orographic_gwd)
+       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_x_wind,Model%index_for_cause_dcnv,have_dcnv)
+       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_y_wind,Model%index_for_cause_dcnv,have_dcnv)
+       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_x_wind,Model%index_for_cause_convective_gwd)
+       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_y_wind,Model%index_for_cause_convective_gwd)
+       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_x_wind,Model%index_for_cause_rayleigh_damping)
+       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_y_wind,Model%index_for_cause_rayleigh_damping)
+       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_x_wind,Model%index_for_cause_scnv,have_scnv)
+       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_y_wind,Model%index_for_cause_scnv,have_scnv)
+       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_x_wind,Model%index_for_cause_physics)
+       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_y_wind,Model%index_for_cause_physics)
+       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_x_wind,Model%index_for_cause_non_physics)
+       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_y_wind,Model%index_for_cause_non_physics)
+
+       call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntqv,Model%index_for_cause_pbl,have_pbl)
+       call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntqv,Model%index_for_cause_dcnv,have_dcnv)
+       call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntqv,Model%index_for_cause_scnv,have_scnv)
+       call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntqv,Model%index_for_cause_mp,have_mp)
+       call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntqv,Model%index_for_cause_physics,.true.)
+       call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntqv,Model%index_for_cause_non_physics,.true.)
+
+       call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntoz,Model%index_for_cause_pbl,have_pbl .and. have_oz_phys)
+       call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntoz,Model%index_for_cause_prod_loss,have_oz_phys)
+       call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntoz,Model%index_for_cause_ozmix,have_oz_phys)
+       call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntoz,Model%index_for_cause_temp,have_oz_phys)
+       call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntoz,Model%index_for_cause_overhead_ozone,have_oz_phys)
+       call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntoz,Model%index_for_cause_physics,.true.)
+       call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntoz,Model%index_for_cause_non_physics,.true.)
 
     end if
 
@@ -5858,11 +5887,15 @@ module GFS_typedefs
     integer, intent(out) :: dtidx(:,:)
     integer, intent(in) :: itrac
     integer, intent(in) :: icause
-    logical, intent(in) :: flag
+    logical, intent(in), optional :: flag
+    logical :: flag2
 
-    if(icause>0 .and. flag .and. itrac>0) then
+    flag2=.true.
+    if(present(flag)) flag2=flag
+
+    if(icause>0 .and. flag2 .and. itrac>0) then
        ndtend = ndtend+1
-       dtidx(100+itrac,icause) = ndtend
+       dtidx(itrac,icause) = ndtend
     endif
   end subroutine fill_dtidx
 
