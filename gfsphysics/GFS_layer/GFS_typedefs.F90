@@ -3657,7 +3657,7 @@ module GFS_typedefs
 !--- convective clouds
     integer :: ncnvcld3d = 0       !< number of convective 3d clouds fields
 
-
+    integer :: itrac
     logical :: have_pbl, have_dcnv, have_scnv, have_mp, have_oz_phys
 
 !--- read in the namelist
@@ -4423,7 +4423,7 @@ module GFS_typedefs
     allocate(Model%dtidx(Model%ntracp100,Model%ncause))
     Model%dtidx = 1 ! unused indices MUST be 1
 
-    if(qdiag3d) then
+    if(ldiag3d) then
        Model%ndtend = 1 ! first i-k slice is empty
        ! Flags used to turn on or off tracer "causes"
        have_pbl = .true.
@@ -4464,21 +4464,27 @@ module GFS_typedefs
        call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_x_wind,Model%index_for_cause_non_physics)
        call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_y_wind,Model%index_for_cause_non_physics)
 
-       call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntqv,Model%index_for_cause_pbl,have_pbl)
-       call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntqv,Model%index_for_cause_dcnv,have_dcnv)
-       call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntqv,Model%index_for_cause_scnv,have_scnv)
-       call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntqv,Model%index_for_cause_mp,have_mp)
-       call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntqv,Model%index_for_cause_physics,.true.)
-       call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntqv,Model%index_for_cause_non_physics,.true.)
-
-       call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntoz,Model%index_for_cause_pbl,have_pbl .and. have_oz_phys)
-       call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntoz,Model%index_for_cause_prod_loss,have_oz_phys)
-       call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntoz,Model%index_for_cause_ozmix,have_oz_phys)
-       call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntoz,Model%index_for_cause_temp,have_oz_phys)
-       call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntoz,Model%index_for_cause_overhead_ozone,have_oz_phys)
-       call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntoz,Model%index_for_cause_physics,.true.)
-       call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntoz,Model%index_for_cause_non_physics,.true.)
-
+       if(qdiag3d) then
+          call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntqv,Model%index_for_cause_pbl,have_pbl)
+          call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntqv,Model%index_for_cause_dcnv,have_dcnv)
+          call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntqv,Model%index_for_cause_scnv,have_scnv)
+          
+          call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntoz,Model%index_for_cause_pbl,have_pbl .and. have_oz_phys)
+          call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntoz,Model%index_for_cause_prod_loss,have_oz_phys)
+          call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntoz,Model%index_for_cause_ozmix,have_oz_phys)
+          call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntoz,Model%index_for_cause_temp,have_oz_phys)
+          call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntoz,Model%index_for_cause_overhead_ozone,have_oz_phys)
+          call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntoz,Model%index_for_cause_physics,.true.)
+          call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntoz,Model%index_for_cause_non_physics,.true.)
+          
+          do itrac=1,Model%ntrac
+             if(itrac==Model%ntchs) exit ! remaining tracers are chemical
+             if(itrac==Model%ntoz) cycle ! already took care of ozone
+             call fill_dtidx(Model%ndtend,Model%dtidx,100+itrac,Model%index_for_cause_mp,have_mp)
+             call fill_dtidx(Model%ndtend,Model%dtidx,100+itrac,Model%index_for_cause_physics,.true.)
+             call fill_dtidx(Model%ndtend,Model%dtidx,100+itrac,Model%index_for_cause_non_physics,.true.)
+          enddo
+       endif
     end if
 
 #ifdef CCPP
