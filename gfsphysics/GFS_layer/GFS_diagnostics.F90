@@ -69,18 +69,18 @@ module GFS_diagnostics
     if(idtend>1) then
        idx = idx + 1
        ExtDiag(idx)%axes = 3
-       ExtDiag(idx)%name = 'dtend_'//trim(IntDiag(1)%dtend_tracer_labels(itrac)%name)//'_'//trim(IntDiag(1)%dtend_cause_labels(icause)%name)
-       ExtDiag(idx)%mod_name = IntDiag(1)%dtend_cause_labels(icause)%mod_name
-       ExtDiag(idx)%time_avg = IntDiag(1)%dtend_cause_labels(icause)%time_avg
+       ExtDiag(idx)%name = 'dtend_'//trim(Model%dtend_tracer_labels(itrac)%name)//'_'//trim(Model%dtend_cause_labels(icause)%name)
+       ExtDiag(idx)%mod_name = Model%dtend_cause_labels(icause)%mod_name
+       ExtDiag(idx)%time_avg = Model%dtend_cause_labels(icause)%time_avg
        if(present(desc)) then
           ExtDiag(idx)%desc = desc
        else
-          ExtDiag(idx)%desc = trim(IntDiag(1)%dtend_tracer_labels(itrac)%desc)//' '//trim(IntDiag(1)%dtend_cause_labels(icause)%desc)
+          ExtDiag(idx)%desc = trim(Model%dtend_tracer_labels(itrac)%desc)//' '//trim(Model%dtend_cause_labels(icause)%desc)
        endif
        if(present(unit)) then
           ExtDiag(idx)%unit = trim(unit)
        else
-          ExtDiag(idx)%unit = trim(IntDiag(1)%dtend_tracer_labels(itrac)%unit)
+          ExtDiag(idx)%unit = trim(Model%dtend_tracer_labels(itrac)%unit)
        endif
        allocate (ExtDiag(idx)%data(nblks))
        do nb = 1,nblks

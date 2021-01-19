@@ -531,11 +531,31 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: dkt     (:,:)   => null()  !< instantaneous dkt diffusion coefficient for temperature (m**2/s)
     real (kind=kind_phys), pointer :: qci_conv(:,:)   => null()  !< convective cloud condesate after rainout
 
-
     contains
       procedure :: create  => coupling_create  !<   allocate array data
   end type GFS_coupling_type
 
+
+!----------------------------------------------------------------
+! dtend_tracer_label
+!  Information about first dimension of dtidx
+!----------------------------------------------------------------
+  type dtend_tracer_label
+    character(len=20) :: name
+    character(len=44) :: desc
+    character(len=32) :: unit
+  end type dtend_tracer_label
+
+!----------------------------------------------------------------
+! dtend_cause_label
+!  Information about second dimension of dtidx
+!----------------------------------------------------------------
+  type dtend_cause_label
+    character(len=20) :: name
+    character(len=44) :: desc
+    logical :: time_avg
+    character(len=20) :: mod_name
+  end type dtend_cause_label
 
 !----------------------------------------------------------------------------------
 ! GFS_control_type
@@ -1121,6 +1141,8 @@ module GFS_typedefs
 
     integer, pointer :: dtidx(:,:) => null()   !< index in outermost dimension of dtend
     integer :: ndtend               !< size of outermost dimension of dtend
+    type(dtend_tracer_label), pointer :: dtend_tracer_labels(:) => null() !< information about first dim of dtidx
+    type(dtend_cause_label), pointer :: dtend_cause_labels(:) => null() !< information about second dim of dtidx
 
     ! Indices within inner dimension of dtidx for things that are not tracers:
     integer :: index_for_temperature  !< temperature in dtidx
@@ -1471,27 +1493,6 @@ module GFS_typedefs
 
 
 !----------------------------------------------------------------
-! dtend_tracer_label
-!  Information about first dimension of dtidx
-!----------------------------------------------------------------
-  type dtend_tracer_label
-    character(len=20) :: name
-    character(len=44) :: desc
-    character(len=32) :: unit
-  end type dtend_tracer_label
-
-!----------------------------------------------------------------
-! dtend_cause_label
-!  Information about second dimension of dtidx
-!----------------------------------------------------------------
-  type dtend_cause_label
-    character(len=20) :: name
-    character(len=44) :: desc
-    logical :: time_avg
-    character(len=20) :: mod_name
-  end type dtend_cause_label
-
-!----------------------------------------------------------------
 ! GFS_diag_type
 !  internal diagnostic type used as arguments to gbphys and grrad 
 !----------------------------------------------------------------
@@ -1658,8 +1659,6 @@ module GFS_typedefs
     ! Sparse in outermost two dimensions. dtidx(1:100+ntrac,ncause) maps to dtend 
     ! outer dimension index.
     real (kind=kind_phys), pointer :: dtend (:,:,:) => null()    !< tracer changes due to physics
-    type(dtend_tracer_label), pointer :: dtend_tracer_labels(:) => null() !< information about first dim of dtidx
-    type(dtend_cause_label), pointer :: dtend_cause_labels(:) => null() !< information about second dim of dtidx
 
     real (kind=kind_phys), pointer :: refdmax (:)    => null()   !< max hourly 1-km agl reflectivity
     real (kind=kind_phys), pointer :: refdmax263k(:) => null()   !< max hourly -10C reflectivity
@@ -3071,6 +3070,8 @@ module GFS_typedefs
     logical              :: ldiag3d        = .false.         !< flag for 3d diagnostic fields
     logical              :: qdiag3d        = .false.         !< flag for 3d tracer diagnostic fields
     logical              :: lssav          = .false.         !< logical flag for storing diagnostics
+    integer, parameter :: pat_len = 60, pat_count=100        !< dimensions of dtend_select
+    character(len=pat_len) :: dtend_select(pat_count)         !< fglob_list() patterns to decide which 3d diagnostic fields to enable
     integer              :: naux2d         = 0               !< number of auxiliary 2d arrays to output (for debugging)
     integer              :: naux3d         = 0               !< number of auxiliary 3d arrays to output (for debugging)
     logical              :: aux2d_time_avg(1:naux2dmax) = .false. !< flags for time averaging of auxiliary 2d arrays
@@ -3530,8 +3531,8 @@ module GFS_typedefs
 
     NAMELIST /gfs_physics_nml/                                                              &
                           !--- general parameters
-                               fhzero, ldiag3d, qdiag3d, lssav, naux2d, naux3d,             &
-                               aux2d_time_avg, aux3d_time_avg, fhcyc,                       &
+                               fhzero, dtend_select, ldiag3d, qdiag3d, lssav, naux2d,       &
+                               naux3d, aux2d_time_avg, aux3d_time_avg, fhcyc,               &
                                thermodyn_id, sfcpress_id,                                   &
                           !--- coupling parameters
                                cplflx, cplwav, cplwav2atm, cplchm, lsidea,                  &
@@ -3657,8 +3658,16 @@ module GFS_typedefs
 !--- convective clouds
     integer :: ncnvcld3d = 0       !< number of convective 3d clouds fields
 
-    integer :: itrac
+    integer :: itrac, ipat, ichem
     logical :: have_pbl, have_dcnv, have_scnv, have_mp, have_oz_phys
+    character(len=20) :: namestr
+    character(len=44) :: descstr
+
+    ! dtend selection: default is to match all variables:
+    dtend_select(1)='*'
+    do ipat=2,pat_count
+       dtend_select(ipat)=' '
+    enddo
 
 !--- read in the namelist
 #ifdef INTERNAL_FILE_NML
@@ -4427,62 +4436,145 @@ module GFS_typedefs
        Model%ndtend = 1 ! first i-k slice is empty
        ! Flags used to turn on or off tracer "causes"
        have_pbl = .true.
-       have_dcnv = Model%ras .or. Model%cscnv .or. Model%do_deep .or. &
-            Model%hwrf_samfdeep
-       have_scnv = Model%shal_cnv
+       have_dcnv = Model%imfdeepcnv>=0 !Model%ras .or. Model%cscnv .or. Model%do_deep .or. Model%hwrf_samfdeep
+       have_scnv = Model%imfshalcnv>=0 !Model%shal_cnv
        have_mp = Model%imp_physics>0
        have_oz_phys = Model%oz_phys .or. Model%oz_phys_2015
        
        ! Increment idtend and fill dtidx:
+        allocate(Model%dtend_tracer_labels(Model%ntracp100))
+        allocate(Model%dtend_cause_labels(Model%ncause))
 
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_temperature,Model%index_for_cause_longwave)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_temperature,Model%index_for_cause_shortwave)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_temperature,Model%index_for_cause_pbl,have_pbl)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_temperature,Model%index_for_cause_dcnv,have_dcnv)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_temperature,Model%index_for_cause_scnv,have_scnv)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_temperature,Model%index_for_cause_mp,have_mp)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_temperature,Model%index_for_cause_orographic_gwd)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_temperature,Model%index_for_cause_rayleigh_damping)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_temperature,Model%index_for_cause_convective_gwd)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_temperature,Model%index_for_cause_physics)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_temperature,Model%index_for_cause_non_physics)
+        call allocate_dtend_labels_and_causes(Model)
 
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_x_wind,Model%index_for_cause_pbl,have_pbl)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_y_wind,Model%index_for_cause_pbl,have_pbl)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_x_wind,Model%index_for_cause_orographic_gwd)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_y_wind,Model%index_for_cause_orographic_gwd)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_x_wind,Model%index_for_cause_dcnv,have_dcnv)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_y_wind,Model%index_for_cause_dcnv,have_dcnv)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_x_wind,Model%index_for_cause_convective_gwd)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_y_wind,Model%index_for_cause_convective_gwd)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_x_wind,Model%index_for_cause_rayleigh_damping)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_y_wind,Model%index_for_cause_rayleigh_damping)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_x_wind,Model%index_for_cause_scnv,have_scnv)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_y_wind,Model%index_for_cause_scnv,have_scnv)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_x_wind,Model%index_for_cause_physics)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_y_wind,Model%index_for_cause_physics)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_x_wind,Model%index_for_cause_non_physics)
-       call fill_dtidx(Model%ndtend,Model%dtidx,Model%index_for_y_wind,Model%index_for_cause_non_physics)
+        ! Default names of tracers just in case later code does not initialize them:
+        do itrac=1,Model%ntrac
+           write(namestr,'("tracer",I0)') itrac
+           write(descstr,'("tracer ",I0," of ",I0)') itrac, Model%ntrac
+           call label_dtend_tracer(Model,100+itrac,trim(namestr),trim(descstr))
+        enddo
+
+        if(Model%ntchs>0) then
+           if(Model%ntchm>0) then
+              ! Chemical tracers are first so more specific tracer names
+              ! replace them. There is no straightforward way of getting
+              ! chemical tracer short names or descriptions, so we use
+              ! indices instead.
+              do ichem=Model%ntchs,Model%ntchs+Model%ntchm-1
+                 write(namestr,'("chem",I0)') ichem
+                 write(descstr,'("chemical tracer ",I0," of ",I0)') ichem, Model%ntchm
+                 call label_dtend_tracer(Model,100+ichem,trim(namestr),trim(descstr))
+              enddo
+           endif
+
+           ! More specific chemical tracer names:
+           call label_dtend_tracer(Model,100+Model%ntchs,'so2','sulfur dioxide concentration')
+           if(Model%ntchm>0) then
+              ! Need better descriptions of these.
+              call label_dtend_tracer(Model,100+Model%ntchm+Model%ntchs-1,'pp10','pp10 concentration')
+
+              itrac=get_tracer_index(Model%tracer_names, 'DMS', Model%me, Model%master, Model%debug)
+              if(itrac>0) then
+                 call label_dtend_tracer(Model,100+itrac,'DMS','DMS concentration')
+              endif
+              itrac=get_tracer_index(Model%tracer_names, 'msa', Model%me, Model%master, Model%debug)
+              if(itrac>0) then
+                 call label_dtend_tracer(Model,100+itrac,'msa','msa concentration')
+              endif
+           endif
+        endif
+
+        call label_dtend_tracer(Model,Model%index_for_temperature,'temp','temperature','K s-1')
+        call label_dtend_tracer(Model,Model%index_for_x_wind,'u','x wind','m s-2')
+        call label_dtend_tracer(Model,Model%index_for_y_wind,'v','y wind','m s-2')
+
+        ! Other tracer names. These were taken from GFS_typedefs.F90 with descriptions from GFS_typedefs.meta
+        call label_dtend_tracer(Model,100+Model%ntqv,'qv','water vapor specific humidity')
+        call label_dtend_tracer(Model,100+Model%ntoz,'o3','ozone concentration')
+        call label_dtend_tracer(Model,100+Model%ntcw,'liq_wat','cloud condensate (or liquid water)')
+        call label_dtend_tracer(Model,100+Model%ntiw,'ice_wat','ice water')
+        call label_dtend_tracer(Model,100+Model%ntrw,'rainwat','rain water')
+        call label_dtend_tracer(Model,100+Model%ntsw,'snowwat','snow water')
+        call label_dtend_tracer(Model,100+Model%ntgl,'graupel','graupel')
+        call label_dtend_tracer(Model,100+Model%ntclamt,'cld_amt','cloud amount integer')
+        call label_dtend_tracer(Model,100+Model%ntlnc,'water_nc','liquid number concentration')
+        call label_dtend_tracer(Model,100+Model%ntinc,'ice_nc','ice number concentration')
+        call label_dtend_tracer(Model,100+Model%ntrnc,'rain_nc','rain number concentration')
+        call label_dtend_tracer(Model,100+Model%ntsnc,'snow_nc','snow number concentration')
+        call label_dtend_tracer(Model,100+Model%ntgnc,'graupel_nc','graupel number concentration')
+        call label_dtend_tracer(Model,100+Model%ntke,'sgs_tke','turbulent kinetic energy')
+        call label_dtend_tracer(Model,100+Model%nqrimef,'q_rimef','mass weighted rime factor')
+        call label_dtend_tracer(Model,100+Model%ntwa,'liq_aero','number concentration of water-friendly aerosols')
+        call label_dtend_tracer(Model,100+Model%ntia,'ice_aero','number concentration of ice-friendly aerosols')
+        call label_dtend_tracer(Model,100+Model%nto,'o_ion','oxygen ion concentration')
+        call label_dtend_tracer(Model,100+Model%nto2,'o2','oxygen concentration')
+
+        call label_dtend_cause(Model,Model%index_for_cause_pbl,'pbl','tendency due to PBL')
+        call label_dtend_cause(Model,Model%index_for_cause_dcnv,'deepcnv','tendency due to deep convection')
+        call label_dtend_cause(Model,Model%index_for_cause_scnv,'shalcnv','tendency due to shallow convection')
+        call label_dtend_cause(Model,Model%index_for_cause_mp,'mp','tendency due to microphysics')
+        call label_dtend_cause(Model,Model%index_for_cause_prod_loss,'prodloss','tendency due to production and loss rate')
+        call label_dtend_cause(Model,Model%index_for_cause_ozmix,'o3mix','tendency due to ozone mixing ratio')
+        call label_dtend_cause(Model,Model%index_for_cause_temp,'temp','tendency due to temperature')
+        call label_dtend_cause(Model,Model%index_for_cause_overhead_ozone,'o3column','tendency due to overhead ozone column')
+        call label_dtend_cause(Model,Model%index_for_cause_physics,'phys','tendency due to physics')
+        call label_dtend_cause(Model,Model%index_for_cause_non_physics,'nophys','tendency due to non-physics processes', &
+                               mod_name='gfs_dyn')
+
+        call label_dtend_cause(Model,Model%index_for_cause_longwave,'lw','tendency due to long wave radiation')
+        call label_dtend_cause(Model,Model%index_for_cause_shortwave,'sw','tendency due to short wave radiation')
+        call label_dtend_cause(Model,Model%index_for_cause_orographic_gwd,'orogwd','tendency due to orographic gravity wave drag')
+        call label_dtend_cause(Model,Model%index_for_cause_rayleigh_damping,'rdamp','tendency due to Rayleigh damping')
+        call label_dtend_cause(Model,Model%index_for_cause_convective_gwd,'cnvgwd','tendency due to convective gravity wave drag')
+
+       call fill_dtidx(Model,dtend_select,Model%index_for_temperature,Model%index_for_cause_longwave)
+       call fill_dtidx(Model,dtend_select,Model%index_for_temperature,Model%index_for_cause_shortwave)
+       call fill_dtidx(Model,dtend_select,Model%index_for_temperature,Model%index_for_cause_pbl,have_pbl)
+       call fill_dtidx(Model,dtend_select,Model%index_for_temperature,Model%index_for_cause_dcnv,have_dcnv)
+       call fill_dtidx(Model,dtend_select,Model%index_for_temperature,Model%index_for_cause_scnv,have_scnv)
+       call fill_dtidx(Model,dtend_select,Model%index_for_temperature,Model%index_for_cause_mp,have_mp)
+       call fill_dtidx(Model,dtend_select,Model%index_for_temperature,Model%index_for_cause_orographic_gwd)
+       call fill_dtidx(Model,dtend_select,Model%index_for_temperature,Model%index_for_cause_rayleigh_damping)
+       call fill_dtidx(Model,dtend_select,Model%index_for_temperature,Model%index_for_cause_convective_gwd)
+       call fill_dtidx(Model,dtend_select,Model%index_for_temperature,Model%index_for_cause_physics)
+       call fill_dtidx(Model,dtend_select,Model%index_for_temperature,Model%index_for_cause_non_physics)
+
+       call fill_dtidx(Model,dtend_select,Model%index_for_x_wind,Model%index_for_cause_pbl,have_pbl)
+       call fill_dtidx(Model,dtend_select,Model%index_for_y_wind,Model%index_for_cause_pbl,have_pbl)
+       call fill_dtidx(Model,dtend_select,Model%index_for_x_wind,Model%index_for_cause_orographic_gwd)
+       call fill_dtidx(Model,dtend_select,Model%index_for_y_wind,Model%index_for_cause_orographic_gwd)
+       call fill_dtidx(Model,dtend_select,Model%index_for_x_wind,Model%index_for_cause_dcnv,have_dcnv)
+       call fill_dtidx(Model,dtend_select,Model%index_for_y_wind,Model%index_for_cause_dcnv,have_dcnv)
+       call fill_dtidx(Model,dtend_select,Model%index_for_x_wind,Model%index_for_cause_convective_gwd)
+       call fill_dtidx(Model,dtend_select,Model%index_for_y_wind,Model%index_for_cause_convective_gwd)
+       call fill_dtidx(Model,dtend_select,Model%index_for_x_wind,Model%index_for_cause_rayleigh_damping)
+       call fill_dtidx(Model,dtend_select,Model%index_for_y_wind,Model%index_for_cause_rayleigh_damping)
+       call fill_dtidx(Model,dtend_select,Model%index_for_x_wind,Model%index_for_cause_scnv,have_scnv)
+       call fill_dtidx(Model,dtend_select,Model%index_for_y_wind,Model%index_for_cause_scnv,have_scnv)
+       call fill_dtidx(Model,dtend_select,Model%index_for_x_wind,Model%index_for_cause_physics)
+       call fill_dtidx(Model,dtend_select,Model%index_for_y_wind,Model%index_for_cause_physics)
+       call fill_dtidx(Model,dtend_select,Model%index_for_x_wind,Model%index_for_cause_non_physics)
+       call fill_dtidx(Model,dtend_select,Model%index_for_y_wind,Model%index_for_cause_non_physics)
 
        if(qdiag3d) then
-          call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntqv,Model%index_for_cause_pbl,have_pbl)
-          call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntqv,Model%index_for_cause_dcnv,have_dcnv)
-          call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntqv,Model%index_for_cause_scnv,have_scnv)
+          call fill_dtidx(Model,dtend_select,100+Model%ntqv,Model%index_for_cause_pbl,have_pbl)
+          call fill_dtidx(Model,dtend_select,100+Model%ntqv,Model%index_for_cause_dcnv,have_dcnv)
+          call fill_dtidx(Model,dtend_select,100+Model%ntqv,Model%index_for_cause_scnv,have_scnv)
           
-          call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntoz,Model%index_for_cause_pbl,have_pbl .and. have_oz_phys)
-          call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntoz,Model%index_for_cause_prod_loss,have_oz_phys)
-          call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntoz,Model%index_for_cause_ozmix,have_oz_phys)
-          call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntoz,Model%index_for_cause_temp,have_oz_phys)
-          call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntoz,Model%index_for_cause_overhead_ozone,have_oz_phys)
-          call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntoz,Model%index_for_cause_physics,.true.)
-          call fill_dtidx(Model%ndtend,Model%dtidx,100+Model%ntoz,Model%index_for_cause_non_physics,.true.)
+          call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_for_cause_pbl,have_pbl .and. have_oz_phys)
+          call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_for_cause_prod_loss,have_oz_phys)
+          call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_for_cause_ozmix,have_oz_phys)
+          call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_for_cause_temp,have_oz_phys)
+          call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_for_cause_overhead_ozone,have_oz_phys)
+          call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_for_cause_physics,.true.)
+          call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_for_cause_non_physics,.true.)
           
           do itrac=1,Model%ntrac
              if(itrac==Model%ntchs) exit ! remaining tracers are chemical
              if(itrac==Model%ntoz) cycle ! already took care of ozone
-             call fill_dtidx(Model%ndtend,Model%dtidx,100+itrac,Model%index_for_cause_mp,have_mp)
-             call fill_dtidx(Model%ndtend,Model%dtidx,100+itrac,Model%index_for_cause_physics,.true.)
-             call fill_dtidx(Model%ndtend,Model%dtidx,100+itrac,Model%index_for_cause_non_physics,.true.)
+             call fill_dtidx(Model,dtend_select,100+itrac,Model%index_for_cause_mp,have_mp)
+             call fill_dtidx(Model,dtend_select,100+itrac,Model%index_for_cause_physics,.true.)
+             call fill_dtidx(Model,dtend_select,100+itrac,Model%index_for_cause_non_physics,.true.)
           enddo
        endif
     end if
@@ -5887,54 +5979,179 @@ module GFS_typedefs
 
   end subroutine radtend_create
 
-  subroutine fill_dtidx(ndtend,dtidx,itrac,icause,flag)
+  subroutine fill_dtidx(Model,dtend_select,itrac,icause,flag)
     implicit none
-    integer, intent(inout) :: ndtend
-    integer, intent(out) :: dtidx(:,:)
+    class(GFS_control_type), intent(inout) :: Model
+    character(len=*), intent(in) :: dtend_select(:)
     integer, intent(in) :: itrac
     integer, intent(in) :: icause
     logical, intent(in), optional :: flag
+
+    character(len=100) :: name
     logical :: flag2
 
     flag2=.true.
     if(present(flag)) flag2=flag
 
     if(icause>0 .and. flag2 .and. itrac>0) then
-       ndtend = ndtend+1
-       dtidx(itrac,icause) = ndtend
+       name = 'dtend_'//trim(Model%dtend_tracer_labels(itrac)%name)//'_'//trim(Model%dtend_cause_labels(icause)%name)
+       if(fglob_list(dtend_select,trim(name))) then
+          Model%ndtend = Model%ndtend+1
+          Model%dtidx(itrac,icause) = Model%ndtend
+       elseif(Model%me==Model%master) then
+          print '(A,A,A)','Skipping ',trim(name),' due to mismatch with dtend_select.'
+       endif
     endif
   end subroutine fill_dtidx
 
-
-  subroutine allocate_dtend_labels_and_causes(Diag,Model)
+  recursive function fglob(pattern,string) result(match)
+    ! Matches UNIX-style globs. A '*' matches 0 or more characters,
+    ! and a '?' matches one character. Other characters must match
+    ! exactly. The entire string must match, so if you want to match
+    ! a substring in the middle, put '*' at the ends.
+    !
+    ! Spaces ARE significant, so make sure you trim() the inputs.
+    !
+    ! Examples:
+    !
+    !   fglob('dtend*_mp','dtend_temp_mp') => .true.
+    !   fglob('dtend*_mp','dtend_cow_mp_dog') => .false. ! entire string must match
+    !   fglob('c?w','cow') => .true.
+    !   fglob('c?w','coow') => .false. ! "?" matches one char, not two
+    !   fglob('c?w   ','cow  ') => .false. ! You forgot to trim() the inputs.
     implicit none
-    type(GFS_diag_type), intent(inout) :: Diag
+    logical :: match
+    character(len=*), intent(in) :: pattern,string
+    integer :: npat, nstr, ipat, istr, min_match, num_match
+    logical :: match_infinity
+
+    npat=len(pattern)
+    nstr=len(string)
+    ipat=1 ! Next pattern character to process
+    istr=1 ! First string character not yet matched
+    outer: do while(ipat<=npat)
+       if_glob: if(pattern(ipat:ipat)=='*' .or. pattern(ipat:ipat)=='?') then
+          ! Collect sequences of * and ? to avoid pathalogical cases.
+          min_match=0 ! Number of "?" which is minimum number of chars to match
+          match_infinity=.false. ! Do we see a "*"?
+          glob_collect: do while(ipat<=npat)
+             if(pattern(ipat:ipat)=='*') then
+                match_infinity=.true.
+             else if(pattern(ipat:ipat)=='?') then
+                min_match=min_match+1
+             else
+                exit
+             endif
+             ipat=ipat+1
+          end do glob_collect
+
+          num_match=0
+          glob_match: do while(istr<=len(string))
+             if(num_match>=min_match) then
+                if(match_infinity) then
+                   if(fglob(pattern(ipat:npat),string(istr:nstr))) then
+                      ! Remaining pattern matches remaining string.
+                      match=.true.
+                      return
+                   else
+                      ! Remaining pattern does NOT match, so we have
+                      ! to consume another char.
+                   endif
+                else
+                   ! This is a sequence of "?" and we matched them all.
+                   cycle outer
+                endif
+             else
+                ! Haven't consumed enough chars for all the "?" yet.
+             endif
+             istr=istr+1
+             num_match=num_match+1
+          enddo glob_match
+          ! We get here if we hit the end of the string.
+          if(num_match<min_match) then
+             ! Number of "?" was greater than number of chars left, so match failed.
+             match=.false.
+             return
+          elseif(ipat<=npat) then
+             ! Not enough pattern to match the string.
+             match=.false.
+             return
+          else
+             ! Exact match. We're done.
+             match=.true.
+             return
+          endif
+       elseif(istr>nstr) then
+          ! Not enough string left to match the pattern
+          match=.false.
+          return
+       elseif(string(istr:istr)/=pattern(ipat:ipat)) then
+          ! Exact character mismatch
+          match=.false.
+          return
+       endif if_glob
+       ! Exact character match
+       istr=istr+1
+       ipat=ipat+1
+    end do outer
+    ! We get here if we ran out of pattern. We must also hit the end of the string.
+    match = istr>nstr
+  end function fglob
+
+  logical function fglob_list(patterns,string)
+    ! Wrapper around fglob that returns .true. if ANY pattern
+    ! matches. Unlike fglob(), patterns and strings ARE automatically
+    ! trim()ed. Patterns are processed in order until one matches, one
+    ! is empty, or one is '*'.
+    implicit none
+    character(len=*), intent(in) :: patterns(:)
+    character(len=*), intent(in) :: string
+    integer :: i,n,s
+    fglob_list=.false.
+    s=len_trim(string)
+    do i=1,len(patterns)
+       n=len_trim(patterns(i))
+       if(n<1) then
+          return ! end of pattern list
+       elseif(n==1 .and. patterns(i)(1:1)=='*') then
+          fglob_list=.true. ! A single "*" matches anything
+          return
+       else if(fglob(patterns(i)(1:n),string(1:s))) then
+          fglob_list=.true.
+          return
+       else
+       endif
+    enddo
+  end function fglob_list
+
+  subroutine allocate_dtend_labels_and_causes(Model)
+    implicit none
     type(GFS_control_type), intent(in) :: Model
     integer :: i
     
-    allocate(Diag%dtend_tracer_labels(Model%ntracp100))
-    allocate(Diag%dtend_cause_labels(Model%ncause))
+    allocate(Model%dtend_tracer_labels(Model%ntracp100))
+    allocate(Model%dtend_cause_labels(Model%ncause))
     
-    Diag%dtend_tracer_labels(1)%name = 'unallocated'
-    Diag%dtend_tracer_labels(1)%desc = 'unallocated tracer'
-    Diag%dtend_tracer_labels(1)%unit = 'kg kg-1 s-1'
+    Model%dtend_tracer_labels(1)%name = 'unallocated'
+    Model%dtend_tracer_labels(1)%desc = 'unallocated tracer'
+    Model%dtend_tracer_labels(1)%unit = 'kg kg-1 s-1'
     
     do i=2,Model%ntrac
-       Diag%dtend_tracer_labels(i)%name = 'unknown'
-       Diag%dtend_tracer_labels(i)%desc = 'unspecified tracer'
-       Diag%dtend_tracer_labels(i)%unit = 'kg kg-1 s-1'
+       Model%dtend_tracer_labels(i)%name = 'unknown'
+       Model%dtend_tracer_labels(i)%desc = 'unspecified tracer'
+       Model%dtend_tracer_labels(i)%unit = 'kg kg-1 s-1'
     enddo
     do i=1,Model%ncause
-       Diag%dtend_cause_labels(i)%name = 'unknown'
-       Diag%dtend_cause_labels(i)%desc = 'unspecified tendency'
-       Diag%dtend_cause_labels(i)%time_avg = .true.
-       Diag%dtend_cause_labels(i)%mod_name = 'gfs_phys'
+       Model%dtend_cause_labels(i)%name = 'unknown'
+       Model%dtend_cause_labels(i)%desc = 'unspecified tendency'
+       Model%dtend_cause_labels(i)%time_avg = .true.
+       Model%dtend_cause_labels(i)%mod_name = 'gfs_phys'
     enddo
   end subroutine allocate_dtend_labels_and_causes
     
-  subroutine label_dtend_tracer(Diag,itrac,name,desc,unit)
+  subroutine label_dtend_tracer(Model,itrac,name,desc,unit)
     implicit none
-    type(GFS_diag_type), intent(inout) :: Diag
+    type(GFS_control_type), intent(inout) :: Model
     integer, intent(in) :: itrac
     character(len=*), intent(in) :: name, desc
     character(len=*), optional, intent(in) :: unit
@@ -5944,34 +6161,34 @@ module GFS_typedefs
        return
     endif
     
-    Diag%dtend_tracer_labels(itrac)%name = name
-    Diag%dtend_tracer_labels(itrac)%desc = desc
+    Model%dtend_tracer_labels(itrac)%name = name
+    Model%dtend_tracer_labels(itrac)%desc = desc
     if(present(unit)) then
-       Diag%dtend_tracer_labels(itrac)%unit=unit
+       Model%dtend_tracer_labels(itrac)%unit=unit
     else
-       Diag%dtend_tracer_labels(itrac)%unit='kg kg-1 s-1'
+       Model%dtend_tracer_labels(itrac)%unit='kg kg-1 s-1'
     endif
   end subroutine label_dtend_tracer
   
-  subroutine label_dtend_cause(Diag,icause,name,desc,mod_name,time_avg)
+  subroutine label_dtend_cause(Model,icause,name,desc,mod_name,time_avg)
     implicit none
-    type(GFS_diag_type), intent(inout) :: Diag
+    type(GFS_control_type), intent(inout) :: Model
     integer, intent(in) :: icause
     character(len=*), intent(in) :: name, desc
     character(len=*), optional, intent(in) :: mod_name
     logical, optional, intent(in) :: time_avg
       
-    Diag%dtend_cause_labels(icause)%name=name
-    Diag%dtend_cause_labels(icause)%desc=desc
+    Model%dtend_cause_labels(icause)%name=name
+    Model%dtend_cause_labels(icause)%desc=desc
     if(present(mod_name)) then
-       Diag%dtend_cause_labels(icause)%mod_name = mod_name
+       Model%dtend_cause_labels(icause)%mod_name = mod_name
     else
-       Diag%dtend_cause_labels(icause)%mod_name = "gfs_phys"
+       Model%dtend_cause_labels(icause)%mod_name = "gfs_phys"
     endif
     if(present(time_avg)) then
-       Diag%dtend_cause_labels(icause)%time_avg = time_avg
+       Model%dtend_cause_labels(icause)%time_avg = time_avg
     else
-       Diag%dtend_cause_labels(icause)%time_avg = .true.
+       Model%dtend_cause_labels(icause)%time_avg = .true.
     endif
   end subroutine label_dtend_cause
 
@@ -5986,9 +6203,6 @@ module GFS_typedefs
 
 !
     logical, save :: linit
-    character(len=20) :: namestr
-    character(len=44) :: descstr
-    integer :: ichem, itrac
     logical :: have_pbl, have_dcnv, have_scnv, have_mp, have_oz_phys
 
     !--- Radiation
@@ -6117,93 +6331,9 @@ module GFS_typedefs
 #ifdef CCPP
         allocate(Diag%dtend(IM,Model%levs,Model%ndtend))
         Diag%dtend = clear_val
-        allocate(Diag%dtend_tracer_labels(Model%ntracp100))
-        allocate(Diag%dtend_cause_labels(Model%ncause))
-
-        call allocate_dtend_labels_and_causes(Diag,Model)
-
-        ! Default names of tracers just in case later code does not initialize them:
-        do itrac=1,Model%ntrac
-           write(namestr,'("tracer",I0)') itrac
-           write(descstr,'("tracer ",I0," of ",I0)') itrac, Model%ntrac
-           call label_dtend_tracer(Diag,100+itrac,trim(namestr),trim(descstr))
-        enddo
-
-        if(Model%ntchs>0) then
-           if(Model%ntchm>0) then
-              ! Chemical tracers are first so more specific tracer names
-              ! replace them. There is no straightforward way of getting
-              ! chemical tracer short names or descriptions, so we use
-              ! indices instead.
-              do ichem=Model%ntchs,Model%ntchs+Model%ntchm-1
-                 write(namestr,'("chem",I0)') ichem
-                 write(descstr,'("chemical tracer ",I0," of ",I0)') ichem, Model%ntchm
-                 call label_dtend_tracer(Diag,100+ichem,trim(namestr),trim(descstr))
-              enddo
-           endif
-
-           ! More specific chemical tracer names:
-           call label_dtend_tracer(Diag,100+Model%ntchs,'so2','sulfur dioxide concentration')
-           if(Model%ntchm>0) then
-              ! Need better descriptions of these.
-              call label_dtend_tracer(Diag,100+Model%ntchm+Model%ntchs-1,'pp10','pp10 concentration')
-
-              itrac=get_tracer_index(Model%tracer_names, 'DMS', Model%me, Model%master, Model%debug)
-              if(itrac>0) then
-                 call label_dtend_tracer(Diag,100+itrac,'DMS','DMS concentration')
-              endif
-              itrac=get_tracer_index(Model%tracer_names, 'msa', Model%me, Model%master, Model%debug)
-              if(itrac>0) then
-                 call label_dtend_tracer(Diag,100+itrac,'msa','msa concentration')
-              endif
-           endif
-        endif
-
-        call label_dtend_tracer(Diag,Model%index_for_temperature,'temp','temperature','K s-1')
-        call label_dtend_tracer(Diag,Model%index_for_x_wind,'u','x wind','m s-2')
-        call label_dtend_tracer(Diag,Model%index_for_y_wind,'v','y wind','m s-2')
-
-        ! Other tracer names. These were taken from GFS_typedefs.F90 with descriptions from GFS_typedefs.meta
-        call label_dtend_tracer(Diag,100+Model%ntqv,'qv','water vapor specific humidity')
-        call label_dtend_tracer(Diag,100+Model%ntoz,'o3','ozone concentration')
-        call label_dtend_tracer(Diag,100+Model%ntcw,'liq_wat','cloud condensate (or liquid water)')
-        call label_dtend_tracer(Diag,100+Model%ntiw,'ice_wat','ice water')
-        call label_dtend_tracer(Diag,100+Model%ntrw,'rainwat','rain water')
-        call label_dtend_tracer(Diag,100+Model%ntsw,'snowwat','snow water')
-        call label_dtend_tracer(Diag,100+Model%ntgl,'graupel','graupel')
-        call label_dtend_tracer(Diag,100+Model%ntclamt,'cld_amt','cloud amount integer')
-        call label_dtend_tracer(Diag,100+Model%ntlnc,'water_nc','liquid number concentration')
-        call label_dtend_tracer(Diag,100+Model%ntinc,'ice_nc','ice number concentration')
-        call label_dtend_tracer(Diag,100+Model%ntrnc,'rain_nc','rain number concentration')
-        call label_dtend_tracer(Diag,100+Model%ntsnc,'snow_nc','snow number concentration')
-        call label_dtend_tracer(Diag,100+Model%ntgnc,'graupel_nc','graupel number concentration')
-        call label_dtend_tracer(Diag,100+Model%ntke,'sgs_tke','turbulent kinetic energy')
-        call label_dtend_tracer(Diag,100+Model%nqrimef,'q_rimef','mass weighted rime factor')
-        call label_dtend_tracer(Diag,100+Model%ntwa,'liq_aero','number concentration of water-friendly aerosols')
-        call label_dtend_tracer(Diag,100+Model%ntia,'ice_aero','number concentration of ice-friendly aerosols')
-        call label_dtend_tracer(Diag,100+Model%nto,'o_ion','oxygen ion concentration')
-        call label_dtend_tracer(Diag,100+Model%nto2,'o2','oxygen concentration')
-
-        call label_dtend_cause(Diag,Model%index_for_cause_pbl,'pbl','tendency due to PBL')
-        call label_dtend_cause(Diag,Model%index_for_cause_dcnv,'deepcnv','tendency due to deep convection')
-        call label_dtend_cause(Diag,Model%index_for_cause_scnv,'shalcnv','tendency due to shallow convection')
-        call label_dtend_cause(Diag,Model%index_for_cause_mp,'mp','tendency due to microphysics')
-        call label_dtend_cause(Diag,Model%index_for_cause_prod_loss,'prodloss','tendency due to production and loss rate')
-        call label_dtend_cause(Diag,Model%index_for_cause_ozmix,'o3mix','tendency due to ozone mixing ratio')
-        call label_dtend_cause(Diag,Model%index_for_cause_temp,'temp','tendency due to temperature')
-        call label_dtend_cause(Diag,Model%index_for_cause_overhead_ozone,'o3column','tendency due to overhead ozone column')
-        call label_dtend_cause(Diag,Model%index_for_cause_physics,'phys','tendency due to physics')
-        call label_dtend_cause(Diag,Model%index_for_cause_non_physics,'nophys','tendency due to non-physics processes', &
-                               mod_name='gfs_dyn')
-
-        call label_dtend_cause(Diag,Model%index_for_cause_longwave,'lw','tendency due to long wave radiation')
-        call label_dtend_cause(Diag,Model%index_for_cause_shortwave,'sw','tendency due to short wave radiation')
-        call label_dtend_cause(Diag,Model%index_for_cause_orographic_gwd,'orogwd','tendency due to orographic gravity wave drag')
-        call label_dtend_cause(Diag,Model%index_for_cause_rayleigh_damping,'rdamp','tendency due to Rayleigh damping')
-        call label_dtend_cause(Diag,Model%index_for_cause_convective_gwd,'cnvgwd','tendency due to convective gravity wave drag')
 
 #else
-        allocate(Diag%dtend(IM,Model%levs,13))
+        allocate(Diag%dq3dt(IM,Model%levs,13))
         Diag%dtend = clear_val
 #endif
       endif
