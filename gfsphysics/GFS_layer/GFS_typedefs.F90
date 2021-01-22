@@ -3659,7 +3659,7 @@ module GFS_typedefs
     integer :: ncnvcld3d = 0       !< number of convective 3d clouds fields
 
     integer :: itrac, ipat, ichem
-    logical :: have_pbl, have_dcnv, have_scnv, have_mp, have_oz_phys
+    logical :: have_pbl, have_dcnv, have_scnv, have_mp, have_oz_phys, have_samf, have_pbl
     character(len=20) :: namestr
     character(len=44) :: descstr
 
@@ -3763,9 +3763,6 @@ module GFS_typedefs
       if(me==master) &
            write(0,*) 'FLAG: imfshalcnv_gf so scnv not generic'
       Model%flag_for_scnv_generic_tend=.false.
-    ! else if(imfshalcnv == Model%imfshalcnv_samf) then
-    !   write(0,*) 'FLAG: imfshalcnv_samf so scnv not generic'
-    !   Model%flag_for_scnv_generic_tend=.false.
     elseif(me==master) then
       write(0,*) 'NO FLAG: scnv is generic'
     endif
@@ -3774,9 +3771,6 @@ module GFS_typedefs
       if(me==master) &
            write(0,*) 'FLAG: imfdeepcnv_gf so dcnv not generic'
       Model%flag_for_dcnv_generic_tend=.false.
-    ! else if(imfdeepcnv == Model%imfdeepcnv_samf) then
-    !   write(0,*) 'FLAG: imfdeepcnv_samf so dcnv not generic'
-    !   Model%flag_for_dcnv_generic_tend=.false.
     elseif(me==master) then
       write(0,*) 'NO FLAG: dcnv is generic'
     endif
@@ -4435,6 +4429,8 @@ module GFS_typedefs
     if(ldiag3d) then
        Model%ndtend = 1 ! first i-k slice is empty
        ! Flags used to turn on or off tracer "causes"
+       have_pbl_edmf = Model%hedmf .or. Model%satmedmf .or. do_mynnedmf
+       have_samf =  Model%satmedmf .or. Model%trans_trac .or. Model%ras .or. Model%do_shoc
        have_pbl = .true.
        have_dcnv = Model%imfdeepcnv>=0 !Model%ras .or. Model%cscnv .or. Model%do_deep .or. Model%hwrf_samfdeep
        have_scnv = Model%imfshalcnv>=0 !Model%shal_cnv
@@ -4557,10 +4553,20 @@ module GFS_typedefs
        call fill_dtidx(Model,dtend_select,Model%index_for_y_wind,Model%index_for_cause_non_physics)
 
        if(qdiag3d) then
-          call fill_dtidx(Model,dtend_select,100+Model%ntqv,Model%index_for_cause_pbl,have_pbl)
-          call fill_dtidx(Model,dtend_select,100+Model%ntqv,Model%index_for_cause_dcnv,have_dcnv)
-          call fill_dtidx(Model,dtend_select,100+Model%ntqv,Model%index_for_cause_scnv,have_scnv)
-          
+          if(have_samf) then
+            do itrac=1,Model%ntrac
+              call fill_dtidx(Model,dtend_select,100+itrac,Model%index_for_cause_dcnv,have_dcnv)
+              call fill_dtidx(Model,dtend_select,100+itrac,Model%index_for_cause_scnv,have_scnv)
+            enddo
+          else
+            call fill_dtidx(Model,dtend_select,100+Model%ntqv,Model%index_for_cause_dcnv,have_dcnv)
+            call fill_dtidx(Model,dtend_select,100+Model%ntqv,Model%index_for_cause_scnv,have_scnv)
+            call fill_dtidx(Model,dtend_select,100+Model%ntcw,Model%index_for_cause_dcnv,have_dcnv)
+            call fill_dtidx(Model,dtend_select,100+Model%ntcw,Model%index_for_cause_scnv,have_scnv)
+            call fill_dtidx(Model,dtend_select,100+Model%ntiw,Model%index_for_cause_dcnv,have_dcnv)
+            call fill_dtidx(Model,dtend_select,100+Model%ntiw,Model%index_for_cause_scnv,have_scnv)
+          endif
+
           call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_for_cause_pbl,have_pbl .and. have_oz_phys)
           call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_for_cause_prod_loss,have_oz_phys)
           call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_for_cause_ozmix,have_oz_phys)
@@ -4569,10 +4575,19 @@ module GFS_typedefs
           call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_for_cause_physics,.true.)
           call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_for_cause_non_physics,.true.)
           
+          if(.not.Model%do_mynnedmf .and. .not. Model%satmedmf) then
+            call fill_dtidx(Model,dtend_select,100+Model%ntqv,Model%index_for_cause_pbl,have_pbl)
+            call fill_dtidx(Model,dtend_select,100+Model%ntcw,Model%index_for_cause_pbl,have_pbl)
+            call fill_dtidx(Model,dtend_select,100+Model%ntiw,Model%index_for_cause_pbl,have_pbl)
+          endif
+
           do itrac=1,Model%ntrac
              if(itrac==Model%ntchs) exit ! remaining tracers are chemical
              if(itrac==Model%ntoz) cycle ! already took care of ozone
              call fill_dtidx(Model,dtend_select,100+itrac,Model%index_for_cause_mp,have_mp)
+             if(have_pbl_edmf) then
+               call fill_dtidx(Model,dtend_select,100+itrac,Model%index_for_cause_pbl,have_pbl)
+             endif
              call fill_dtidx(Model,dtend_select,100+itrac,Model%index_for_cause_physics,.true.)
              call fill_dtidx(Model,dtend_select,100+itrac,Model%index_for_cause_non_physics,.true.)
           enddo
