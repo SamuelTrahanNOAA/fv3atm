@@ -100,7 +100,7 @@ use CCPP_data,          only: ccpp_suite,                      &
 use IPD_driver,         only: IPD_initialize, IPD_initialize_rst
 use CCPP_driver,        only: CCPP_step, non_uniform_blocks
 
-use stochastic_physics_wrapper_mod, only: stochastic_physics_wrapper
+use stochastic_physics_wrapper_mod, only: stochastic_physics_wrapper,stochastic_physics_wrapper_end
 #else
 use IPD_driver,         only: IPD_initialize, IPD_initialize_rst, IPD_step
 use physics_abstraction_layer, only: time_vary_step, radiation_step1, physics_step1, physics_step2
@@ -658,9 +658,9 @@ subroutine atmos_model_init (Atmos, Time_init, Time, Time_step)
                         IPD_Interstitial, commglobal, mpp_npes(), Init_parm)
 
 !--- Initialize stochastic physics pattern generation / cellular automata for first time step
-   call stochastic_physics_wrapper(IPD_Control, IPD_Data, Atm_block, ierr)
-   if (ierr/=0)  call mpp_error(FATAL, 'Call to stochastic_physics_wrapper failed')
-
+!   call stochastic_physics_wrapper(IPD_Control, IPD_Data, Atm_block, ierr)
+!   if (ierr/=0)  call mpp_error(FATAL, 'Call to stochastic_physics_wrapper failed')
+!
 #else
    call IPD_initialize (IPD_Control, IPD_Data, IPD_Diag, IPD_Restart, Init_parm)
 #endif
@@ -715,6 +715,9 @@ subroutine atmos_model_init (Atmos, Time_init, Time, Time_step)
    ! Initialize the CCPP physics
    call CCPP_step (step="physics_init", nblks=Atm_block%nblks, ierr=ierr)
    if (ierr/=0)  call mpp_error(FATAL, 'Call to CCPP physics_init step failed')
+!--- Initialize stochastic physics pattern generation / cellular automata for first time step
+   call stochastic_physics_wrapper(IPD_Control, IPD_Data, Atm_block, ierr)
+   if (ierr/=0)  call mpp_error(FATAL, 'Call to stochastic_physics_wrapper failed')
 #endif
 
    !--- set the initial diagnostic timestamp
@@ -993,6 +996,9 @@ subroutine atmos_model_end (Atmos)
 !---- termination routine for atmospheric model ----
 
     call atmosphere_end (Atmos % Time, Atmos%grid, restart_endfcst)
+
+    call stochastic_physics_wrapper_end(IPD_Control)
+
     if(restart_endfcst) then
       call FV3GFS_restart_write (IPD_Data, IPD_Restart, Atm_block, &
                                  IPD_Control, Atmos%domain)
@@ -1792,7 +1798,6 @@ end subroutine atmos_data_type_chksum
                   nb = Atm_block%blkno(i,j)
                   ix = Atm_block%ixp(i,j)
 
-                  IPD_Data(nb)%Sfcprop%fice(ix)          = zero
                   IPD_Data(nb)%Coupling%slimskin_cpl(ix) = IPD_Data(nb)%Sfcprop%slmsk(ix)
                   ofrac = IPD_Data(nb)%Sfcprop%oceanfrac(ix)
                   if (ofrac > zero) then
@@ -1807,7 +1812,7 @@ end subroutine atmos_data_type_chksum
                       if (abs(one-ofrac) < epsln) then
                         IPD_Data(nb)%Sfcprop%slmsk(ix)         = zero
                         IPD_Data(nb)%Coupling%slimskin_cpl(ix) = zero
-                      end if
+                      endif
                     endif
                   endif
                 enddo
