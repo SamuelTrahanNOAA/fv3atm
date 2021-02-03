@@ -513,6 +513,10 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: ca_shal  (:)   => null() !
     real (kind=kind_phys), pointer :: ca_rad   (:)   => null() !
     real (kind=kind_phys), pointer :: ca_micro (:)   => null() !
+    real (kind=kind_phys), pointer :: ca_emis_anthro(:) => null()
+    real (kind=kind_phys), pointer :: ca_emis_dust(:)   => null()
+    real (kind=kind_phys), pointer :: ca_emis_plume(:)  => null()
+    real (kind=kind_phys), pointer :: ca_emis_seas(:)   => null()
     real (kind=kind_phys), pointer :: condition(:)   => null() !
     real (kind=kind_phys), pointer :: vfact_ca(:)    => null() !
     !--- stochastic physics
@@ -1039,6 +1043,7 @@ module GFS_typedefs
     integer              :: nseed_g         !< cellular automata seed frequency    
     logical              :: do_ca           !< cellular automata main switch
     logical              :: ca_sgs          !< switch for sgs ca
+    logical              :: ca_sgs_emis     !< switch for sgs ca on tracer emissions
     logical              :: ca_global       !< switch for global ca on prognostic fields
     logical              :: ca_global_emis  !< switch for global ca application to tracer emissions
     logical              :: ca_global_any   !< true if ca_global or ca_global_emis are true
@@ -1608,6 +1613,8 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: ca_shal  (:)   => null()   !< cellular automata fraction
     real (kind=kind_phys), pointer :: ca_rad   (:)   => null()   !< cellular automata fraction
     real (kind=kind_phys), pointer :: ca_micro (:)   => null()   !< cellular automata fraction
+    real (kind=kind_phys), pointer :: ca_condition(:)=> null()   !< cellular automata fraction
+    real (kind=kind_phys), pointer :: ca_plume(:)    => null()   !< cellular automata fraction
 
     real (kind=kind_phys), pointer :: skebu_wts(:,:) => null()   !< 10 meter u wind speed
     real (kind=kind_phys), pointer :: skebv_wts(:,:) => null()   !< 10 meter v wind speed
@@ -3388,6 +3395,7 @@ module GFS_typedefs
     integer              :: nspinup        = 1
     logical              :: do_ca          = .false.
     logical              :: ca_sgs         = .false.
+    logical              :: ca_sgs_emis    = .false.
     logical              :: ca_global      = .false.
     logical              :: ca_global_emis = .false.
     logical              :: ca_smooth      = .false.
@@ -4213,6 +4221,7 @@ module GFS_typedefs
     Model%ca_global_any    = ca_global .or. ca_global_emis
     Model%do_ca            = do_ca
     Model%ca_sgs           = ca_sgs
+    Model%ca_sgs_emis      = ca_sgs_emis
     Model%iseed_ca         = iseed_ca
     Model%ca_smooth        = ca_smooth
     Model%nspinup          = nspinup  
@@ -5333,6 +5342,7 @@ module GFS_typedefs
       print *, ' ca_global         : ', Model%ca_global
       print *, ' ca_global_emis    : ', Model%ca_global_emis
       print *, ' ca_sgs            : ', Model%ca_sgs
+      print *, ' ca_sgs_emis       : ', Model%ca_sgs_emis
       print *, ' do_ca             : ', Model%do_ca
       print *, ' iseed_ca          : ', Model%iseed_ca
       print *, ' ca_smooth         : ', Model%ca_smooth

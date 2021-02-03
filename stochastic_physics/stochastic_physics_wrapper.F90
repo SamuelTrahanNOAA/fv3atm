@@ -28,6 +28,8 @@ module stochastic_physics_wrapper_mod
   real(kind=kind_phys), dimension(:,:),   allocatable, save :: condition
   real(kind=kind_phys), dimension(:,:),   allocatable, save :: ca_deep_cpl, ca_turb_cpl, ca_shal_cpl
   real(kind=kind_phys), dimension(:,:),   allocatable, save :: ca_deep_diag,ca_turb_diag,ca_shal_diag
+  real(kind=kind_phys), dimension(:,:),   allocatable, save :: ca_emis_anthro, ca_emis_dust, &
+       ca_emis_plume, ca_emis_seas, ca_condition_diag, ca_plume_diag
   real(kind=kind_phys), dimension(:,:),   allocatable, save :: ca1_cpl, ca2_cpl, ca3_cpl
   real(kind=kind_phys), dimension(:,:),   allocatable, save :: ca1_diag,ca2_diag,ca3_diag
 
@@ -57,6 +59,7 @@ module stochastic_physics_wrapper_mod
     use stochastic_physics,           only: init_stochastic_physics, run_stochastic_physics
     use cellular_automata_global_mod, only: cellular_automata_global
     use cellular_automata_sgs_mod,    only: cellular_automata_sgs
+    use cellular_automata_sgs_emis_mod,    only: cellular_automata_sgs_emis
     use lndp_apply_perts_mod, only: lndp_apply_perts
     use namelist_soilveg, only: maxsmc
 
@@ -223,6 +226,60 @@ module stochastic_physics_wrapper_mod
 
     ! Cellular automata code is identical for initialization (kstep=0) and time integration (kstep>0)
     if(GFS_Control%do_ca)then
+       if(GFS_Control%ca_sgs_emis)then
+         ! Allocate contiguous arrays; copy in as needed
+         allocate(ugrs        (1:Atm_block%nblks,maxval(GFS_Control%blksz),1:GFS_Control%levs))
+         allocate(qgrs        (1:Atm_block%nblks,maxval(GFS_Control%blksz),1:GFS_Control%levs))
+         allocate(pgr         (1:Atm_block%nblks,maxval(GFS_Control%blksz)                   ))
+         allocate(vvl         (1:Atm_block%nblks,maxval(GFS_Control%blksz),1:GFS_Control%levs))
+         allocate(prsl        (1:Atm_block%nblks,maxval(GFS_Control%blksz),1:GFS_Control%levs))
+         allocate(ca_emis_anthro(1:Atm_block%nblks,maxval(GFS_Control%blksz)                 ))
+         allocate(ca_emis_dust(1:Atm_block%nblks,maxval(GFS_Control%blksz)                   ))
+         allocate(ca_emis_plume(1:Atm_block%nblks,maxval(GFS_Control%blksz)                  ))
+         allocate(ca_emis_seas(1:Atm_block%nblks,maxval(GFS_Control%blksz)                   ))
+         allocate(ca_plume_diag(1:Atm_block%nblks,maxval(GFS_Control%blksz)                  ))
+         allocate(ca_condition_diag(1:Atm_block%nblks,maxval(GFS_Control%blksz)              ))
+         allocate(condition   (1:Atm_block%nblks,maxval(GFS_Control%blksz)                   ))
+         do nb=1,Atm_block%nblks
+             ugrs       (nb,1:GFS_Control%blksz(nb),:) = GFS_Data(nb)%Statein%ugrs(:,:)
+             qgrs       (nb,1:GFS_Control%blksz(nb),:) = GFS_Data(nb)%Statein%qgrs(:,:,1)
+             pgr        (nb,1:GFS_Control%blksz(nb))   = GFS_Data(nb)%Statein%pgr(:)
+             vvl        (nb,1:GFS_Control%blksz(nb),:) = GFS_Data(nb)%Statein%vvl(:,:)
+             prsl       (nb,1:GFS_Control%blksz(nb),:) = GFS_Data(nb)%Statein%prsl(:,:)
+             condition  (nb,1:GFS_Control%blksz(nb))   = GFS_Data(nb)%Coupling%condition(:)
+             ca_emis_anthro(nb,1:GFS_Control%blksz(nb))= GFS_Data(nb)%Coupling%ca_emis_anthro(:)
+             ca_emis_dust(nb,1:GFS_Control%blksz(nb))  = GFS_Data(nb)%Coupling%ca_emis_dust(:)
+             ca_emis_plume(nb,1:GFS_Control%blksz(nb)) = GFS_Data(nb)%Coupling%ca_emis_plume(:)
+             ca_emis_seas(nb,1:GFS_Control%blksz(nb))  = GFS_Data(nb)%Coupling%ca_emis_seas(:)
+         enddo
+         call cellular_automata_sgs_emis(GFS_Control%kdt,ugrs,qgrs,pgr,vvl,prsl,condition,ca_emis_anthro,ca_emis_dust,    &
+            ca_emis_plume,ca_emis_seas,ca_condition_diag,ca_plume_diag,Atm(mygrid)%domain_for_coupler,Atm_block%nblks,    &
+            Atm_block%isc,Atm_block%iec,Atm_block%jsc,Atm_block%jec,Atm(mygrid)%npx,Atm(mygrid)%npy, GFS_Control%levs,    &
+            GFS_Control%nca,GFS_Control%ncells,GFS_Control%nlives,GFS_Control%nfracseed,                                  &
+            GFS_Control%nseed,GFS_Control%nthresh,GFS_Control%ca_global_any,GFS_Control%ca_sgs,GFS_Control%iseed_ca,          &
+            GFS_Control%ca_smooth,GFS_Control%nspinup,Atm_block%blksz(1),GFS_Control%master,GFS_Control%communicator)
+         ! Copy contiguous data back as needed
+         do nb=1,Atm_block%nblks
+             GFS_Data(nb)%Intdiag%ca_condition(:)    = ca_condition_diag(nb,1:GFS_Control%blksz(nb))
+             GFS_Data(nb)%Intdiag%ca_plume(:)        = ca_plume_diag(nb,1:GFS_Control%blksz(nb))
+             GFS_Data(nb)%Coupling%ca_emis_anthro(:) = ca_emis_anthro (nb,1:GFS_Control%blksz(nb))
+             GFS_Data(nb)%Coupling%ca_emis_dust(:)   = ca_emis_dust (nb,1:GFS_Control%blksz(nb))
+             GFS_Data(nb)%Coupling%ca_emis_plume(:)  = ca_emis_plume (nb,1:GFS_Control%blksz(nb))
+             GFS_Data(nb)%Coupling%ca_emis_seas(:)   = ca_emis_seas (nb,1:GFS_Control%blksz(nb))
+         enddo
+         deallocate(ugrs        )
+         deallocate(qgrs        )
+         deallocate(pgr         )
+         deallocate(vvl         )
+         deallocate(prsl        )
+         deallocate(condition   )
+         deallocate(ca_emis_anthro)
+         deallocate(ca_emis_dust)
+         deallocate(ca_emis_plume)
+         deallocate(ca_emis_seas)
+         deallocate(ca_condition_diag)
+         deallocate(ca_plume_diag)
+       endif
        if(GFS_Control%ca_sgs)then
          ! Allocate contiguous arrays; copy in as needed
          allocate(ugrs        (1:Atm_block%nblks,maxval(GFS_Control%blksz),1:GFS_Control%levs))
