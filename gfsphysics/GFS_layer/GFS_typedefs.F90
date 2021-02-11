@@ -5330,6 +5330,8 @@ module GFS_typedefs
     nullify(Tbd%dfi_radar_tten)
     if(Model%num_dfi_radar>0) then
        allocate(Tbd%dfi_radar_tten(IM,Model%levs,Model%num_dfi_radar))
+       Tbd%dfi_radar_tten = -20.0
+       Tbd%dfi_radar_tten(:,1,:) = 0.0
     endif
 #endif
 
