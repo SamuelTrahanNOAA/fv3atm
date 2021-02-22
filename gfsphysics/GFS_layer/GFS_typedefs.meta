@@ -5868,13 +5868,20 @@
   type = real
   kind = kind_phys
 [dt3dt(:,:,10)]
+  standard_name = cumulative_change_in_temperature_due_to_dfi_radar
+  long_name = cumulative change in temperature due to dfi radar
+  units = K
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
+[dt3dt(:,:,11)]
   standard_name = cumulative_change_in_temperature_due_to_physics
   long_name = cumulative change in temperature due to physics
   units = K
   dimensions = (horizontal_dimension,vertical_dimension)
   type = real
   kind = kind_phys
-[dt3dt(:,:,11)]
+[dt3dt(:,:,12)]
   standard_name = cumulative_change_in_temperature_due_to_non_physics_processes
   long_name = cumulative change in temperature due to non-physics processed
   units = K
