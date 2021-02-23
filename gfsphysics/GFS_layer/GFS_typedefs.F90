@@ -3675,7 +3675,7 @@ module GFS_typedefs
     integer :: ncnvcld3d = 0       !< number of convective 3d clouds fields
 
     integer :: itrac, ipat, ichem
-    logical :: have_pbl, have_dcnv, have_scnv, have_mp, have_oz_phys, have_samf, have_pbl
+    logical :: have_pbl, have_dcnv, have_scnv, have_mp, have_oz_phys, have_samf, have_pbl_edmf
     character(len=20) :: namestr
     character(len=44) :: descstr
 
@@ -4454,7 +4454,7 @@ module GFS_typedefs
     if(ldiag3d) then
        Model%ndtend = 1 ! first i-k slice is empty
        ! Flags used to turn on or off tracer "causes"
-       have_pbl_edmf = Model%hedmf .or. Model%satmedmf .or. do_mynnedmf
+       have_pbl_edmf = Model%hybedmf .or. Model%satmedmf .or. do_mynnedmf
        have_samf =  Model%satmedmf .or. Model%trans_trac .or. Model%ras .or. Model%do_shoc
        have_pbl = .true.
        have_dcnv = Model%imfdeepcnv>=0 !Model%ras .or. Model%cscnv .or. Model%do_deep .or. Model%hwrf_samfdeep
