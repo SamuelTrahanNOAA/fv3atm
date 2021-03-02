@@ -10326,6 +10326,12 @@
   type = character
   kind = len=128
   active = (flag_for_rrtmgp_radiation_scheme)
+[rtg_ozone_index]
+  standard_name = vertically_diffused_tracer_index_of_ozone
+  long_name = number of tracers
+  units = count
+  dimensions = ()
+  type = integer
 
 ########################################################################
 [ccpp-table-properties]

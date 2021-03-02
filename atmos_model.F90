@@ -228,9 +228,7 @@ subroutine update_atmos_radiation_physics (Atmos)
 !-----------------------------------------------------------------------
   type (atmos_data_type), intent(in) :: Atmos
 !--- local variables---
-#ifdef CCPP
     integer :: idtend, itrac
-#endif
     integer :: nb, jdat(8), rc, ierr
 
     if (mpp_pe() == mpp_root_pe() .and. debug) write(6,*) "statein driver"
@@ -286,7 +284,6 @@ subroutine update_atmos_radiation_physics (Atmos)
       ! variables from new/updated IPD Statein variables (gives the tendencies
       ! due to anything else than physics)
       if (GFS_Control%ldiag3d) then
-#ifdef CCPP
         idtend = GFS_Control%dtidx(GFS_Control%index_for_x_wind,GFS_Control%index_for_cause_non_physics)
         if(idtend>1) then
           do nb = 1,Atm_block%nblks
@@ -322,24 +319,6 @@ subroutine update_atmos_radiation_physics (Atmos)
             endif
           enddo
         endif
-#else
-        do nb = 1,Atm_block%nblks
-          GFS_data(nb)%Intdiag%du3dt(:,:,8)  = GFS_data(nb)%Intdiag%du3dt(:,:,8)  &
-                                              + (GFS_data(nb)%Statein%ugrs - GFS_data(nb)%Stateout%gu0)
-          GFS_data(nb)%Intdiag%dv3dt(:,:,8)  = GFS_data(nb)%Intdiag%dv3dt(:,:,8)  &
-                                              + (GFS_data(nb)%Statein%vgrs - GFS_data(nb)%Stateout%gv0)
-          GFS_data(nb)%Intdiag%dt3dt(:,:,11) = GFS_data(nb)%Intdiag%dt3dt(:,:,11) &
-                                              + (GFS_data(nb)%Statein%tgrs - GFS_data(nb)%Stateout%gt0)
-        enddo
-        if (GFS_control%qdiag3d) then
-          do nb = 1,Atm_block%nblks
-            GFS_data(nb)%Intdiag%dq3dt(:,:,12) = GFS_data(nb)%Intdiag%dq3dt(:,:,12) &
-                  + (GFS_data(nb)%Statein%qgrs(:,:,GFS_control%ntqv) - GFS_data(nb)%Stateout%gq0(:,:,GFS_control%ntqv))
-            GFS_data(nb)%Intdiag%dq3dt(:,:,13) = GFS_data(nb)%Intdiag%dq3dt(:,:,13) &
-                  + (GFS_data(nb)%Statein%qgrs(:,:,GFS_control%ntoz) - GFS_data(nb)%Stateout%gq0(:,:,GFS_control%ntoz))
-          enddo
-        endif
-#endif
       endif
 
       call mpp_clock_end(setupClock)

@@ -520,7 +520,6 @@ module GFS_typedefs
       procedure :: create  => coupling_create  !<   allocate array data
   end type GFS_coupling_type
 
-
 !----------------------------------------------------------------
 ! dtend_tracer_label
 !  Information about first dimension of dtidx
@@ -1128,7 +1127,6 @@ module GFS_typedefs
     integer :: index_for_cause_physics          !< tracer changes caused by physics schemes
     integer :: index_for_cause_non_physics      !< tracer changes caused by everything except physics schemes
 
-#endif
     integer              :: ntqv            !< tracer index for water vapor (specific humidity)
     integer              :: ntoz            !< tracer index for ozone mixing ratio
     integer              :: ntcw            !< tracer index for cloud condensate (or liquid water)
@@ -1578,13 +1576,6 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: sppt_wts(:,:)  => null()   !<
     real (kind=kind_phys), pointer :: shum_wts(:,:)  => null()   !<
     real (kind=kind_phys), pointer :: zmtnblck(:)    => null()   !<mountain blocking evel
-
-#ifndef CCPP
-    ! Basic 3d tendencies from ldiag3d:
-    real (kind=kind_phys), pointer :: du3dt (:,:,:)  => null()   !< u momentum change due to physics
-    real (kind=kind_phys), pointer :: dv3dt (:,:,:)  => null()   !< v momentum change due to physics
-    real (kind=kind_phys), pointer :: dt3dt (:,:,:)  => null()   !< temperature change due to physics
-#endif
 
     ! dtend/dtidxt: Multitudenous 3d tendencies in a 4D array: (i,k,0:ntrac,ncause)
     ! Sparse in outermost two dimensions. dtidx(1:100+ntrac,ncause) maps to dtend 
@@ -2172,6 +2163,8 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: f_rimef    (:,:)   => null()  !<
     real (kind=kind_phys), pointer :: cwm        (:,:)   => null()  !<
 
+    !-- 3D diagnostics
+    integer :: rtg_ozone_index
 
     contains
       procedure :: create      => interstitial_create     !<   allocate array data
@@ -3445,7 +3438,7 @@ module GFS_typedefs
 
     NAMELIST /gfs_physics_nml/                                                              &
                           !--- general parameters
-                               fhzero, dtend_select, ldiag3d, qdiag3d, lssav, naux2d,       &
+                               fhzero, ldiag3d, qdiag3d, lssav, naux2d, dtend_select,       &
                                naux3d, aux2d_time_avg, aux3d_time_avg, fhcyc,               &
                                thermodyn_id, sfcpress_id,                                   &
                           !--- coupling parameters
@@ -4499,7 +4492,6 @@ module GFS_typedefs
        endif
     end if
 
-#ifdef CCPP
     ! To ensure that these values match what's in the physics,
     ! array sizes are compared during model init in GFS_phys_time_vary_init()
     !
@@ -6139,27 +6131,8 @@ module GFS_typedefs
 
     !--- 3D diagnostics
     if (Model%ldiag3d) then
-#ifndef CCPP
-       
-      allocate (Diag%du3dt  (IM,Model%levs,8))
-      allocate (Diag%dv3dt  (IM,Model%levs,8))
-      allocate (Diag%dt3dt  (IM,Model%levs,11))
-#endif
-      if (Model%qdiag3d) then
-#ifdef CCPP
-        allocate(Diag%dtend(IM,Model%levs,Model%ndtend))
-        Diag%dtend = clear_val
-
-#else
-        allocate(Diag%dq3dt(IM,Model%levs,13))
-        Diag%dtend = clear_val
-#endif
-      endif
-    else
-      allocate (Diag%du3dt  (1,1,8))
-      allocate (Diag%dv3dt  (1,1,8))
-      allocate (Diag%dt3dt  (1,1,11))
-      allocate (Diag%dq3dt  (1,1,13))
+      allocate(Diag%dtend(IM,Model%levs,Model%ndtend))
+      Diag%dtend = clear_val
     endif
 
 ! UGWP
@@ -6444,21 +6417,7 @@ module GFS_typedefs
 !    if(Model%me == Model%master) print *,'in diag_phys_zero, totprcpb set to 0,kdt=',Model%kdt
 
     if (Model%ldiag3d) then
-#ifdef CCPP
        Diag%dtend    = zero
-#else
-       Diag%du3dt    = zero
-       Diag%dv3dt    = zero
-       Diag%dt3dt    = zero
-#endif
-      if (Model%qdiag3d) then
-#ifndef CCPP
-         Diag%dq3dt    = zero
-!        Diag%upd_mf   = zero
-!        Diag%dwn_mf   = zero
-!        Diag%det_mf   = zero
-#endif
-      endif
     endif
 
 !
