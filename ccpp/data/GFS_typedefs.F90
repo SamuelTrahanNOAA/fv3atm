@@ -1124,6 +1124,7 @@ module GFS_typedefs
     integer :: index_for_cause_rayleigh_damping !< tracer changes caused by Rayleigh damping
     integer :: index_for_cause_convective_gwd   !< tracer changes caused by convective gravity wave drag
     integer :: index_for_cause_overhead_ozone   !< tracer changes caused by overhead ozone column
+    integer :: index_for_cause_conv_trans       !< tracer changes caused by convective transport
     integer :: index_for_cause_physics          !< tracer changes caused by physics schemes
     integer :: index_for_cause_non_physics      !< tracer changes caused by everything except physics schemes
 
@@ -4296,8 +4297,6 @@ module GFS_typedefs
 
     ! Tracer diagnostics indices and dimension size, which must be in
     ! Model to be forwarded to the right places.
-    Model%ncause           = 15
-    Model%ncause_summed    = 13 ! causes to be summed to make physics tendency
     Model%index_for_cause_pbl = 1
     Model%index_for_cause_dcnv = 2
     Model%index_for_cause_scnv = 3
@@ -4311,9 +4310,13 @@ module GFS_typedefs
     Model%index_for_cause_orographic_gwd = 11
     Model%index_for_cause_rayleigh_damping = 12
     Model%index_for_cause_convective_gwd = 13
+    Model%index_for_cause_conv_trans = 14
     ! These two must be last:
-    Model%index_for_cause_physics = 14
-    Model%index_for_cause_non_physics = 15
+    Model%index_for_cause_physics = 15
+    Model%index_for_cause_non_physics = 16
+
+    Model%ncause           = Model%index_for_cause_non_physics
+    Model%ncause_summed    = Model%index_for_cause_physics-1 ! causes to be summed to make physics tendency
 
     Model%index_for_temperature = 10
     Model%index_for_x_wind = 11
@@ -4414,7 +4417,7 @@ module GFS_typedefs
         call label_dtend_cause(Model,Model%index_for_cause_physics,'phys','tendency due to physics')
         call label_dtend_cause(Model,Model%index_for_cause_non_physics,'nophys','tendency due to non-physics processes', &
                                mod_name='gfs_dyn')
-
+        call label_dtend_cause(Model,Model%index_for_cause_conv_trans,'cnvtrans','tendency due to convective transport')
         call label_dtend_cause(Model,Model%index_for_cause_longwave,'lw','tendency due to long wave radiation')
         call label_dtend_cause(Model,Model%index_for_cause_shortwave,'sw','tendency due to short wave radiation')
         call label_dtend_cause(Model,Model%index_for_cause_orographic_gwd,'orogwd','tendency due to orographic gravity wave drag')
@@ -4453,6 +4456,8 @@ module GFS_typedefs
        if(qdiag3d) then
           if(have_samf) then
             do itrac=1,Model%ntrac
+              if(itrac==Model%ntchs) exit ! remaining tracers are chemical
+              if(itrac==Model%ntke) cycle ! TKE is handled by convective transport (see below)
               call fill_dtidx(Model,dtend_select,100+itrac,Model%index_for_cause_dcnv,have_dcnv)
               call fill_dtidx(Model,dtend_select,100+itrac,Model%index_for_cause_scnv,have_scnv)
             enddo
@@ -4464,6 +4469,8 @@ module GFS_typedefs
             call fill_dtidx(Model,dtend_select,100+Model%ntiw,Model%index_for_cause_dcnv,have_dcnv)
             call fill_dtidx(Model,dtend_select,100+Model%ntiw,Model%index_for_cause_scnv,have_scnv)
           endif
+          call fill_dtidx(Model,dtend_select,100+Model%ntke,Model%index_for_cause_conv_trans,have_scnv.or.have_dcnv)
+          call fill_dtidx(Model,dtend_select,100+Model%ntclamt,Model%index_for_cause_conv_trans,have_scnv.or.have_dcnv)
 
           call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_for_cause_pbl,have_pbl .and. have_oz_phys)
           call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_for_cause_prod_loss,have_oz_phys)
@@ -4477,6 +4484,7 @@ module GFS_typedefs
             call fill_dtidx(Model,dtend_select,100+Model%ntqv,Model%index_for_cause_pbl,have_pbl)
             call fill_dtidx(Model,dtend_select,100+Model%ntcw,Model%index_for_cause_pbl,have_pbl)
             call fill_dtidx(Model,dtend_select,100+Model%ntiw,Model%index_for_cause_pbl,have_pbl)
+            call fill_dtidx(Model,dtend_select,100+Model%ntke,Model%index_for_cause_pbl,have_pbl)
           endif
 
           do itrac=1,Model%ntrac

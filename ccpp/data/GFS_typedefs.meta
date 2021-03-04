@@ -4379,6 +4379,12 @@
   units = index
   dimensions = ()
   type = integer
+[index_for_cause_conv_trans]
+  standard_name = index_for_cause_conv_trans
+  long_name = tracer changes caused by convective transport of tracers
+  units = index
+  dimensions = ()
+  type = integer
 [index_for_cause_physics]
   standard_name = index_for_cause_physics
   long_name = tracer changes caused by physics schemes

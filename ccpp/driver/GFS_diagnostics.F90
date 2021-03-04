@@ -2357,7 +2357,8 @@ module GFS_diagnostics
 
 !    if(mpp_pe()==mpp_root_pe())print *,'in gfdl_diag_register,af shum_wts,idx=',idx
 
-!--- three-dimensional variables that need to be handled special when writing
+!--- Three-dimensional diagnostic tendencies stored in a 4D sparse
+!--- array need special handling:
     if_ldiag3d: if(Model%ldiag3d) then
       do icause=1,Model%ncause
         do itrac=1,Model%ntracp100
