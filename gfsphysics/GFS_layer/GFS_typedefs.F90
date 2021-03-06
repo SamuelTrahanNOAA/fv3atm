@@ -2865,6 +2865,16 @@ module GFS_typedefs
       Coupling%ca_rad    = clear_val
       Coupling%ca_micro  = clear_val   
       Coupling%condition = clear_val
+      if(Model%ca_sgs_emis) then
+        allocate(Coupling%ca_emis_anthro(IM))
+        allocate(Coupling%ca_emis_dust(IM))
+        allocate(Coupling%ca_emis_plume(IM))
+        allocate(Coupling%ca_emis_seas(IM))
+        Coupling%ca_emis_anthro = clear_val
+        Coupling%ca_emis_dust = clear_val
+        Coupling%ca_emis_plume = clear_val
+        Coupling%ca_emis_seas = clear_val
+      endif
     endif
 
     ! -- GSDCHEM coupling options
@@ -3586,7 +3596,7 @@ module GFS_typedefs
                           !--- cellular automata
                                nca, ncells, nlives, nca_g, ncells_g, nlives_g, nfracseed,   &
                                nseed, nseed_g, nthresh, do_ca,                              &
-                               ca_sgs, ca_global,iseed_ca,ca_smooth,                        &
+                               ca_sgs, ca_sgs_emis, ca_global,iseed_ca,ca_smooth,           &
                                nspinup,ca_amplitude,nsmooth,ca_closure,ca_entr,ca_trigger,  & 
                           !--- IAU
                                iau_delthrs,iaufhrs,iau_inc_files,iau_filter_increments,     &
@@ -6110,6 +6120,14 @@ module GFS_typedefs
       Diag%dusfc_fd      = 0
       Diag%dvsfc_fd      = 0
     endif
+
+    if(Model%do_ca .and. Model%ca_sgs_emis) then
+      allocate(Diag%ca_plume(IM))
+      allocate(Diag%ca_condition(IM))
+      Diag%ca_condition = clear_val
+      Diag%ca_plume = clear_val
+    endif
+
 #endif
 
     ! Auxiliary arrays in output for debugging

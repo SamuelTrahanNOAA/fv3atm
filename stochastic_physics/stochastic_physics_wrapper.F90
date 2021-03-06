@@ -239,25 +239,30 @@ module stochastic_physics_wrapper_mod
          allocate(ca_emis_seas(1:Atm_block%nblks,maxval(GFS_Control%blksz)                   ))
          allocate(ca_plume_diag(1:Atm_block%nblks,maxval(GFS_Control%blksz)                  ))
          allocate(ca_condition_diag(1:Atm_block%nblks,maxval(GFS_Control%blksz)              ))
-         allocate(condition   (1:Atm_block%nblks,maxval(GFS_Control%blksz)                   ))
+         allocate(vfrac(1:Atm_block%nblks,maxval(GFS_Control%blksz)                          ))
          do nb=1,Atm_block%nblks
              ugrs       (nb,1:GFS_Control%blksz(nb),:) = GFS_Data(nb)%Statein%ugrs(:,:)
              qgrs       (nb,1:GFS_Control%blksz(nb),:) = GFS_Data(nb)%Statein%qgrs(:,:,1)
              pgr        (nb,1:GFS_Control%blksz(nb))   = GFS_Data(nb)%Statein%pgr(:)
              vvl        (nb,1:GFS_Control%blksz(nb),:) = GFS_Data(nb)%Statein%vvl(:,:)
              prsl       (nb,1:GFS_Control%blksz(nb),:) = GFS_Data(nb)%Statein%prsl(:,:)
-             condition  (nb,1:GFS_Control%blksz(nb))   = GFS_Data(nb)%Coupling%condition(:)
+             vfrac      (nb,1:GFS_Control%blksz(nb))   = GFS_Data(nb)%Sfcprop%vfrac(:)
              ca_emis_anthro(nb,1:GFS_Control%blksz(nb))= GFS_Data(nb)%Coupling%ca_emis_anthro(:)
              ca_emis_dust(nb,1:GFS_Control%blksz(nb))  = GFS_Data(nb)%Coupling%ca_emis_dust(:)
              ca_emis_plume(nb,1:GFS_Control%blksz(nb)) = GFS_Data(nb)%Coupling%ca_emis_plume(:)
              ca_emis_seas(nb,1:GFS_Control%blksz(nb))  = GFS_Data(nb)%Coupling%ca_emis_seas(:)
          enddo
-         call cellular_automata_sgs_emis(GFS_Control%kdt,ugrs,qgrs,pgr,vvl,prsl,condition,ca_emis_anthro,ca_emis_dust,    &
-            ca_emis_plume,ca_emis_seas,ca_condition_diag,ca_plume_diag,Atm(mygrid)%domain_for_coupler,Atm_block%nblks,    &
-            Atm_block%isc,Atm_block%iec,Atm_block%jsc,Atm_block%jec,Atm(mygrid)%npx,Atm(mygrid)%npy, GFS_Control%levs,    &
-            GFS_Control%nca,GFS_Control%ncells,GFS_Control%nlives,GFS_Control%nfracseed,                                  &
-            GFS_Control%nseed,GFS_Control%nthresh,GFS_Control%ca_global_any,GFS_Control%ca_sgs,GFS_Control%iseed_ca,          &
-            GFS_Control%ca_smooth,GFS_Control%nspinup,Atm_block%blksz(1),GFS_Control%master,GFS_Control%communicator)
+         call cellular_automata_sgs_emis(kstep=GFS_Control%kdt,ugrs=ugrs,qgrs=qgrs,pgr=pgr,vvl=vvl,prsl=prsl, &
+              vfrac_cpl=vfrac,ca_emis_anthro_cpl=ca_emis_anthro,ca_emis_dust_cpl=ca_emis_dust,    &
+              ca_emis_plume_cpl=ca_emis_plume,ca_emis_seas_cpl=ca_emis_seas, &
+              ca_condition_diag=ca_condition_diag,ca_plume_diag=ca_plume_diag, &
+              domain_for_coupler=Atm(mygrid)%domain_for_coupler,nblks=Atm_block%nblks,    &
+              isc=Atm_block%isc,iec=Atm_block%iec,jsc=Atm_block%jsc,jec=Atm_block%jec,npx=Atm(mygrid)%npx, &
+              npy=Atm(mygrid)%npy, nlev=GFS_Control%levs,nca=GFS_Control%nca,ncells=GFS_Control%ncells, &
+              nlives=GFS_Control%nlives,nfracseed=GFS_Control%nfracseed,nseed=GFS_Control%nseed, &
+              nthresh=GFS_Control%nthresh,ca_global=GFS_Control%ca_global_any,ca_sgs=GFS_Control%ca_sgs_emis, &
+              iseed_ca=GFS_Control%iseed_ca,ca_smooth=GFS_Control%ca_smooth,nspinup=GFS_Control%nspinup, &
+              blocksize=Atm_block%blksz(1),mpiroot=GFS_Control%master,mpicomm=GFS_Control%communicator)
          ! Copy contiguous data back as needed
          do nb=1,Atm_block%nblks
              GFS_Data(nb)%Intdiag%ca_condition(:)    = ca_condition_diag(nb,1:GFS_Control%blksz(nb))
@@ -272,7 +277,7 @@ module stochastic_physics_wrapper_mod
          deallocate(pgr         )
          deallocate(vvl         )
          deallocate(prsl        )
-         deallocate(condition   )
+         deallocate(vfrac       )
          deallocate(ca_emis_anthro)
          deallocate(ca_emis_dust)
          deallocate(ca_emis_plume)
