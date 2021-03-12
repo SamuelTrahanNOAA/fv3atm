@@ -29,7 +29,7 @@ module stochastic_physics_wrapper_mod
   real(kind=kind_phys), dimension(:,:),   allocatable, save :: ca_deep_cpl, ca_turb_cpl, ca_shal_cpl
   real(kind=kind_phys), dimension(:,:),   allocatable, save :: ca_deep_diag,ca_turb_diag,ca_shal_diag
   real(kind=kind_phys), dimension(:,:),   allocatable, save :: ca_emis_anthro, ca_emis_dust, &
-       ca_emis_plume, ca_emis_seas, ca_condition_diag, ca_plume_diag
+       ca_emis_plume, ca_emis_seas, ca_condition_diag, ca_plume_diag, ca_sgs_gbbepx_frp
   real(kind=kind_phys), dimension(:,:),   allocatable, save :: ca1_cpl, ca2_cpl, ca3_cpl
   real(kind=kind_phys), dimension(:,:),   allocatable, save :: ca1_diag,ca2_diag,ca3_diag
 
@@ -234,6 +234,7 @@ module stochastic_physics_wrapper_mod
          allocate(vvl         (1:Atm_block%nblks,maxval(GFS_Control%blksz),1:GFS_Control%levs))
          allocate(prsl        (1:Atm_block%nblks,maxval(GFS_Control%blksz),1:GFS_Control%levs))
          allocate(ca_emis_anthro(1:Atm_block%nblks,maxval(GFS_Control%blksz)                 ))
+         allocate(ca_sgs_gbbepx_frp(1:Atm_block%nblks,maxval(GFS_Control%blksz)              ))
          allocate(ca_emis_dust(1:Atm_block%nblks,maxval(GFS_Control%blksz)                   ))
          allocate(ca_emis_plume(1:Atm_block%nblks,maxval(GFS_Control%blksz)                  ))
          allocate(ca_emis_seas(1:Atm_block%nblks,maxval(GFS_Control%blksz)                   ))
@@ -247,6 +248,7 @@ module stochastic_physics_wrapper_mod
              vvl        (nb,1:GFS_Control%blksz(nb),:) = GFS_Data(nb)%Statein%vvl(:,:)
              prsl       (nb,1:GFS_Control%blksz(nb),:) = GFS_Data(nb)%Statein%prsl(:,:)
              vfrac      (nb,1:GFS_Control%blksz(nb))   = GFS_Data(nb)%Sfcprop%vfrac(:)
+             ca_sgs_gbbepx_frp(nb,1:GFS_Control%blksz(nb)) = GFS_Data(nb)%Coupling%ca_sgs_gbbepx_frp(:)
              ca_emis_anthro(nb,1:GFS_Control%blksz(nb))= GFS_Data(nb)%Coupling%ca_emis_anthro(:)
              ca_emis_dust(nb,1:GFS_Control%blksz(nb))  = GFS_Data(nb)%Coupling%ca_emis_dust(:)
              ca_emis_plume(nb,1:GFS_Control%blksz(nb)) = GFS_Data(nb)%Coupling%ca_emis_plume(:)
@@ -255,7 +257,7 @@ module stochastic_physics_wrapper_mod
          call cellular_automata_sgs_emis(kstep=GFS_Control%kdt,ugrs=ugrs,qgrs=qgrs,pgr=pgr,vvl=vvl,prsl=prsl, &
               vfrac_cpl=vfrac,ca_emis_anthro_cpl=ca_emis_anthro,ca_emis_dust_cpl=ca_emis_dust,    &
               ca_emis_plume_cpl=ca_emis_plume,ca_emis_seas_cpl=ca_emis_seas, &
-              ca_condition_diag=ca_condition_diag,ca_plume_diag=ca_plume_diag, &
+              ca_condition_diag=ca_condition_diag,ca_plume_diag=ca_plume_diag,ca_sgs_gbbepx_frp=ca_sgs_gbbepx_frp, &
               domain_for_coupler=Atm(mygrid)%domain_for_coupler,nblks=Atm_block%nblks,    &
               isc=Atm_block%isc,iec=Atm_block%iec,jsc=Atm_block%jsc,jec=Atm_block%jec,npx=Atm(mygrid)%npx, &
               npy=Atm(mygrid)%npy, nlev=GFS_Control%levs,nca=GFS_Control%nca,ncells=GFS_Control%ncells, &
@@ -279,6 +281,7 @@ module stochastic_physics_wrapper_mod
          deallocate(prsl        )
          deallocate(vfrac       )
          deallocate(ca_emis_anthro)
+         deallocate(ca_sgs_gbbepx_frp)
          deallocate(ca_emis_dust)
          deallocate(ca_emis_plume)
          deallocate(ca_emis_seas)

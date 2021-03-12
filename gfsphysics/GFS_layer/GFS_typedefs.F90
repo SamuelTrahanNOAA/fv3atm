@@ -513,6 +513,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: ca_shal  (:)   => null() !
     real (kind=kind_phys), pointer :: ca_rad   (:)   => null() !
     real (kind=kind_phys), pointer :: ca_micro (:)   => null() !
+    real (kind=kind_phys), pointer :: ca_sgs_gbbepx_frp(:) => null()
     real (kind=kind_phys), pointer :: ca_emis_anthro(:) => null()
     real (kind=kind_phys), pointer :: ca_emis_dust(:)   => null()
     real (kind=kind_phys), pointer :: ca_emis_plume(:)  => null()
@@ -2866,10 +2867,12 @@ module GFS_typedefs
       Coupling%ca_micro  = clear_val   
       Coupling%condition = clear_val
       if(Model%ca_sgs_emis) then
+        allocate(Coupling%ca_sgs_gbbepx_frp(IM))
         allocate(Coupling%ca_emis_anthro(IM))
         allocate(Coupling%ca_emis_dust(IM))
         allocate(Coupling%ca_emis_plume(IM))
         allocate(Coupling%ca_emis_seas(IM))
+        Coupling%ca_sgs_gbbepx_frp = clear_val
         Coupling%ca_emis_anthro = clear_val
         Coupling%ca_emis_dust = clear_val
         Coupling%ca_emis_plume = clear_val

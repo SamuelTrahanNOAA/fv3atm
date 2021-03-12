@@ -2107,6 +2107,17 @@ module GFS_diagnostics
 
     idx = idx + 1
     ExtDiag(idx)%axes = 2
+    ExtDiag(idx)%name = 'ca_sgs_gbbepx_frp'
+    ExtDiag(idx)%desc = 'CA sgs GBBEPx frp'
+    ExtDiag(idx)%unit = '%'
+    ExtDiag(idx)%mod_name = 'gfs_phys'
+    allocate (ExtDiag(idx)%data(nblks))
+    do nb = 1,nblks
+      ExtDiag(idx)%data(nb)%var2 => Coupling(nb)%ca_sgs_gbbepx_frp(:)
+    enddo
+
+    idx = idx + 1
+    ExtDiag(idx)%axes = 2
     ExtDiag(idx)%name = 'ca_emis_anthro'
     ExtDiag(idx)%desc = 'CA emis anthro'
     ExtDiag(idx)%unit = '%'

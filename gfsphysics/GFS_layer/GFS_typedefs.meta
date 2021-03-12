@@ -2022,6 +2022,14 @@
   type = real
   kind = kind_phys
   active = (flag_for_cellular_automata)
+[ca_sgs_gbbepx_frp]
+  standard_name = GBBEPx_fire_radiative_power_for_stochastic_physics
+  long_name = GBBEPx fire radiative power for stochastic physics
+  units = MW
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+  active = (flag_for_cellular_automata)
 [ca_emis_anthro]
   standard_name = fraction_of_cellular_automata_for_anthropogenic_emissions
   long_name = fraction of cellular automata for anthropogenic emissions
