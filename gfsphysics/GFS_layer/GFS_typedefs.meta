@@ -2077,6 +2077,12 @@
   type = real
   kind = kind_phys
   active = (flag_for_cellular_automata)
+[vegtype_cpl]
+  standard_name = vegetation_type_classification_for_coupling
+  long_name = vegetation type at each grid cell copied from vegtype
+  units = index
+  dimensions = (horizontal_dimension)
+  type = integer
 [condition]
   standard_name = physics_field_for_coupling
   long_name = physics_field_for_coupling

@@ -518,6 +518,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: ca_emis_dust(:)   => null()
     real (kind=kind_phys), pointer :: ca_emis_plume(:)  => null()
     real (kind=kind_phys), pointer :: ca_emis_seas(:)   => null()
+    integer, pointer :: vegtype_cpl(:)    => null()
     real (kind=kind_phys), pointer :: condition(:)   => null() !
     real (kind=kind_phys), pointer :: vfact_ca(:)    => null() !
     !--- stochastic physics
@@ -2845,6 +2846,7 @@ module GFS_typedefs
     endif
 
    !-- cellular automata
+    allocate (Coupling%vegtype_cpl(IM))
     allocate (Coupling%condition(IM))
     allocate (Coupling%vfact_ca(Model%levs))
     if (Model%do_ca) then
@@ -2865,6 +2867,7 @@ module GFS_typedefs
       Coupling%ca_shal   = clear_val
       Coupling%ca_rad    = clear_val
       Coupling%ca_micro  = clear_val   
+      Coupling%vegtype_cpl = clear_val
       Coupling%condition = clear_val
       if(Model%ca_sgs_emis) then
         allocate(Coupling%ca_sgs_gbbepx_frp(IM))

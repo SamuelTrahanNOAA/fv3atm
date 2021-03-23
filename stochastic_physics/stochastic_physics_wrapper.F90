@@ -17,10 +17,12 @@ module stochastic_physics_wrapper_mod
   real(kind=kind_phys), dimension(:,:,:), allocatable, save :: stc 
   real(kind=kind_phys), dimension(:,:,:), allocatable, save :: slc 
   real(kind=kind_phys), dimension(:,:), allocatable, save :: vfrac
+  integer, dimension(:,:), allocatable, save :: vegtype
   real(kind=kind_phys), dimension(:,:), allocatable, save :: stype
 
   ! For cellular automata
   real(kind=kind_phys), dimension(:,:,:), allocatable, save :: ugrs
+  real(kind=kind_phys), dimension(:,:,:), allocatable, save :: vgrs
   real(kind=kind_phys), dimension(:,:,:), allocatable, save :: qgrs
   real(kind=kind_phys), dimension(:,:),   allocatable, save :: pgr
   real(kind=kind_phys), dimension(:,:,:), allocatable, save :: vvl
@@ -229,10 +231,13 @@ module stochastic_physics_wrapper_mod
        if(GFS_Control%ca_sgs_emis)then
          ! Allocate contiguous arrays; copy in as needed
          allocate(ugrs        (1:Atm_block%nblks,maxval(GFS_Control%blksz),1:GFS_Control%levs))
+         allocate(vgrs        (1:Atm_block%nblks,maxval(GFS_Control%blksz),1:GFS_Control%levs))
          allocate(qgrs        (1:Atm_block%nblks,maxval(GFS_Control%blksz),1:GFS_Control%levs))
          allocate(pgr         (1:Atm_block%nblks,maxval(GFS_Control%blksz)                   ))
          allocate(vvl         (1:Atm_block%nblks,maxval(GFS_Control%blksz),1:GFS_Control%levs))
          allocate(prsl        (1:Atm_block%nblks,maxval(GFS_Control%blksz),1:GFS_Control%levs))
+         allocate(vfrac       (1:Atm_block%nblks,maxval(GFS_Control%blksz)                   ))
+         allocate(vegtype     (1:Atm_block%nblks,maxval(GFS_Control%blksz)                   ))
          allocate(ca_emis_anthro(1:Atm_block%nblks,maxval(GFS_Control%blksz)                 ))
          allocate(ca_sgs_gbbepx_frp(1:Atm_block%nblks,maxval(GFS_Control%blksz)              ))
          allocate(ca_emis_dust(1:Atm_block%nblks,maxval(GFS_Control%blksz)                   ))
@@ -240,31 +245,35 @@ module stochastic_physics_wrapper_mod
          allocate(ca_emis_seas(1:Atm_block%nblks,maxval(GFS_Control%blksz)                   ))
          allocate(ca_plume_diag(1:Atm_block%nblks,maxval(GFS_Control%blksz)                  ))
          allocate(ca_condition_diag(1:Atm_block%nblks,maxval(GFS_Control%blksz)              ))
-         allocate(vfrac(1:Atm_block%nblks,maxval(GFS_Control%blksz)                          ))
          do nb=1,Atm_block%nblks
              ugrs       (nb,1:GFS_Control%blksz(nb),:) = GFS_Data(nb)%Statein%ugrs(:,:)
+             vgrs       (nb,1:GFS_Control%blksz(nb),:) = GFS_Data(nb)%Statein%vgrs(:,:)
              qgrs       (nb,1:GFS_Control%blksz(nb),:) = GFS_Data(nb)%Statein%qgrs(:,:,1)
              pgr        (nb,1:GFS_Control%blksz(nb))   = GFS_Data(nb)%Statein%pgr(:)
              vvl        (nb,1:GFS_Control%blksz(nb),:) = GFS_Data(nb)%Statein%vvl(:,:)
              prsl       (nb,1:GFS_Control%blksz(nb),:) = GFS_Data(nb)%Statein%prsl(:,:)
              vfrac      (nb,1:GFS_Control%blksz(nb))   = GFS_Data(nb)%Sfcprop%vfrac(:)
+             vegtype    (nb,1:GFS_Control%blksz(nb))   = GFS_Data(nb)%Coupling%vegtype_cpl(:)
              ca_sgs_gbbepx_frp(nb,1:GFS_Control%blksz(nb)) = GFS_Data(nb)%Coupling%ca_sgs_gbbepx_frp(:)
              ca_emis_anthro(nb,1:GFS_Control%blksz(nb))= GFS_Data(nb)%Coupling%ca_emis_anthro(:)
              ca_emis_dust(nb,1:GFS_Control%blksz(nb))  = GFS_Data(nb)%Coupling%ca_emis_dust(:)
              ca_emis_plume(nb,1:GFS_Control%blksz(nb)) = GFS_Data(nb)%Coupling%ca_emis_plume(:)
              ca_emis_seas(nb,1:GFS_Control%blksz(nb))  = GFS_Data(nb)%Coupling%ca_emis_seas(:)
          enddo
-         call cellular_automata_sgs_emis(kstep=GFS_Control%kdt,ugrs=ugrs,qgrs=qgrs,pgr=pgr,vvl=vvl,prsl=prsl, &
+
+         call cellular_automata_sgs_emis(kstep=GFS_Control%kdt,ugrs=ugrs,vgrs=vgrs,qgrs=qgrs,pgr=pgr,vvl=vvl,prsl=prsl, &
               vfrac_cpl=vfrac,ca_emis_anthro_cpl=ca_emis_anthro,ca_emis_dust_cpl=ca_emis_dust,    &
-              ca_emis_plume_cpl=ca_emis_plume,ca_emis_seas_cpl=ca_emis_seas, &
+              ca_emis_plume_cpl=ca_emis_plume,ca_emis_seas_cpl=ca_emis_seas,iopt_dveg=GFS_Control%iopt_dveg, &
               ca_condition_diag=ca_condition_diag,ca_plume_diag=ca_plume_diag,ca_sgs_gbbepx_frp=ca_sgs_gbbepx_frp, &
               domain_for_coupler=Atm(mygrid)%domain_for_coupler,nblks=Atm_block%nblks,    &
               isc=Atm_block%isc,iec=Atm_block%iec,jsc=Atm_block%jsc,jec=Atm_block%jec,npx=Atm(mygrid)%npx, &
-              npy=Atm(mygrid)%npy, nlev=GFS_Control%levs,nca=GFS_Control%nca,ncells=GFS_Control%ncells, &
-              nlives=GFS_Control%nlives,nfracseed=GFS_Control%nfracseed,nseed=GFS_Control%nseed, &
-              nthresh=GFS_Control%nthresh,ca_global=GFS_Control%ca_global_any,ca_sgs=GFS_Control%ca_sgs_emis, &
-              iseed_ca=GFS_Control%iseed_ca,ca_smooth=GFS_Control%ca_smooth,nspinup=GFS_Control%nspinup, &
-              blocksize=Atm_block%blksz(1),mpiroot=GFS_Control%master,mpicomm=GFS_Control%communicator)
+              npy=Atm(mygrid)%npy, nlev=GFS_Control%levs,nca=GFS_Control%nca,fhour=GFS_Control%fhour,vegtype_cpl=vegtype, &
+              ncells=GFS_Control%ncells,nlives=GFS_Control%nlives,nfracseed=GFS_Control%nfracseed, &
+              nseed=GFS_Control%nseed,nthresh=GFS_Control%nthresh,ca_global=GFS_Control%ca_global_any, &
+              ca_sgs=GFS_Control%ca_sgs_emis,iseed_ca=GFS_Control%iseed_ca,ca_smooth=GFS_Control%ca_smooth, &
+              nspinup=GFS_Control%nspinup,blocksize=Atm_block%blksz(1),mpiroot=GFS_Control%master, &
+              mpicomm=GFS_Control%communicator)
+
          ! Copy contiguous data back as needed
          do nb=1,Atm_block%nblks
              GFS_Data(nb)%Intdiag%ca_condition(:)    = ca_condition_diag(nb,1:GFS_Control%blksz(nb))
@@ -275,11 +284,13 @@ module stochastic_physics_wrapper_mod
              GFS_Data(nb)%Coupling%ca_emis_seas(:)   = ca_emis_seas (nb,1:GFS_Control%blksz(nb))
          enddo
          deallocate(ugrs        )
+         deallocate(vgrs        )
          deallocate(qgrs        )
          deallocate(pgr         )
          deallocate(vvl         )
          deallocate(prsl        )
          deallocate(vfrac       )
+         deallocate(vegtype     )
          deallocate(ca_emis_anthro)
          deallocate(ca_sgs_gbbepx_frp)
          deallocate(ca_emis_dust)
