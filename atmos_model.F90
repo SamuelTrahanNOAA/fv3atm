@@ -284,7 +284,7 @@ subroutine update_atmos_radiation_physics (Atmos)
       ! variables from new/updated IPD Statein variables (gives the tendencies
       ! due to anything else than physics)
       if (GFS_Control%ldiag3d) then
-        idtend = GFS_Control%dtidx(GFS_Control%index_for_x_wind,GFS_Control%index_for_cause_non_physics)
+        idtend = GFS_Control%dtidx(GFS_Control%index_of_x_wind,GFS_Control%index_of_process_non_physics)
         if(idtend>1) then
           do nb = 1,Atm_block%nblks
             GFS_data(nb)%Intdiag%dtend(:,:,idtend) = GFS_data(nb)%Intdiag%dtend(:,:,idtend) &
@@ -292,7 +292,7 @@ subroutine update_atmos_radiation_physics (Atmos)
           enddo
         endif
 
-        idtend = GFS_Control%dtidx(GFS_Control%index_for_y_wind,GFS_Control%index_for_cause_non_physics)
+        idtend = GFS_Control%dtidx(GFS_Control%index_of_y_wind,GFS_Control%index_of_process_non_physics)
         if(idtend>1) then
           do nb = 1,Atm_block%nblks
             GFS_data(nb)%Intdiag%dtend(:,:,idtend) = GFS_data(nb)%Intdiag%dtend(:,:,idtend) &
@@ -300,7 +300,7 @@ subroutine update_atmos_radiation_physics (Atmos)
           enddo
         endif
 
-        idtend = GFS_Control%dtidx(GFS_Control%index_for_temperature,GFS_Control%index_for_cause_non_physics)
+        idtend = GFS_Control%dtidx(GFS_Control%index_of_temperature,GFS_Control%index_of_process_non_physics)
         if(idtend>1) then
           do nb = 1,Atm_block%nblks
             GFS_data(nb)%Intdiag%dtend(:,:,idtend) = GFS_data(nb)%Intdiag%dtend(:,:,idtend) &
@@ -310,7 +310,7 @@ subroutine update_atmos_radiation_physics (Atmos)
 
         if (GFS_Control%qdiag3d) then
           do itrac=1,GFS_Control%ntrac
-            idtend = GFS_Control%dtidx(itrac+100,GFS_Control%index_for_cause_non_physics)
+            idtend = GFS_Control%dtidx(itrac+100,GFS_Control%index_of_process_non_physics)
             if(idtend>1) then
               do nb = 1,Atm_block%nblks
                 GFS_data(nb)%Intdiag%dtend(:,:,idtend) = GFS_data(nb)%Intdiag%dtend(:,:,idtend) &

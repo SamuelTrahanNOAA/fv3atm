@@ -521,25 +521,25 @@ module GFS_typedefs
   end type GFS_coupling_type
 
 !----------------------------------------------------------------
-! dtend_tracer_label
+! dtend_var_label
 !  Information about first dimension of dtidx
 !----------------------------------------------------------------
-  type dtend_tracer_label
+  type dtend_var_label
     character(len=20) :: name
     character(len=44) :: desc
     character(len=32) :: unit
-  end type dtend_tracer_label
+  end type dtend_var_label
 
 !----------------------------------------------------------------
-! dtend_cause_label
+! dtend_process_label
 !  Information about second dimension of dtidx
 !----------------------------------------------------------------
-  type dtend_cause_label
+  type dtend_process_label
     character(len=20) :: name
     character(len=44) :: desc
     logical :: time_avg
     character(len=20) :: mod_name
-  end type dtend_cause_label
+  end type dtend_process_label
 
 !----------------------------------------------------------------------------------
 ! GFS_control_type
@@ -1100,33 +1100,33 @@ module GFS_typedefs
 
     integer, pointer :: dtidx(:,:) => null()   !< index in outermost dimension of dtend
     integer :: ndtend               !< size of outermost dimension of dtend
-    type(dtend_tracer_label), pointer :: dtend_tracer_labels(:) => null() !< information about first dim of dtidx
-    type(dtend_cause_label), pointer :: dtend_cause_labels(:) => null() !< information about second dim of dtidx
+    type(dtend_var_label), pointer :: dtend_var_labels(:) => null() !< information about first dim of dtidx
+    type(dtend_process_label), pointer :: dtend_process_labels(:) => null() !< information about second dim of dtidx
 
     ! Indices within inner dimension of dtidx for things that are not tracers:
-    integer :: index_for_temperature  !< temperature in dtidx
-    integer :: index_for_x_wind       !< x wind in dtidx
-    integer :: index_for_y_wind       !< y wind in dtidx
+    integer :: index_of_temperature  !< temperature in dtidx
+    integer :: index_of_x_wind       !< x wind in dtidx
+    integer :: index_of_y_wind       !< y wind in dtidx
 
     ! Indices within outer dimension of dtidx:
-    integer :: ncause                           !< maximum value of the below index_for_cause_ variables
+    integer :: ncause                           !< maximum value of the below index_for_process_ variables
     integer :: ncause_summed                    !< number of causes in dtend(:,:,dtidx(...)) to sum to make the physics tendency
-    integer :: index_for_cause_pbl              !< tracer changes caused by PBL scheme
-    integer :: index_for_cause_dcnv             !< tracer changes caused by deep convection scheme
-    integer :: index_for_cause_scnv             !< tracer changes caused by shallow convection scheme
-    integer :: index_for_cause_mp               !< tracer changes caused by microphysics scheme
-    integer :: index_for_cause_prod_loss        !< tracer changes caused by ozone production and loss
-    integer :: index_for_cause_ozmix            !< tracer changes caused by ozone mixing ratio
-    integer :: index_for_cause_temp             !< tracer changes caused by temperature
-    integer :: index_for_cause_longwave         !< tracer changes caused by long wave radiation
-    integer :: index_for_cause_shortwave        !< tracer changes caused by short wave radiation
-    integer :: index_for_cause_orographic_gwd   !< tracer changes caused by orographic gravity wave drag
-    integer :: index_for_cause_rayleigh_damping !< tracer changes caused by Rayleigh damping
-    integer :: index_for_cause_convective_gwd   !< tracer changes caused by convective gravity wave drag
-    integer :: index_for_cause_overhead_ozone   !< tracer changes caused by overhead ozone column
-    integer :: index_for_cause_conv_trans       !< tracer changes caused by convective transport
-    integer :: index_for_cause_physics          !< tracer changes caused by physics schemes
-    integer :: index_for_cause_non_physics      !< tracer changes caused by everything except physics schemes
+    integer :: index_of_process_pbl              !< tracer changes caused by PBL scheme
+    integer :: index_of_process_dcnv             !< tracer changes caused by deep convection scheme
+    integer :: index_of_process_scnv             !< tracer changes caused by shallow convection scheme
+    integer :: index_of_process_mp               !< tracer changes caused by microphysics scheme
+    integer :: index_of_process_prod_loss        !< tracer changes caused by ozone production and loss
+    integer :: index_of_process_ozmix            !< tracer changes caused by ozone mixing ratio
+    integer :: index_of_process_temp             !< tracer changes caused by temperature
+    integer :: index_of_process_longwave         !< tracer changes caused by long wave radiation
+    integer :: index_of_process_shortwave        !< tracer changes caused by short wave radiation
+    integer :: index_of_process_orographic_gwd   !< tracer changes caused by orographic gravity wave drag
+    integer :: index_of_process_rayleigh_damping !< tracer changes caused by Rayleigh damping
+    integer :: index_of_process_nonorographic_gwd   !< tracer changes caused by convective gravity wave drag
+    integer :: index_of_process_overhead_ozone   !< tracer changes caused by overhead ozone column
+    integer :: index_of_process_conv_trans       !< tracer changes caused by convective transport
+    integer :: index_of_process_physics          !< tracer changes caused by physics schemes
+    integer :: index_of_process_non_physics      !< tracer changes caused by everything except physics schemes
 
     integer              :: ntqv            !< tracer index for water vapor (specific humidity)
     integer              :: ntoz            !< tracer index for ozone mixing ratio
@@ -4297,30 +4297,30 @@ module GFS_typedefs
 
     ! Tracer diagnostics indices and dimension size, which must be in
     ! Model to be forwarded to the right places.
-    Model%index_for_cause_pbl = 1
-    Model%index_for_cause_dcnv = 2
-    Model%index_for_cause_scnv = 3
-    Model%index_for_cause_mp = 4
-    Model%index_for_cause_prod_loss = 5
-    Model%index_for_cause_ozmix = 6
-    Model%index_for_cause_temp = 7
-    Model%index_for_cause_overhead_ozone = 8
-    Model%index_for_cause_longwave = 9
-    Model%index_for_cause_shortwave = 10
-    Model%index_for_cause_orographic_gwd = 11
-    Model%index_for_cause_rayleigh_damping = 12
-    Model%index_for_cause_convective_gwd = 13
-    Model%index_for_cause_conv_trans = 14
+    Model%index_of_process_pbl = 1
+    Model%index_of_process_dcnv = 2
+    Model%index_of_process_scnv = 3
+    Model%index_of_process_mp = 4
+    Model%index_of_process_prod_loss = 5
+    Model%index_of_process_ozmix = 6
+    Model%index_of_process_temp = 7
+    Model%index_of_process_overhead_ozone = 8
+    Model%index_of_process_longwave = 9
+    Model%index_of_process_shortwave = 10
+    Model%index_of_process_orographic_gwd = 11
+    Model%index_of_process_rayleigh_damping = 12
+    Model%index_of_process_nonorographic_gwd = 13
+    Model%index_of_process_conv_trans = 14
     ! These two must be last:
-    Model%index_for_cause_physics = 15
-    Model%index_for_cause_non_physics = 16
+    Model%index_of_process_physics = 15
+    Model%index_of_process_non_physics = 16
 
-    Model%ncause           = Model%index_for_cause_non_physics
-    Model%ncause_summed    = Model%index_for_cause_physics-1 ! causes to be summed to make physics tendency
+    Model%ncause           = Model%index_of_process_non_physics
+    Model%ncause_summed    = Model%index_of_process_physics-1 ! causes to be summed to make physics tendency
 
-    Model%index_for_temperature = 10
-    Model%index_for_x_wind = 11
-    Model%index_for_y_wind = 12
+    Model%index_of_temperature = 10
+    Model%index_of_x_wind = 11
+    Model%index_of_y_wind = 12
 
     ! Last index of outermost dimension of dtend
     Model%ndtend = 0
@@ -4339,8 +4339,8 @@ module GFS_typedefs
        have_oz_phys = Model%oz_phys .or. Model%oz_phys_2015
        
        ! Increment idtend and fill dtidx:
-        allocate(Model%dtend_tracer_labels(Model%ntracp100))
-        allocate(Model%dtend_cause_labels(Model%ncause))
+        allocate(Model%dtend_var_labels(Model%ntracp100))
+        allocate(Model%dtend_process_labels(Model%ncause))
 
         call allocate_dtend_labels_and_causes(Model)
 
@@ -4381,9 +4381,9 @@ module GFS_typedefs
            endif
         endif
 
-        call label_dtend_tracer(Model,Model%index_for_temperature,'temp','temperature','K s-1')
-        call label_dtend_tracer(Model,Model%index_for_x_wind,'u','x wind','m s-2')
-        call label_dtend_tracer(Model,Model%index_for_y_wind,'v','y wind','m s-2')
+        call label_dtend_tracer(Model,Model%index_of_temperature,'temp','temperature','K s-1')
+        call label_dtend_tracer(Model,Model%index_of_x_wind,'u','x wind','m s-2')
+        call label_dtend_tracer(Model,Model%index_of_y_wind,'v','y wind','m s-2')
 
         ! Other tracer names. These were taken from GFS_typedefs.F90 with descriptions from GFS_typedefs.meta
         call label_dtend_tracer(Model,100+Model%ntqv,'qv','water vapor specific humidity')
@@ -4406,96 +4406,96 @@ module GFS_typedefs
         call label_dtend_tracer(Model,100+Model%nto,'o_ion','oxygen ion concentration')
         call label_dtend_tracer(Model,100+Model%nto2,'o2','oxygen concentration')
 
-        call label_dtend_cause(Model,Model%index_for_cause_pbl,'pbl','tendency due to PBL')
-        call label_dtend_cause(Model,Model%index_for_cause_dcnv,'deepcnv','tendency due to deep convection')
-        call label_dtend_cause(Model,Model%index_for_cause_scnv,'shalcnv','tendency due to shallow convection')
-        call label_dtend_cause(Model,Model%index_for_cause_mp,'mp','tendency due to microphysics')
-        call label_dtend_cause(Model,Model%index_for_cause_prod_loss,'prodloss','tendency due to production and loss rate')
-        call label_dtend_cause(Model,Model%index_for_cause_ozmix,'o3mix','tendency due to ozone mixing ratio')
-        call label_dtend_cause(Model,Model%index_for_cause_temp,'temp','tendency due to temperature')
-        call label_dtend_cause(Model,Model%index_for_cause_overhead_ozone,'o3column','tendency due to overhead ozone column')
-        call label_dtend_cause(Model,Model%index_for_cause_physics,'phys','tendency due to physics')
-        call label_dtend_cause(Model,Model%index_for_cause_non_physics,'nophys','tendency due to non-physics processes', &
+        call label_dtend_cause(Model,Model%index_of_process_pbl,'pbl','tendency due to PBL')
+        call label_dtend_cause(Model,Model%index_of_process_dcnv,'deepcnv','tendency due to deep convection')
+        call label_dtend_cause(Model,Model%index_of_process_scnv,'shalcnv','tendency due to shallow convection')
+        call label_dtend_cause(Model,Model%index_of_process_mp,'mp','tendency due to microphysics')
+        call label_dtend_cause(Model,Model%index_of_process_prod_loss,'prodloss','tendency due to production and loss rate')
+        call label_dtend_cause(Model,Model%index_of_process_ozmix,'o3mix','tendency due to ozone mixing ratio')
+        call label_dtend_cause(Model,Model%index_of_process_temp,'temp','tendency due to temperature')
+        call label_dtend_cause(Model,Model%index_of_process_overhead_ozone,'o3column','tendency due to overhead ozone column')
+        call label_dtend_cause(Model,Model%index_of_process_physics,'phys','tendency due to physics')
+        call label_dtend_cause(Model,Model%index_of_process_non_physics,'nophys','tendency due to non-physics processes', &
                                mod_name='gfs_dyn')
-        call label_dtend_cause(Model,Model%index_for_cause_conv_trans,'cnvtrans','tendency due to convective transport')
-        call label_dtend_cause(Model,Model%index_for_cause_longwave,'lw','tendency due to long wave radiation')
-        call label_dtend_cause(Model,Model%index_for_cause_shortwave,'sw','tendency due to short wave radiation')
-        call label_dtend_cause(Model,Model%index_for_cause_orographic_gwd,'orogwd','tendency due to orographic gravity wave drag')
-        call label_dtend_cause(Model,Model%index_for_cause_rayleigh_damping,'rdamp','tendency due to Rayleigh damping')
-        call label_dtend_cause(Model,Model%index_for_cause_convective_gwd,'cnvgwd','tendency due to convective gravity wave drag')
+        call label_dtend_cause(Model,Model%index_of_process_conv_trans,'cnvtrans','tendency due to convective transport')
+        call label_dtend_cause(Model,Model%index_of_process_longwave,'lw','tendency due to long wave radiation')
+        call label_dtend_cause(Model,Model%index_of_process_shortwave,'sw','tendency due to short wave radiation')
+        call label_dtend_cause(Model,Model%index_of_process_orographic_gwd,'orogwd','tendency due to orographic gravity wave drag')
+        call label_dtend_cause(Model,Model%index_of_process_rayleigh_damping,'rdamp','tendency due to Rayleigh damping')
+        call label_dtend_cause(Model,Model%index_of_process_nonorographic_gwd,'cnvgwd','tendency due to convective gravity wave drag')
 
-       call fill_dtidx(Model,dtend_select,Model%index_for_temperature,Model%index_for_cause_longwave)
-       call fill_dtidx(Model,dtend_select,Model%index_for_temperature,Model%index_for_cause_shortwave)
-       call fill_dtidx(Model,dtend_select,Model%index_for_temperature,Model%index_for_cause_pbl,have_pbl)
-       call fill_dtidx(Model,dtend_select,Model%index_for_temperature,Model%index_for_cause_dcnv,have_dcnv)
-       call fill_dtidx(Model,dtend_select,Model%index_for_temperature,Model%index_for_cause_scnv,have_scnv)
-       call fill_dtidx(Model,dtend_select,Model%index_for_temperature,Model%index_for_cause_mp,have_mp)
-       call fill_dtidx(Model,dtend_select,Model%index_for_temperature,Model%index_for_cause_orographic_gwd)
-       call fill_dtidx(Model,dtend_select,Model%index_for_temperature,Model%index_for_cause_rayleigh_damping)
-       call fill_dtidx(Model,dtend_select,Model%index_for_temperature,Model%index_for_cause_convective_gwd)
-       call fill_dtidx(Model,dtend_select,Model%index_for_temperature,Model%index_for_cause_physics)
-       call fill_dtidx(Model,dtend_select,Model%index_for_temperature,Model%index_for_cause_non_physics)
+       call fill_dtidx(Model,dtend_select,Model%index_of_temperature,Model%index_of_process_longwave)
+       call fill_dtidx(Model,dtend_select,Model%index_of_temperature,Model%index_of_process_shortwave)
+       call fill_dtidx(Model,dtend_select,Model%index_of_temperature,Model%index_of_process_pbl,have_pbl)
+       call fill_dtidx(Model,dtend_select,Model%index_of_temperature,Model%index_of_process_dcnv,have_dcnv)
+       call fill_dtidx(Model,dtend_select,Model%index_of_temperature,Model%index_of_process_scnv,have_scnv)
+       call fill_dtidx(Model,dtend_select,Model%index_of_temperature,Model%index_of_process_mp,have_mp)
+       call fill_dtidx(Model,dtend_select,Model%index_of_temperature,Model%index_of_process_orographic_gwd)
+       call fill_dtidx(Model,dtend_select,Model%index_of_temperature,Model%index_of_process_rayleigh_damping)
+       call fill_dtidx(Model,dtend_select,Model%index_of_temperature,Model%index_of_process_nonorographic_gwd)
+       call fill_dtidx(Model,dtend_select,Model%index_of_temperature,Model%index_of_process_physics)
+       call fill_dtidx(Model,dtend_select,Model%index_of_temperature,Model%index_of_process_non_physics)
 
-       call fill_dtidx(Model,dtend_select,Model%index_for_x_wind,Model%index_for_cause_pbl,have_pbl)
-       call fill_dtidx(Model,dtend_select,Model%index_for_y_wind,Model%index_for_cause_pbl,have_pbl)
-       call fill_dtidx(Model,dtend_select,Model%index_for_x_wind,Model%index_for_cause_orographic_gwd)
-       call fill_dtidx(Model,dtend_select,Model%index_for_y_wind,Model%index_for_cause_orographic_gwd)
-       call fill_dtidx(Model,dtend_select,Model%index_for_x_wind,Model%index_for_cause_dcnv,have_dcnv)
-       call fill_dtidx(Model,dtend_select,Model%index_for_y_wind,Model%index_for_cause_dcnv,have_dcnv)
-       call fill_dtidx(Model,dtend_select,Model%index_for_x_wind,Model%index_for_cause_convective_gwd)
-       call fill_dtidx(Model,dtend_select,Model%index_for_y_wind,Model%index_for_cause_convective_gwd)
-       call fill_dtidx(Model,dtend_select,Model%index_for_x_wind,Model%index_for_cause_rayleigh_damping)
-       call fill_dtidx(Model,dtend_select,Model%index_for_y_wind,Model%index_for_cause_rayleigh_damping)
-       call fill_dtidx(Model,dtend_select,Model%index_for_x_wind,Model%index_for_cause_scnv,have_scnv)
-       call fill_dtidx(Model,dtend_select,Model%index_for_y_wind,Model%index_for_cause_scnv,have_scnv)
-       call fill_dtidx(Model,dtend_select,Model%index_for_x_wind,Model%index_for_cause_physics)
-       call fill_dtidx(Model,dtend_select,Model%index_for_y_wind,Model%index_for_cause_physics)
-       call fill_dtidx(Model,dtend_select,Model%index_for_x_wind,Model%index_for_cause_non_physics)
-       call fill_dtidx(Model,dtend_select,Model%index_for_y_wind,Model%index_for_cause_non_physics)
+       call fill_dtidx(Model,dtend_select,Model%index_of_x_wind,Model%index_of_process_pbl,have_pbl)
+       call fill_dtidx(Model,dtend_select,Model%index_of_y_wind,Model%index_of_process_pbl,have_pbl)
+       call fill_dtidx(Model,dtend_select,Model%index_of_x_wind,Model%index_of_process_orographic_gwd)
+       call fill_dtidx(Model,dtend_select,Model%index_of_y_wind,Model%index_of_process_orographic_gwd)
+       call fill_dtidx(Model,dtend_select,Model%index_of_x_wind,Model%index_of_process_dcnv,have_dcnv)
+       call fill_dtidx(Model,dtend_select,Model%index_of_y_wind,Model%index_of_process_dcnv,have_dcnv)
+       call fill_dtidx(Model,dtend_select,Model%index_of_x_wind,Model%index_of_process_nonorographic_gwd)
+       call fill_dtidx(Model,dtend_select,Model%index_of_y_wind,Model%index_of_process_nonorographic_gwd)
+       call fill_dtidx(Model,dtend_select,Model%index_of_x_wind,Model%index_of_process_rayleigh_damping)
+       call fill_dtidx(Model,dtend_select,Model%index_of_y_wind,Model%index_of_process_rayleigh_damping)
+       call fill_dtidx(Model,dtend_select,Model%index_of_x_wind,Model%index_of_process_scnv,have_scnv)
+       call fill_dtidx(Model,dtend_select,Model%index_of_y_wind,Model%index_of_process_scnv,have_scnv)
+       call fill_dtidx(Model,dtend_select,Model%index_of_x_wind,Model%index_of_process_physics)
+       call fill_dtidx(Model,dtend_select,Model%index_of_y_wind,Model%index_of_process_physics)
+       call fill_dtidx(Model,dtend_select,Model%index_of_x_wind,Model%index_of_process_non_physics)
+       call fill_dtidx(Model,dtend_select,Model%index_of_y_wind,Model%index_of_process_non_physics)
 
        if(qdiag3d) then
           if(have_samf) then
             do itrac=1,Model%ntrac
               if(itrac==Model%ntchs) exit ! remaining tracers are chemical
               if(itrac==Model%ntke) cycle ! TKE is handled by convective transport (see below)
-              call fill_dtidx(Model,dtend_select,100+itrac,Model%index_for_cause_dcnv,have_dcnv)
-              call fill_dtidx(Model,dtend_select,100+itrac,Model%index_for_cause_scnv,have_scnv)
+              call fill_dtidx(Model,dtend_select,100+itrac,Model%index_of_process_dcnv,have_dcnv)
+              call fill_dtidx(Model,dtend_select,100+itrac,Model%index_of_process_scnv,have_scnv)
             enddo
           else
-            call fill_dtidx(Model,dtend_select,100+Model%ntqv,Model%index_for_cause_dcnv,have_dcnv)
-            call fill_dtidx(Model,dtend_select,100+Model%ntqv,Model%index_for_cause_scnv,have_scnv)
-            call fill_dtidx(Model,dtend_select,100+Model%ntcw,Model%index_for_cause_dcnv,have_dcnv)
-            call fill_dtidx(Model,dtend_select,100+Model%ntcw,Model%index_for_cause_scnv,have_scnv)
-            call fill_dtidx(Model,dtend_select,100+Model%ntiw,Model%index_for_cause_dcnv,have_dcnv)
-            call fill_dtidx(Model,dtend_select,100+Model%ntiw,Model%index_for_cause_scnv,have_scnv)
+            call fill_dtidx(Model,dtend_select,100+Model%ntqv,Model%index_of_process_dcnv,have_dcnv)
+            call fill_dtidx(Model,dtend_select,100+Model%ntqv,Model%index_of_process_scnv,have_scnv)
+            call fill_dtidx(Model,dtend_select,100+Model%ntcw,Model%index_of_process_dcnv,have_dcnv)
+            call fill_dtidx(Model,dtend_select,100+Model%ntcw,Model%index_of_process_scnv,have_scnv)
+            call fill_dtidx(Model,dtend_select,100+Model%ntiw,Model%index_of_process_dcnv,have_dcnv)
+            call fill_dtidx(Model,dtend_select,100+Model%ntiw,Model%index_of_process_scnv,have_scnv)
           endif
-          call fill_dtidx(Model,dtend_select,100+Model%ntke,Model%index_for_cause_conv_trans,have_scnv.or.have_dcnv)
-          call fill_dtidx(Model,dtend_select,100+Model%ntclamt,Model%index_for_cause_conv_trans,have_scnv.or.have_dcnv)
+          call fill_dtidx(Model,dtend_select,100+Model%ntke,Model%index_of_process_conv_trans,have_scnv.or.have_dcnv)
+          call fill_dtidx(Model,dtend_select,100+Model%ntclamt,Model%index_of_process_conv_trans,have_scnv.or.have_dcnv)
 
-          call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_for_cause_pbl,have_pbl .and. have_oz_phys)
-          call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_for_cause_prod_loss,have_oz_phys)
-          call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_for_cause_ozmix,have_oz_phys)
-          call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_for_cause_temp,have_oz_phys)
-          call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_for_cause_overhead_ozone,have_oz_phys)
-          call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_for_cause_physics,.true.)
-          call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_for_cause_non_physics,.true.)
+          call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_of_process_pbl,have_pbl .and. have_oz_phys)
+          call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_of_process_prod_loss,have_oz_phys)
+          call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_of_process_ozmix,have_oz_phys)
+          call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_of_process_temp,have_oz_phys)
+          call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_of_process_overhead_ozone,have_oz_phys)
+          call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_of_process_physics,.true.)
+          call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_of_process_non_physics,.true.)
           
           if(.not.Model%do_mynnedmf .and. .not. Model%satmedmf) then
-            call fill_dtidx(Model,dtend_select,100+Model%ntqv,Model%index_for_cause_pbl,have_pbl)
-            call fill_dtidx(Model,dtend_select,100+Model%ntcw,Model%index_for_cause_pbl,have_pbl)
-            call fill_dtidx(Model,dtend_select,100+Model%ntiw,Model%index_for_cause_pbl,have_pbl)
-            call fill_dtidx(Model,dtend_select,100+Model%ntke,Model%index_for_cause_pbl,have_pbl)
+            call fill_dtidx(Model,dtend_select,100+Model%ntqv,Model%index_of_process_pbl,have_pbl)
+            call fill_dtidx(Model,dtend_select,100+Model%ntcw,Model%index_of_process_pbl,have_pbl)
+            call fill_dtidx(Model,dtend_select,100+Model%ntiw,Model%index_of_process_pbl,have_pbl)
+            call fill_dtidx(Model,dtend_select,100+Model%ntke,Model%index_of_process_pbl,have_pbl)
           endif
 
           do itrac=1,Model%ntrac
              if(itrac==Model%ntchs) exit ! remaining tracers are chemical
              if(itrac==Model%ntoz) cycle ! already took care of ozone
-             call fill_dtidx(Model,dtend_select,100+itrac,Model%index_for_cause_mp,have_mp)
+             call fill_dtidx(Model,dtend_select,100+itrac,Model%index_of_process_mp,have_mp)
              if(have_pbl_edmf) then
-               call fill_dtidx(Model,dtend_select,100+itrac,Model%index_for_cause_pbl,have_pbl)
+               call fill_dtidx(Model,dtend_select,100+itrac,Model%index_of_process_pbl,have_pbl)
              endif
-             call fill_dtidx(Model,dtend_select,100+itrac,Model%index_for_cause_physics,.true.)
-             call fill_dtidx(Model,dtend_select,100+itrac,Model%index_for_cause_non_physics,.true.)
+             call fill_dtidx(Model,dtend_select,100+itrac,Model%index_of_process_physics,.true.)
+             call fill_dtidx(Model,dtend_select,100+itrac,Model%index_of_process_non_physics,.true.)
           enddo
        endif
     end if
@@ -5819,7 +5819,7 @@ module GFS_typedefs
     if(present(flag)) flag2=flag
 
     if(icause>0 .and. flag2 .and. itrac>0) then
-       name = 'dtend_'//trim(Model%dtend_tracer_labels(itrac)%name)//'_'//trim(Model%dtend_cause_labels(icause)%name)
+       name = 'dtend_'//trim(Model%dtend_var_labels(itrac)%name)//'_'//trim(Model%dtend_process_labels(icause)%name)
        if(fglob_list(dtend_select,trim(name))) then
           Model%ndtend = Model%ndtend+1
           Model%dtidx(itrac,icause) = Model%ndtend
@@ -5954,23 +5954,23 @@ module GFS_typedefs
     type(GFS_control_type), intent(in) :: Model
     integer :: i
     
-    allocate(Model%dtend_tracer_labels(Model%ntracp100))
-    allocate(Model%dtend_cause_labels(Model%ncause))
+    allocate(Model%dtend_var_labels(Model%ntracp100))
+    allocate(Model%dtend_process_labels(Model%ncause))
     
-    Model%dtend_tracer_labels(1)%name = 'unallocated'
-    Model%dtend_tracer_labels(1)%desc = 'unallocated tracer'
-    Model%dtend_tracer_labels(1)%unit = 'kg kg-1 s-1'
+    Model%dtend_var_labels(1)%name = 'unallocated'
+    Model%dtend_var_labels(1)%desc = 'unallocated tracer'
+    Model%dtend_var_labels(1)%unit = 'kg kg-1 s-1'
     
     do i=2,Model%ntrac
-       Model%dtend_tracer_labels(i)%name = 'unknown'
-       Model%dtend_tracer_labels(i)%desc = 'unspecified tracer'
-       Model%dtend_tracer_labels(i)%unit = 'kg kg-1 s-1'
+       Model%dtend_var_labels(i)%name = 'unknown'
+       Model%dtend_var_labels(i)%desc = 'unspecified tracer'
+       Model%dtend_var_labels(i)%unit = 'kg kg-1 s-1'
     enddo
     do i=1,Model%ncause
-       Model%dtend_cause_labels(i)%name = 'unknown'
-       Model%dtend_cause_labels(i)%desc = 'unspecified tendency'
-       Model%dtend_cause_labels(i)%time_avg = .true.
-       Model%dtend_cause_labels(i)%mod_name = 'gfs_phys'
+       Model%dtend_process_labels(i)%name = 'unknown'
+       Model%dtend_process_labels(i)%desc = 'unspecified tendency'
+       Model%dtend_process_labels(i)%time_avg = .true.
+       Model%dtend_process_labels(i)%mod_name = 'gfs_phys'
     enddo
   end subroutine allocate_dtend_labels_and_causes
     
@@ -5986,12 +5986,12 @@ module GFS_typedefs
        return
     endif
     
-    Model%dtend_tracer_labels(itrac)%name = name
-    Model%dtend_tracer_labels(itrac)%desc = desc
+    Model%dtend_var_labels(itrac)%name = name
+    Model%dtend_var_labels(itrac)%desc = desc
     if(present(unit)) then
-       Model%dtend_tracer_labels(itrac)%unit=unit
+       Model%dtend_var_labels(itrac)%unit=unit
     else
-       Model%dtend_tracer_labels(itrac)%unit='kg kg-1 s-1'
+       Model%dtend_var_labels(itrac)%unit='kg kg-1 s-1'
     endif
   end subroutine label_dtend_tracer
   
@@ -6003,17 +6003,17 @@ module GFS_typedefs
     character(len=*), optional, intent(in) :: mod_name
     logical, optional, intent(in) :: time_avg
       
-    Model%dtend_cause_labels(icause)%name=name
-    Model%dtend_cause_labels(icause)%desc=desc
+    Model%dtend_process_labels(icause)%name=name
+    Model%dtend_process_labels(icause)%desc=desc
     if(present(mod_name)) then
-       Model%dtend_cause_labels(icause)%mod_name = mod_name
+       Model%dtend_process_labels(icause)%mod_name = mod_name
     else
-       Model%dtend_cause_labels(icause)%mod_name = "gfs_phys"
+       Model%dtend_process_labels(icause)%mod_name = "gfs_phys"
     endif
     if(present(time_avg)) then
-       Model%dtend_cause_labels(icause)%time_avg = time_avg
+       Model%dtend_process_labels(icause)%time_avg = time_avg
     else
-       Model%dtend_cause_labels(icause)%time_avg = .true.
+       Model%dtend_process_labels(icause)%time_avg = .true.
     endif
   end subroutine label_dtend_cause
 

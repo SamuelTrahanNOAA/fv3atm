@@ -4273,13 +4273,13 @@
   type = integer
 [ntracp100]
   standard_name = number_of_tracers_plus_one_hundred
-  long_name = number of tracers plus one_hundred
+  long_name = number of tracers plus one hundred
   units = count
   dimensions = ()
   type = integer
 [ncause]
-  standard_name = number_of_possible_causes_of_tracer_changes
-  long_name = number of possible causes of tracer changes
+  standard_name = number_of_cumulative_change_processes
+  long_name = number of processes that cause changes in state variables
   units = count
   dimensions = ()
   type = integer
@@ -4290,128 +4290,128 @@
   dimensions = ()
   type = integer
 [dtidx]
-  standard_name = dtend_outer_index
-  long_name = index in outer dimension of dtend of a tracer-cause pair
+  standard_name = cumulative_change_of_state_variables_outer_index
+  long_name = index of state-variable and process in last dimension of diagnostic tendencies array AKA cumulative_change_index
   units = index
-  dimensions = (number_of_tracers_plus_one_hundred,number_of_possible_causes_of_tracer_changes)
+  dimensions = (number_of_tracers_plus_one_hundred,number_of_cumulative_change_processes)
   type = integer
 [ndtend]
-  standard_name = dtend_outer_index_max
-  long_name = highest index used in outer dimension of dtend
+  standard_name = cumulative_change_of_state_variables_outer_index_max
+  long_name = last dimension of array of diagnostic tendencies for state variables
   units = count
   dimensions = ()
   type = integer
-[index_for_cause_pbl]
-  standard_name = index_for_cause_pbl
-  long_name = tracer changes caused by PBL scheme
+[index_of_process_pbl]
+  standard_name = index_of_subgrid_scale_vertical_mixing_process_in_cumulative_change_index
+  long_name = index of subgrid scale vertical mixing process in second dimension of array cumulative change index
   units = index
   dimensions = ()
   type = integer
-[index_for_cause_dcnv]
-  standard_name = index_for_cause_dcnv
-  long_name = tracer changes caused by deep convection scheme
+[index_of_process_dcnv]
+  standard_name = index_of_deep_convection_process_process_in_cumulative_change_index
+  long_name = index of deep convection process in second dimension of array cumulative change index
   units = index
   dimensions = ()
   type = integer
-[index_for_cause_scnv]
-  standard_name = index_for_cause_scnv
-  long_name = tracer changes caused by shallow convection scheme
+[index_of_process_scnv]
+  standard_name = index_of_shallow_convection_process_process_in_cumulative_change_index
+  long_name = index of shallow convection process in second dimension of array cumulative change index
   units = index
   dimensions = ()
   type = integer
-[index_for_cause_mp]
-  standard_name = index_for_cause_mp
-  long_name = tracer changes caused by microphysics scheme
+[index_of_process_mp]
+  standard_name = index_of_microphysics_process_process_in_cumulative_change_index
+  long_name = index of microphysics transport process in second dimension of array cumulative change index
   units = index
   dimensions = ()
   type = integer
-[index_for_cause_prod_loss]
-  standard_name = index_for_cause_prod_loss
-  long_name = tracer changes caused by ozone production and loss
+[index_of_process_prod_loss]
+  standard_name = index_of_production_and_loss_process_in_cumulative_change_index
+  long_name = index of production and loss effect in photochemistry process in second dimension of array cumulative change index
   units = index
   dimensions = ()
   type = integer
-[index_for_cause_ozmix]
-  standard_name = index_for_cause_ozmix
-  long_name = tracer changes caused by ozone mixing ratio
+[index_of_process_ozmix]
+  standard_name = index_of_ozone_mixing_ratio_process_in_cumulative_change_index
+  long_name = index of ozone mixing ratio effect in photochemistry process in second dimension of array cumulative change index
   units = index
   dimensions = ()
   type = integer
-[index_for_cause_temp]
-  standard_name = index_for_cause_temp
-  long_name = tracer changes caused by temperature
+[index_of_process_temp]
+  standard_name = index_of_temperature_process_in_cumulative_change_index
+  long_name = index of temperature effect in photochemistry process in second dimension of array cumulative change index
   units = index
   dimensions = ()
   type = integer
-[index_for_cause_overhead_ozone]
-  standard_name = index_for_cause_overhead_ozone
-  long_name = tracer changes caused by overhead ozone column
+[index_of_process_overhead_ozone]
+  standard_name = index_of_overhead_process_in_cumulative_change_index
+  long_name = index of overhead ozone effect in photochemistry process in second dimension of array cumulative change index
   units = index
   dimensions = ()
   type = integer
-[index_for_cause_longwave]
-  standard_name = index_for_cause_longwave
-  long_name = tracer changes caused by long wave radiation
+[index_of_process_longwave]
+  standard_name = index_of_longwave_heating_process_in_cumulative_change_index
+  long_name = index of longwave heating process in second dimension of array cumulative change index
   units = index
   dimensions = ()
   type = integer
-[index_for_cause_shortwave]
-  standard_name = index_for_cause_shortwave
-  long_name = tracer changes caused by short wave radiation
+[index_of_process_shortwave]
+  standard_name = index_of_shortwave_heating_process_in_cumulative_change_index
+  long_name = index of shortwave heating process in second dimension of array cumulative change index
   units = index
   dimensions = ()
   type = integer
-[index_for_cause_orographic_gwd]
-  standard_name = index_for_cause_orographic_gwd
-  long_name = tracer changes caused by orographic gravity wave drag
+[index_of_process_orographic_gwd]
+  standard_name = index_of_orographic_gravity_wave_drag_process_in_cumulative_change_index
+  long_name = index of orographic gravity wave drag process in second dimension of array cumulative change index
   units = index
   dimensions = ()
   type = integer
-[index_for_cause_rayleigh_damping]
-  standard_name = index_for_cause_rayleigh_damping
-  long_name = tracer changes caused by Rayleigh damping
+[index_of_process_rayleigh_damping]
+  standard_name = index_of_rayleigh_damping_process_in_cumulative_change_index
+  long_name = index of rayleigh damping process in second dimension of array cumulative change index
   units = index
   dimensions = ()
   type = integer
-[index_for_cause_convective_gwd]
-  standard_name = index_for_cause_convective_gwd
-  long_name = tracer changes caused by convective gravity wave drag
+[index_of_process_nonorographic_gwd]
+  standard_name = index_of_nonorographic_gravity_wave_drag_process_in_cumulative_change_index
+  long_name = index of nonorographic gravity wave drag process in second dimension of array cumulative change index
   units = index
   dimensions = ()
   type = integer
-[index_for_cause_conv_trans]
-  standard_name = index_for_cause_conv_trans
-  long_name = tracer changes caused by convective transport of tracers
+[index_of_process_conv_trans]
+  standard_name = index_of_convective_transport_process_in_cumulative_change_index
+  long_name = index of convective transport process in second dimension of array cumulative change index
   units = index
   dimensions = ()
   type = integer
-[index_for_cause_physics]
-  standard_name = index_for_cause_physics
-  long_name = tracer changes caused by physics schemes
+[index_of_process_physics]
+  standard_name = index_of_all_physics_process_in_cumulative_change_index
+  long_name = index of all physics transport process in second dimension of array cumulative change index
   units = index
   dimensions = ()
   type = integer
-[index_for_cause_non_physics]
-  standard_name = index_for_cause_non_physics
-  long_name = tracer changes caused by everything except physics schemes
+[index_of_process_non_physics]
+  standard_name = index_of_non_physics_process_in_cumulative_change_index
+  long_name = index of non-physics transport process in second dimension of array cumulative change index
   units = index
   dimensions = ()
   type = integer
-[index_for_temperature]
-  standard_name = index_for_temperature
-  long_name = index in dtidx first dimension of temperature field
+[index_of_temperature]
+  standard_name = index_of_temperature_in_cumulative_change_index
+  long_name = index of temperature in first dimension of array cumulative change index
   units = index
   dimensions = ()
   type = integer
-[index_for_x_wind]
-  standard_name = index_for_x_wind
-  long_name = index in dtidx first dimension of x wind field
+[index_of_x_wind]
+  standard_name = index_of_x_wind_in_cumulative_change_index
+  long_name = index of x-wind in first dimension of array cumulative change index
   units = index
   dimensions = ()
   type = integer
-[index_for_y_wind]
-  standard_name = index_for_y_wind
-  long_name = index in dtidx first dimension of x wind field
+[index_of_y_wind]
+  standard_name = index_of_y_wind_in_cumulative_change_index
+  long_name = index of x-wind in first dimension of array cumulative change index
   units = index
   dimensions = ()
   type = integer
@@ -6604,10 +6604,10 @@
   type = real
   kind = kind_phys
 [dtend]
-  standard_name = diagnostic_3d_tendencies
-  long_name = diagnostic 3d tendencies for tracers and other fields
+  standard_name = cumulative_change_of_state_variables
+  long_name = diagnostic tendencies for state variables
   units = various
-  dimensions = (horizontal_loop_extent,vertical_dimension,dtend_outer_index_max)
+  dimensions = (horizontal_loop_extent,vertical_dimension,number_of_cumulative_change_processes)
   type = real
   kind = kind_phys
   active = (flag_diagnostics_3D)
