@@ -1109,8 +1109,8 @@ module GFS_typedefs
     integer :: index_of_y_wind       !< y wind in dtidx
 
     ! Indices within outer dimension of dtidx:
-    integer :: ncause                           !< maximum value of the below index_for_process_ variables
-    integer :: ncause_summed                    !< number of causes in dtend(:,:,dtidx(...)) to sum to make the physics tendency
+    integer :: nprocess                         !< maximum value of the below index_for_process_ variables
+    integer :: nprocess_summed                  !< number of causes in dtend(:,:,dtidx(...)) to sum to make the physics tendency
     integer :: index_of_process_pbl              !< tracer changes caused by PBL scheme
     integer :: index_of_process_dcnv             !< tracer changes caused by deep convection scheme
     integer :: index_of_process_scnv             !< tracer changes caused by shallow convection scheme
@@ -1578,8 +1578,8 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: shum_wts(:,:)  => null()   !<
     real (kind=kind_phys), pointer :: zmtnblck(:)    => null()   !<mountain blocking evel
 
-    ! dtend/dtidxt: Multitudenous 3d tendencies in a 4D array: (i,k,0:ntrac,ncause)
-    ! Sparse in outermost two dimensions. dtidx(1:100+ntrac,ncause) maps to dtend 
+    ! dtend/dtidxt: Multitudenous 3d tendencies in a 4D array: (i,k,0:ntrac,nprocess)
+    ! Sparse in outermost two dimensions. dtidx(1:100+ntrac,nprocess) maps to dtend 
     ! outer dimension index.
     real (kind=kind_phys), pointer :: dtend (:,:,:) => null()    !< tracer changes due to physics
 
@@ -4315,8 +4315,8 @@ module GFS_typedefs
     Model%index_of_process_physics = 15
     Model%index_of_process_non_physics = 16
 
-    Model%ncause           = Model%index_of_process_non_physics
-    Model%ncause_summed    = Model%index_of_process_physics-1 ! causes to be summed to make physics tendency
+    Model%nprocess           = Model%index_of_process_non_physics
+    Model%nprocess_summed    = Model%index_of_process_physics-1 ! causes to be summed to make physics tendency
 
     Model%index_of_temperature = 10
     Model%index_of_x_wind = 11
@@ -4324,7 +4324,7 @@ module GFS_typedefs
 
     ! Last index of outermost dimension of dtend
     Model%ndtend = 0
-    allocate(Model%dtidx(Model%ntracp100,Model%ncause))
+    allocate(Model%dtidx(Model%ntracp100,Model%nprocess))
     Model%dtidx = 1 ! unused indices MUST be 1
 
     if(ldiag3d) then
@@ -4340,7 +4340,7 @@ module GFS_typedefs
        
        ! Increment idtend and fill dtidx:
         allocate(Model%dtend_var_labels(Model%ntracp100))
-        allocate(Model%dtend_process_labels(Model%ncause))
+        allocate(Model%dtend_process_labels(Model%nprocess))
 
         call allocate_dtend_labels_and_causes(Model)
 
@@ -5955,18 +5955,18 @@ module GFS_typedefs
     integer :: i
     
     allocate(Model%dtend_var_labels(Model%ntracp100))
-    allocate(Model%dtend_process_labels(Model%ncause))
+    allocate(Model%dtend_process_labels(Model%nprocess))
     
     Model%dtend_var_labels(1)%name = 'unallocated'
     Model%dtend_var_labels(1)%desc = 'unallocated tracer'
     Model%dtend_var_labels(1)%unit = 'kg kg-1 s-1'
     
-    do i=2,Model%ntrac
+    do i=2,Model%ntracp100
        Model%dtend_var_labels(i)%name = 'unknown'
        Model%dtend_var_labels(i)%desc = 'unspecified tracer'
        Model%dtend_var_labels(i)%unit = 'kg kg-1 s-1'
     enddo
-    do i=1,Model%ncause
+    do i=1,Model%nprocess
        Model%dtend_process_labels(i)%name = 'unknown'
        Model%dtend_process_labels(i)%desc = 'unspecified tendency'
        Model%dtend_process_labels(i)%time_avg = .true.

@@ -52,29 +52,29 @@ module GFS_diagnostics
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
  ! Helper function for GFS_externaldiag_populate to handle the massive dtend(:,:,dtidx(:,:)) array
-    subroutine add_dtend(Model,ExtDiag,IntDiag,idx,nblks,itrac,icause,desc,unit)
+    subroutine add_dtend(Model,ExtDiag,IntDiag,idx,nblks,itrac,iprocess,desc,unit)
     implicit none
     type(GFS_control_type),       intent(in)    :: Model
     type(GFS_externaldiag_type),  intent(inout) :: ExtDiag(:)
     type(GFS_diag_type),          intent(in)    :: IntDiag(:)
-    integer, intent(in) :: nblks, itrac, icause
+    integer, intent(in) :: nblks, itrac, iprocess
     integer, intent(inout) :: idx
     real(kind=kind_phys), pointer :: dtend(:,:,:) ! Assumption: dtend is null iff all(dtidx <= 1)
     character(len=*), intent(in), optional :: desc, unit
     
     integer :: idtend, nb
 
-    idtend = Model%dtidx(itrac,icause)
+    idtend = Model%dtidx(itrac,iprocess)
     if(idtend>1) then
        idx = idx + 1
        ExtDiag(idx)%axes = 3
-       ExtDiag(idx)%name = 'dtend_'//trim(Model%dtend_var_labels(itrac)%name)//'_'//trim(Model%dtend_process_labels(icause)%name)
-       ExtDiag(idx)%mod_name = Model%dtend_process_labels(icause)%mod_name
-       ExtDiag(idx)%time_avg = Model%dtend_process_labels(icause)%time_avg
+       ExtDiag(idx)%name = 'dtend_'//trim(Model%dtend_var_labels(itrac)%name)//'_'//trim(Model%dtend_process_labels(iprocess)%name)
+       ExtDiag(idx)%mod_name = Model%dtend_process_labels(iprocess)%mod_name
+       ExtDiag(idx)%time_avg = Model%dtend_process_labels(iprocess)%time_avg
        if(present(desc)) then
           ExtDiag(idx)%desc = desc
        else
-          ExtDiag(idx)%desc = trim(Model%dtend_var_labels(itrac)%desc)//' '//trim(Model%dtend_process_labels(icause)%desc)
+          ExtDiag(idx)%desc = trim(Model%dtend_var_labels(itrac)%desc)//' '//trim(Model%dtend_process_labels(iprocess)%desc)
        endif
        if(present(unit)) then
           ExtDiag(idx)%unit = trim(unit)
@@ -140,7 +140,7 @@ module GFS_diagnostics
     type(GFS_init_type),          intent(in)    :: Init_parm
 
 !--- local variables
-    integer :: idt, idx, num, nb, nblks, NFXR, idtend, ichem, itrac, icause
+    integer :: idt, idx, num, nb, nblks, NFXR, idtend, ichem, itrac, iprocess
     character(len=2) :: xtra
     real(kind=kind_phys), parameter :: cn_one = 1._kind_phys
     real(kind=kind_phys), parameter :: cn_100 = 100._kind_phys
@@ -2360,10 +2360,10 @@ module GFS_diagnostics
 !--- Three-dimensional diagnostic tendencies stored in a 4D sparse
 !--- array need special handling:
     if_ldiag3d: if(Model%ldiag3d) then
-      do icause=1,Model%ncause
+      do iprocess=1,Model%nprocess
         do itrac=1,Model%ntracp100
-          if(Model%dtidx(itrac,icause)>1) then
-            call add_dtend(Model,ExtDiag,IntDiag,idx,nblks,itrac,icause)
+          if(Model%dtidx(itrac,iprocess)>1) then
+            call add_dtend(Model,ExtDiag,IntDiag,idx,nblks,itrac,iprocess)
           endif
         enddo
       enddo
