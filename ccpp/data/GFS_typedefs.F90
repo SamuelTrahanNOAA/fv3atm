@@ -1127,6 +1127,8 @@ module GFS_typedefs
     integer :: index_of_process_conv_trans       !< tracer changes caused by convective transport
     integer :: index_of_process_physics          !< tracer changes caused by physics schemes
     integer :: index_of_process_non_physics      !< tracer changes caused by everything except physics schemes
+    integer :: index_of_process_photochem        !< all changes to ozone
+    logical, pointer :: is_photochem(:) => null()!< flags for which processes should be summed as photochemical
 
     integer              :: ntqv            !< tracer index for water vapor (specific humidity)
     integer              :: ntoz            !< tracer index for ozone mixing ratio
@@ -4297,6 +4299,8 @@ module GFS_typedefs
 
     ! Tracer diagnostics indices and dimension size, which must be in
     ! Model to be forwarded to the right places.
+
+    ! Individual processes:
     Model%index_of_process_pbl = 1
     Model%index_of_process_dcnv = 2
     Model%index_of_process_scnv = 3
@@ -4311,13 +4315,27 @@ module GFS_typedefs
     Model%index_of_process_rayleigh_damping = 12
     Model%index_of_process_nonorographic_gwd = 13
     Model%index_of_process_conv_trans = 14
-    ! These two must be last:
+
+    ! Number of processes to sum (last index of prior set)
+    Model%nprocess_summed = 14
+
+    ! Sums of other processes, which must be after nprocess_summed:
     Model%index_of_process_physics = 15
     Model%index_of_process_non_physics = 16
+    Model%index_of_process_photochem = 17
 
-    Model%nprocess           = Model%index_of_process_non_physics
-    Model%nprocess_summed    = Model%index_of_process_physics-1 ! causes to be summed to make physics tendency
+    ! Total number of processes (last index of prior set)
+    Model%nprocess = 17
 
+    ! List which processes should be summed as photochemical:
+    allocate(Model%is_photochem(Model%nprocess))
+    Model%is_photochem = .false.
+    Model%is_photochem(Model%index_of_process_prod_loss) = .true.
+    Model%is_photochem(Model%index_of_process_ozmix) = .true.
+    Model%is_photochem(Model%index_of_process_temp) = .true.
+    Model%is_photochem(Model%index_of_process_overhead_ozone) = .true.
+
+    ! Non-tracers that appear in first dimension of dtidx:
     Model%index_of_temperature = 10
     Model%index_of_x_wind = 11
     Model%index_of_y_wind = 12
@@ -4325,10 +4343,9 @@ module GFS_typedefs
     ! Last index of outermost dimension of dtend
     Model%ndtend = 0
     allocate(Model%dtidx(Model%ntracp100,Model%nprocess))
-    Model%dtidx = 1 ! unused indices MUST be 1
+    Model%dtidx = -99
 
     if(ldiag3d) then
-       Model%ndtend = 1 ! first i-k slice is empty
        ! Flags used to turn on or off tracer "causes"
        have_pbl_edmf = Model%hybedmf .or. Model%satmedmf .or. do_mynnedmf
        have_samf =  Model%satmedmf .or. Model%trans_trac .or. Model%ras .or. Model%do_shoc
@@ -4414,6 +4431,7 @@ module GFS_typedefs
         call label_dtend_cause(Model,Model%index_of_process_ozmix,'o3mix','tendency due to ozone mixing ratio')
         call label_dtend_cause(Model,Model%index_of_process_temp,'temp','tendency due to temperature')
         call label_dtend_cause(Model,Model%index_of_process_overhead_ozone,'o3column','tendency due to overhead ozone column')
+        call label_dtend_cause(Model,Model%index_of_process_photochem,'photochem','tendency due to photochemical processes')
         call label_dtend_cause(Model,Model%index_of_process_physics,'phys','tendency due to physics')
         call label_dtend_cause(Model,Model%index_of_process_non_physics,'nophys','tendency due to non-physics processes', &
                                mod_name='gfs_dyn')
@@ -4477,6 +4495,7 @@ module GFS_typedefs
           call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_of_process_ozmix,have_oz_phys)
           call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_of_process_temp,have_oz_phys)
           call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_of_process_overhead_ozone,have_oz_phys)
+          call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_of_process_photochem,have_oz_phys)
           call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_of_process_physics,.true.)
           call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_of_process_non_physics,.true.)
           

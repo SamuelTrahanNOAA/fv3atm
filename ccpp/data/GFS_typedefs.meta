@@ -4397,6 +4397,18 @@
   units = index
   dimensions = ()
   type = integer
+[index_of_process_photochem]
+  standard_name = index_of_photochemistry_process_in_cumulative_change_index
+  long_name = index of photochemistry process in second dimension of array cumulative change index
+  units = index
+  dimensions = ()
+  type = integer
+[is_photochem]
+  standard_name = flags_for_photochemistry_processes_to_sum
+  long_name = flags for photochemistry processes to sum as the total photochemistry process cumulative change
+  units = flag
+  dimensions = (number_of_cumulative_change_processes)
+  type = logical
 [index_of_temperature]
   standard_name = index_of_temperature_in_cumulative_change_index
   long_name = index of temperature in first dimension of array cumulative change index

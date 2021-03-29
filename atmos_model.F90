@@ -285,7 +285,7 @@ subroutine update_atmos_radiation_physics (Atmos)
       ! due to anything else than physics)
       if (GFS_Control%ldiag3d) then
         idtend = GFS_Control%dtidx(GFS_Control%index_of_x_wind,GFS_Control%index_of_process_non_physics)
-        if(idtend>1) then
+        if(idtend>=1) then
           do nb = 1,Atm_block%nblks
             GFS_data(nb)%Intdiag%dtend(:,:,idtend) = GFS_data(nb)%Intdiag%dtend(:,:,idtend) &
                  + (GFS_data(nb)%Statein%ugrs - GFS_data(nb)%Stateout%gu0)
@@ -293,7 +293,7 @@ subroutine update_atmos_radiation_physics (Atmos)
         endif
 
         idtend = GFS_Control%dtidx(GFS_Control%index_of_y_wind,GFS_Control%index_of_process_non_physics)
-        if(idtend>1) then
+        if(idtend>=1) then
           do nb = 1,Atm_block%nblks
             GFS_data(nb)%Intdiag%dtend(:,:,idtend) = GFS_data(nb)%Intdiag%dtend(:,:,idtend) &
                  + (GFS_data(nb)%Statein%vgrs - GFS_data(nb)%Stateout%gv0)
@@ -301,7 +301,7 @@ subroutine update_atmos_radiation_physics (Atmos)
         endif
 
         idtend = GFS_Control%dtidx(GFS_Control%index_of_temperature,GFS_Control%index_of_process_non_physics)
-        if(idtend>1) then
+        if(idtend>=1) then
           do nb = 1,Atm_block%nblks
             GFS_data(nb)%Intdiag%dtend(:,:,idtend) = GFS_data(nb)%Intdiag%dtend(:,:,idtend) &
                  + (GFS_data(nb)%Statein%tgrs - GFS_data(nb)%Stateout%gt0)
@@ -311,7 +311,7 @@ subroutine update_atmos_radiation_physics (Atmos)
         if (GFS_Control%qdiag3d) then
           do itrac=1,GFS_Control%ntrac
             idtend = GFS_Control%dtidx(itrac+100,GFS_Control%index_of_process_non_physics)
-            if(idtend>1) then
+            if(idtend>=1) then
               do nb = 1,Atm_block%nblks
                 GFS_data(nb)%Intdiag%dtend(:,:,idtend) = GFS_data(nb)%Intdiag%dtend(:,:,idtend) &
                      + (GFS_data(nb)%Statein%qgrs(:,:,itrac) - GFS_data(nb)%Stateout%gq0(:,:,itrac))

@@ -65,7 +65,7 @@ module GFS_diagnostics
     integer :: idtend, nb
 
     idtend = Model%dtidx(itrac,iprocess)
-    if(idtend>1) then
+    if(idtend>=1) then
        idx = idx + 1
        ExtDiag(idx)%axes = 3
        ExtDiag(idx)%name = 'dtend_'//trim(Model%dtend_var_labels(itrac)%name)//'_'//trim(Model%dtend_process_labels(iprocess)%name)
@@ -2362,7 +2362,7 @@ module GFS_diagnostics
     if_ldiag3d: if(Model%ldiag3d) then
       do iprocess=1,Model%nprocess
         do itrac=1,Model%ntracp100
-          if(Model%dtidx(itrac,iprocess)>1) then
+          if(Model%dtidx(itrac,iprocess)>=1) then
             call add_dtend(Model,ExtDiag,IntDiag,idx,nblks,itrac,iprocess)
           endif
         enddo
