@@ -2078,6 +2078,28 @@ module GFS_diagnostics
 
     idx = idx + 1
     ExtDiag(idx)%axes = 2
+    ExtDiag(idx)%name = 'sfc_wts1'
+    ExtDiag(idx)%desc = 'perturbation amplitude'
+    ExtDiag(idx)%unit = 'none'
+    ExtDiag(idx)%mod_name = 'gfs_phys'
+    allocate (ExtDiag(idx)%data(nblks))
+    do nb = 1,nblks
+      ExtDiag(idx)%data(nb)%var2 => IntDiag(nb)%sfc_wts(:,1)
+    enddo
+
+    idx = idx + 1
+    ExtDiag(idx)%axes = 2
+    ExtDiag(idx)%name = 'sfc_wts2'
+    ExtDiag(idx)%desc = 'perturbation amplitude'
+    ExtDiag(idx)%unit = 'none'
+    ExtDiag(idx)%mod_name = 'gfs_phys'
+    allocate (ExtDiag(idx)%data(nblks))
+    do nb = 1,nblks
+      ExtDiag(idx)%data(nb)%var2 => IntDiag(nb)%sfc_wts(:,2)
+    enddo
+
+    idx = idx + 1
+    ExtDiag(idx)%axes = 2
     ExtDiag(idx)%name = 'ca1'
     ExtDiag(idx)%desc = 'Cellular Automata'
     ExtDiag(idx)%unit = '%'
@@ -2367,6 +2389,45 @@ module GFS_diagnostics
           endif
         enddo
       enddo
+
+      idx = idx + 1
+      ExtDiag(idx)%axes = 3
+      ExtDiag(idx)%name = 'upd_mf'
+      ExtDiag(idx)%desc = 'updraft convective mass flux'
+      ExtDiag(idx)%unit = 'kg m-1 s-3'
+      ExtDiag(idx)%mod_name = 'gfs_phys'
+      ExtDiag(idx)%time_avg = .TRUE.
+      allocate (ExtDiag(idx)%data(nblks))
+      do nb = 1,nblks
+        ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%upd_mf(:,:)
+      enddo
+
+      idx = idx + 1
+      ExtDiag(idx)%axes = 3
+      ExtDiag(idx)%name = 'dwn_mf'
+      ExtDiag(idx)%desc = 'downdraft convective mass flux'
+      ExtDiag(idx)%unit = 'kg m-1 s-3'
+      ExtDiag(idx)%mod_name = 'gfs_phys'
+      ExtDiag(idx)%time_avg = .TRUE.
+      allocate (ExtDiag(idx)%data(nblks))
+      do nb = 1,nblks
+        ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%dwn_mf(:,:)
+      enddo
+
+      idx = idx + 1
+      ExtDiag(idx)%axes = 3
+      ExtDiag(idx)%name = 'det_mf'
+      ExtDiag(idx)%desc = 'detrainment convective mass flux'
+      ExtDiag(idx)%unit = 'kg m-1 s-3'
+      ExtDiag(idx)%mod_name = 'gfs_phys'
+      ExtDiag(idx)%time_avg = .TRUE.
+      allocate (ExtDiag(idx)%data(nblks))
+      do nb = 1,nblks
+        ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%det_mf(:,:)
+      enddo
+
+      end if if_qdiag3d
+
     end if if_ldiag3d
 
 !rab
