@@ -9,4 +9,4 @@
 [submodule "ccpp/physics"]
 	path = ccpp/physics
 	url = https://github.com/SamuelTrahanNOAA/ccpp-physics
-	branch = ca-sgs-emis
+	branch = gocart_co
