@@ -1168,6 +1168,9 @@ module GFS_typedefs
     integer :: chem_conv_tr
     integer :: chem_in_opt
     integer :: chem_opt
+    ! These must match gsd_chem_config.F90:
+    integer, parameter :: chem_opt_gocart = 300      !< chem_opt for simple scheme
+    integer, parameter :: chem_opt_gocart_co = 499   !< chem_opt for simple scheme with co
     integer :: chemdt
     integer :: cldchem_onoff
     integer :: dmsemis_opt
@@ -3466,7 +3469,7 @@ module GFS_typedefs
     integer :: biomass_burn_opt = 1
     integer :: chem_conv_tr = 0
     integer :: chem_in_opt = 0
-    integer :: chem_opt =300
+    integer :: chem_opt = chem_opt_gocart
     integer :: chemdt = 3
     integer :: cldchem_onoff = 0
     integer :: dmsemis_opt = 1
@@ -4300,6 +4303,7 @@ module GFS_typedefs
     Model%ntsulf           = get_tracer_index(Model%tracer_names, 'sulf',       Model%me, Model%master, Model%debug)
     Model%ntdms            = get_tracer_index(Model%tracer_names, 'dms',        Model%me, Model%master, Model%debug)
     Model%ntmsa            = get_tracer_index(Model%tracer_names, 'msa',        Model%me, Model%master, Model%debug)
+    Model%ntco             = get_tracer_index(Model%tracer_names, 'co',         Model%me, Model%master, Model%debug)
     Model%ntpp25           = get_tracer_index(Model%tracer_names, 'pp25',       Model%me, Model%master, Model%debug)
     Model%ntbc1            = get_tracer_index(Model%tracer_names, 'bc1',        Model%me, Model%master, Model%debug)
     Model%ntbc2            = get_tracer_index(Model%tracer_names, 'bc2',        Model%me, Model%master, Model%debug)
@@ -5401,6 +5405,7 @@ module GFS_typedefs
       print *, ' ntsulf            : ', Model%ntsulf
       print *, ' ntdms             : ', Model%ntdms
       print *, ' ntmsa             : ', Model%ntmsa
+      print *, ' ntco              : ', Model%ntco
       print *, ' ntpp25            : ', Model%ntpp25
       print *, ' ntbc1             : ', Model%ntbc1
       print *, ' ntbc2             : ', Model%ntbc2
