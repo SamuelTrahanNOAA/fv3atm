@@ -1114,6 +1114,7 @@ module GFS_typedefs
     integer              :: ntsulf          !< tracer index for sulf
     integer              :: ntdms           !< tracer index for DMS
     integer              :: ntmsa           !< tracer index for msa
+    integer              :: ntco            !< tracer index for co
     integer              :: ntpp25          !< tracer index for pp25
     integer              :: ntbc1           !< tracer index for bc1
     integer              :: ntbc2           !< tracer index for bc2
@@ -1169,8 +1170,8 @@ module GFS_typedefs
     integer :: chem_in_opt
     integer :: chem_opt
     ! These must match gsd_chem_config.F90:
-    integer, parameter :: chem_opt_gocart = 300      !< chem_opt for simple scheme
-    integer, parameter :: chem_opt_gocart_co = 499   !< chem_opt for simple scheme with co
+    integer :: chem_opt_gocart      !< chem_opt for simple scheme
+    integer :: chem_opt_gocart_co   !< chem_opt for simple scheme with co
     integer :: chemdt
     integer :: cldchem_onoff
     integer :: dmsemis_opt
@@ -2337,10 +2338,18 @@ module GFS_typedefs
 !   allocate (Sfcprop%hprim    (IM))
     allocate (Sfcprop%hprime   (IM,Model%nmtvr))
     allocate (Sfcprop%dust_in  (IM,5))
-    allocate (Sfcprop%emi_in   (IM,10))
+    if(Model%chem_opt == Model%CHEM_OPT_GOCART_CO) then
+       allocate (Sfcprop%emi_in   (IM,11))
+    else
+       allocate (Sfcprop%emi_in   (IM,10))
+    endif
     allocate (Sfcprop%emi2_in  (IM,64,3))
     allocate (Sfcprop%fire_MODIS (IM,13))
-    allocate (Sfcprop%fire_GBBEPx(IM,5))
+    if(Model%chem_opt == Model%CHEM_OPT_GOCART_CO) then
+       allocate (Sfcprop%fire_GBBEPx(IM,6))
+    else
+       allocate (Sfcprop%fire_GBBEPx(IM,5))
+    endif
 
     Sfcprop%slmsk     = clear_val
     Sfcprop%oceanfrac = clear_val
@@ -3461,6 +3470,8 @@ module GFS_typedefs
 
 #ifdef CCPP
 !-- chem nml variables for FV3/CCPP-Chem
+    integer, parameter :: chem_opt_gocart = 300
+    integer, parameter :: chem_opt_gocart_co = 499
     integer :: aer_bc_opt = 1
     integer :: aer_ic_opt = 1
     integer :: aer_ra_feedback  = 0
@@ -3642,7 +3653,6 @@ module GFS_typedefs
 
 !--- convective clouds
     integer :: ncnvcld3d = 0       !< number of convective 3d clouds fields
-
 
 !--- read in the namelist
 #ifdef INTERNAL_FILE_NML
@@ -4380,6 +4390,8 @@ module GFS_typedefs
     Model%biomass_burn_opt  = biomass_burn_opt
     Model%chem_conv_tr      = chem_conv_tr
     Model%chem_in_opt       = chem_in_opt
+    Model%chem_opt_gocart   = chem_opt_gocart
+    Model%chem_opt_gocart_co= chem_opt_gocart_co
     Model%chem_opt          = chem_opt
     Model%chemdt            = chemdt
     Model%cldchem_onoff     = cldchem_onoff
