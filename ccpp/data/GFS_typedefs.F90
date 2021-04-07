@@ -6040,7 +6040,7 @@ module GFS_typedefs
 
   subroutine allocate_dtend_labels_and_causes(Model)
     implicit none
-    type(GFS_control_type), intent(in) :: Model
+    type(GFS_control_type), intent(inout) :: Model
     integer :: i
     
     allocate(Model%dtend_var_labels(Model%ntracp100))
