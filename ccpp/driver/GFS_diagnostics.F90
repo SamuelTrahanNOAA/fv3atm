@@ -40,7 +40,7 @@ module GFS_diagnostics
     real(kind=kind_phys) :: cnvfac
     type(data_subtype), dimension(:), allocatable :: data
    end type GFS_externaldiag_type
-   
+
   !--- public data type ---
   public  GFS_externaldiag_type
 

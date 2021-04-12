@@ -3637,10 +3637,6 @@ module GFS_typedefs
     Model%fhzero           = fhzero
     Model%ldiag3d          = ldiag3d
     Model%qdiag3d          = qdiag3d
-    if (ldiag3d .and. .not. lssav) then
-      write(0,*) 'Logic error in GFS_typedefs.F90: ldiag3d requires lssav'
-      stop
-    endif
     if (qdiag3d .and. .not. ldiag3d) then
       write(0,*) 'Logic error in GFS_typedefs.F90: qdiag3d requires ldiag3d'
       stop
