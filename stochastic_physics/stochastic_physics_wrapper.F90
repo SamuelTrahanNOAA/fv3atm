@@ -31,7 +31,7 @@ module stochastic_physics_wrapper_mod
   real(kind=kind_phys), dimension(:,:),   allocatable, save :: ca_deep_cpl, ca_turb_cpl, ca_shal_cpl
   real(kind=kind_phys), dimension(:,:),   allocatable, save :: ca_deep_diag,ca_turb_diag,ca_shal_diag
   real(kind=kind_phys), dimension(:,:),   allocatable, save :: ca_emis_anthro, ca_emis_dust, &
-       ca_emis_plume, ca_emis_seas, ca_condition_diag, ca_plume_diag, ca_sgs_gbbepx_frp
+       ca_emis_plume, ca_emis_seas, ca_condition_diag, ca_plume_diag, ca_sgs_gbbepx_frp, rain
   real(kind=kind_phys), dimension(:,:),   allocatable, save :: ca1_cpl, ca2_cpl, ca3_cpl
   real(kind=kind_phys), dimension(:,:),   allocatable, save :: ca1_diag,ca2_diag,ca3_diag
 
@@ -245,6 +245,7 @@ module stochastic_physics_wrapper_mod
          allocate(ca_emis_seas(1:Atm_block%nblks,maxval(GFS_Control%blksz)                   ))
          allocate(ca_plume_diag(1:Atm_block%nblks,maxval(GFS_Control%blksz)                  ))
          allocate(ca_condition_diag(1:Atm_block%nblks,maxval(GFS_Control%blksz)              ))
+         allocate(rain        (1:Atm_block%nblks,maxval(GFS_Control%blksz)                   ))
          do nb=1,Atm_block%nblks
              ugrs       (nb,1:GFS_Control%blksz(nb),:) = GFS_Data(nb)%Statein%ugrs(:,:)
              vgrs       (nb,1:GFS_Control%blksz(nb),:) = GFS_Data(nb)%Statein%vgrs(:,:)
@@ -259,11 +260,12 @@ module stochastic_physics_wrapper_mod
              ca_emis_dust(nb,1:GFS_Control%blksz(nb))  = GFS_Data(nb)%Coupling%ca_emis_dust(:)
              ca_emis_plume(nb,1:GFS_Control%blksz(nb)) = GFS_Data(nb)%Coupling%ca_emis_plume(:)
              ca_emis_seas(nb,1:GFS_Control%blksz(nb))  = GFS_Data(nb)%Coupling%ca_emis_seas(:)
+             rain       (nb,1:GFS_Control%blksz(nb))   = GFS_Data(nb)%Intdiag%rain(:)
          enddo
 
          call cellular_automata_sgs_emis(kstep=GFS_Control%kdt,ugrs=ugrs,vgrs=vgrs,qgrs=qgrs,pgr=pgr,vvl=vvl,prsl=prsl, &
               vfrac_cpl=vfrac,ca_emis_anthro_cpl=ca_emis_anthro,ca_emis_dust_cpl=ca_emis_dust,    &
-              ca_emis_plume_cpl=ca_emis_plume,ca_emis_seas_cpl=ca_emis_seas,iopt_dveg=GFS_Control%iopt_dveg, &
+              ca_emis_plume_cpl=ca_emis_plume,ca_emis_seas_cpl=ca_emis_seas,iopt_dveg=GFS_Control%iopt_dveg,rain_cpl=rain, &
               ca_condition_diag=ca_condition_diag,ca_plume_diag=ca_plume_diag,ca_sgs_gbbepx_frp=ca_sgs_gbbepx_frp, &
               domain_for_coupler=Atm(mygrid)%domain_for_coupler,nblks=Atm_block%nblks,    &
               isc=Atm_block%isc,iec=Atm_block%iec,jsc=Atm_block%jsc,jec=Atm_block%jec,npx=Atm(mygrid)%npx, &
@@ -298,6 +300,7 @@ module stochastic_physics_wrapper_mod
          deallocate(ca_emis_seas)
          deallocate(ca_condition_diag)
          deallocate(ca_plume_diag)
+         deallocate(rain        )
        endif
        if(GFS_Control%ca_sgs)then
          ! Allocate contiguous arrays; copy in as needed
