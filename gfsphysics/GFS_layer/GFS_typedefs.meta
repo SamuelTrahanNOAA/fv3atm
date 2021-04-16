@@ -2142,7 +2142,7 @@
   standard_name = chem_buffer_ebu
   long_name = chemistry buffer of ebu
   units = various
-  dimensions = (horizontal_dimension,vertical_dimension_plus_one,1,7)
+  dimensions = (horizontal_dimension,vertical_dimension_plus_one,1,buffer_ebu_length)
   type = real
   kind = kind_phys
 [faersw_cpl]
@@ -2419,6 +2419,18 @@
   units = flag
   dimensions = ()
   type = logical
+[num_chem]
+  standard_name = number_of_gsd_chem_chemistry_components
+  long_name = number of gsd chem chemistry components
+  units = count
+  dimensions = ()
+  type = integer
+[num_ebu]
+  standard_name = buffer_ebu_length
+  long_name = buffer ebu length
+  units = count
+  dimensions = ()
+  type = integer
 [lsidea]
   standard_name = flag_idealized_physics
   long_name = flag for idealized physics

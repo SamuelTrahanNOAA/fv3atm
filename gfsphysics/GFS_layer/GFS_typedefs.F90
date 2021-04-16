@@ -621,6 +621,8 @@ module GFS_typedefs
     logical              :: cplchm          !< default no cplchm collection
 #ifdef CCPP
     logical              :: cplchm_rad_opt  !< default no cplchm radiation feedback
+
+    integer              :: num_ebu         !< length of internal gsdchem ebu buffer
 #endif
 
 !--- integrated dynamics through earth's atmosphere
@@ -2904,7 +2906,7 @@ module GFS_typedefs
       !--- accumulated convective rainfall
       allocate (Coupling%rainc_cpl (IM))
       !-- chemistry coupling buffer
-      allocate (Coupling%buffer_ebu  (IM,Model%levs+1,1,7))
+      allocate (Coupling%buffer_ebu  (IM,Model%levs+1,1,Model%num_ebu))
       !-- chemistry coupling feedback to radiation
       allocate (Coupling%faersw_cpl  (IM,Model%levr+LTP,14,3))
 
@@ -4393,6 +4395,11 @@ module GFS_typedefs
     Model%chem_opt_gocart   = chem_opt_gocart
     Model%chem_opt_gocart_co= chem_opt_gocart_co
     Model%chem_opt          = chem_opt
+    if(chem_opt==chem_opt_gocart_co) then
+      Model%num_ebu=8
+    else
+      Model%num_ebu=7
+    endif
     Model%chemdt            = chemdt
     Model%cldchem_onoff     = cldchem_onoff
     Model%dmsemis_opt       = dmsemis_opt
