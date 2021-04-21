@@ -4202,6 +4202,9 @@ module GFS_diagnostics
         case(6)
           ExtDiag(idx)%name = 'sscmass'
           ExtDiag(idx)%desc = 'Seasalt Column Mass Density'
+        case(7)
+          ExtDiag(idx)%name = 'comass'
+          ExtDiag(idx)%desc = 'Carbon Monoxide Column Mass Density'
       end select
 
       ExtDiag(idx)%axes = 2

@@ -623,6 +623,7 @@ module GFS_typedefs
     logical              :: cplchm_rad_opt  !< default no cplchm radiation feedback
 
     integer              :: num_ebu         !< length of internal gsdchem ebu buffer
+    integer              :: num_aecm        !< length of aecm buffer
 #endif
 
 !--- integrated dynamics through earth's atmosphere
@@ -1742,7 +1743,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: abem  (:,:) => null()    !< instantaneous anthopogenic and biomass burning emissions
                                                                !< for black carbon, organic carbon, and sulfur dioxide         ( ug/m**2/s )
     real (kind=kind_phys), pointer :: aecm  (:,:) => null()    !< instantaneous aerosol column mass densities for
-                                                               !< pm2.5, black carbon, organic carbon, sulfate, dust, sea salt ( g/m**2 )
+                                                               !< pm2.5, black carbon, organic carbon, sulfate, dust, sea salt, CO ( g/m**2 )
     real (kind=kind_phys), pointer :: wetdpc_deep(:,:) => null()    !< instantaneous deep convective wet deposition                ( kg/m**2/s )
     real (kind=kind_phys), pointer :: wetdpc_mid (:,:) => null()    !< instantaneous mid convective wet deposition                ( kg/m**2/s )
     real (kind=kind_phys), pointer :: wetdpc_shal(:,:) => null()    !< instantaneous shallow convective wet deposition                ( kg/m**2/s )
@@ -4397,8 +4398,10 @@ module GFS_typedefs
     Model%chem_opt          = chem_opt
     if(chem_opt==chem_opt_gocart_co) then
       Model%num_ebu=8
+      Model%num_aecm=7
     else
       Model%num_ebu=7
+      Model%num_aecm=6
     endif
     Model%chemdt            = chemdt
     Model%cldchem_onoff     = cldchem_onoff
@@ -6523,7 +6526,7 @@ module GFS_typedefs
     ! -- for aerosol species (in order): pm2.5
     ! -- black carbon, organic carbon, sulfate,
     ! -- dust, sea salt
-    allocate (Diag%aecm(IM,6))
+    allocate (Diag%aecm(IM,Model%num_aecm))
     Diag%aecm = zero
 
   contains
