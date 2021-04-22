@@ -6064,7 +6064,7 @@ module GFS_typedefs
     type(GFS_control_type), intent(inout) :: Model
     integer, intent(in) :: itrac
     character(len=*), intent(in) :: name, desc
-    character(len=*), optional, intent(in) :: unit
+    character(len=*), intent(in) :: unit
     
     if(itrac<2) then
        ! Special index 1 is for unallocated tracers
@@ -6073,11 +6073,7 @@ module GFS_typedefs
     
     Model%dtend_var_labels(itrac)%name = name
     Model%dtend_var_labels(itrac)%desc = desc
-    if(present(unit)) then
-       Model%dtend_var_labels(itrac)%unit=unit
-    else
-       Model%dtend_var_labels(itrac)%unit='kg kg-1 s-1'
-    endif
+    Model%dtend_var_labels(itrac)%unit = unit
   end subroutine label_dtend_tracer
   
   subroutine label_dtend_cause(Model,icause,name,desc,mod_name,time_avg)
