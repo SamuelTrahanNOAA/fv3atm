@@ -3750,6 +3750,15 @@ module GFS_typedefs
       write(0,*) 'NO FLAG: dcnv is generic'
     endif
 
+    if(Model%num_dfi_radar>0 .and. imfdeepcnv /= 0) then
+       if(imfdeepcnv /= Model%imfdeepcnv_gf) then
+          write(0,*) 'DFI radar cap_suppress only works with GF scheme.'
+          write(0,*) 'DFI radar will only apply microphysics tendencies in this configuration.'
+       else
+          write(0,*) 'WARNING: DFI radar with convection (cap_suppress) is experimental and may not work!'
+       endif
+    endif
+
 !
 !VAY-ugwp  --- set some GW-related switches
 !
