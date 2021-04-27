@@ -4494,6 +4494,12 @@
   units = index
   dimensions = ()
   type = integer
+[index_of_process_dfi_radar]
+  standard_name = index_of_dfi_radar_obs_process_in_cumulative_change_index
+  long_name = index of DFI radar observations process in second dimension of array cumulative change index
+  units = index
+  dimensions = ()
+  type = integer
 [index_of_process_physics]
   standard_name = index_of_all_physics_process_in_cumulative_change_index
   long_name = index of all physics transport process in second dimension of array cumulative change index

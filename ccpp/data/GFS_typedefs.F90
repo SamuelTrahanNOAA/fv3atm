@@ -1148,6 +1148,7 @@ module GFS_typedefs
     integer :: index_of_process_nonorographic_gwd   !< tracer changes caused by convective gravity wave drag
     integer :: index_of_process_overhead_ozone   !< tracer changes caused by overhead ozone column
     integer :: index_of_process_conv_trans       !< tracer changes caused by convective transport
+    integer :: index_of_process_dfi_radar        !< tracer changes caused by DFI radar obs
     integer :: index_of_process_physics          !< tracer changes caused by physics schemes
     integer :: index_of_process_non_physics      !< tracer changes caused by everything except physics schemes
     integer :: index_of_process_photochem        !< all changes to ozone
@@ -4429,17 +4430,18 @@ module GFS_typedefs
     Model%index_of_process_rayleigh_damping = 12
     Model%index_of_process_nonorographic_gwd = 13
     Model%index_of_process_conv_trans = 14
+    Model%index_of_process_dfi_radar = 15
 
     ! Number of processes to sum (last index of prior set)
-    Model%nprocess_summed = 14
+    Model%nprocess_summed = 15
 
     ! Sums of other processes, which must be after nprocess_summed:
-    Model%index_of_process_physics = 15
-    Model%index_of_process_non_physics = 16
-    Model%index_of_process_photochem = 17
+    Model%index_of_process_physics = 16
+    Model%index_of_process_non_physics = 17
+    Model%index_of_process_photochem = 18
 
     ! Total number of processes (last index of prior set)
-    Model%nprocess = 17
+    Model%nprocess = 18
 
     ! List which processes should be summed as photochemical:
     allocate(Model%is_photochem(Model%nprocess))
@@ -4555,6 +4557,7 @@ module GFS_typedefs
         call label_dtend_cause(Model,Model%index_of_process_orographic_gwd,'orogwd','tendency due to orographic gravity wave drag')
         call label_dtend_cause(Model,Model%index_of_process_rayleigh_damping,'rdamp','tendency due to Rayleigh damping')
         call label_dtend_cause(Model,Model%index_of_process_nonorographic_gwd,'cnvgwd','tendency due to convective gravity wave drag')
+        call label_dtend_cause(Model,Model%index_of_process_dfi_radar,'dfi_radar','tendency due to DFI radar observations')
 
        call fill_dtidx(Model,dtend_select,Model%index_of_temperature,Model%index_of_process_longwave)
        call fill_dtidx(Model,dtend_select,Model%index_of_temperature,Model%index_of_process_shortwave)
@@ -4567,6 +4570,10 @@ module GFS_typedefs
        call fill_dtidx(Model,dtend_select,Model%index_of_temperature,Model%index_of_process_nonorographic_gwd)
        call fill_dtidx(Model,dtend_select,Model%index_of_temperature,Model%index_of_process_physics)
        call fill_dtidx(Model,dtend_select,Model%index_of_temperature,Model%index_of_process_non_physics)
+
+       if(Model%num_dfi_radar>0) then
+          call fill_dtidx(Model,dtend_select,Model%index_of_temperature,Model%index_of_process_dfi_radar)
+       endif
 
        call fill_dtidx(Model,dtend_select,Model%index_of_x_wind,Model%index_of_process_pbl,have_pbl)
        call fill_dtidx(Model,dtend_select,Model%index_of_y_wind,Model%index_of_process_pbl,have_pbl)
