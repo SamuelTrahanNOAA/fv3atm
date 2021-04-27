@@ -9,4 +9,4 @@
 [submodule "ccpp/physics"]
 	path = ccpp/physics
 	url = https://github.com/SamuelTrahanNOAA/ccpp-physics
-	branch = feature/rrfs_dev2_radar_tten
+	branch = feature/dfi-radar
