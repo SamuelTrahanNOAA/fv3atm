@@ -3704,7 +3704,6 @@ module GFS_typedefs
        Model%radar_tten_limits = radar_tten_limits
     endif
 
-#ifdef CCPP
     if(gwd_opt==1) then
       if(me==master) &
            write(0,*) 'FLAG: gwd_opt==1 so gwd not generic'
