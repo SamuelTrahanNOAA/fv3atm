@@ -3470,6 +3470,7 @@ module GFS_typedefs
     logical :: use_zmtnblck = .false.
     logical :: do_shum      = .false.
     logical :: do_skeb      = .false.
+    real(kind=kind_phys), parameter :: limit_unspecified = 1e12
     real(kind=kind_phys) :: radar_tten_limits(2) = (/ limit_unspecified, limit_unspecified /)
     integer :: skeb_npass   = 11
     integer :: lndp_type      = 0
