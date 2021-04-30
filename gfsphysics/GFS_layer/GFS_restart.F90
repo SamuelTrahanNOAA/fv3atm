@@ -266,6 +266,11 @@ module GFS_restart
       enddo
     endif
 #ifdef CCPP
+    if (Model%lrefres) then
+       num = Model%ntot3d+1
+    else
+       num = Model%ntot3d
+    endif
     !--- RAP/HRRR-specific variables, 3D
     num = Model%ntot3d
 

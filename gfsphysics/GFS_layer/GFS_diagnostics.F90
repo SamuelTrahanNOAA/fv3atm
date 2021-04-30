@@ -1939,6 +1939,17 @@ module GFS_diagnostics
 
     idx = idx + 1
     ExtDiag(idx)%axes = 3
+    ExtDiag(idx)%name = 'cldfra'
+    ExtDiag(idx)%desc = 'Instantaneous 3D Cloud Fraction'
+    ExtDiag(idx)%unit = 'frac'
+    ExtDiag(idx)%mod_name = 'gfs_phys'
+    allocate (ExtDiag(idx)%data(nblks))
+    do nb = 1,nblks
+      ExtDiag(idx)%data(nb)%var3 => IntDiag(nb)%cldfra(:,:)
+    enddo
+
+    idx = idx + 1
+    ExtDiag(idx)%axes = 3
     ExtDiag(idx)%name = 'cnvw'
     ExtDiag(idx)%desc = 'subgrid scale convective cloud water'
     ExtDiag(idx)%unit = 'kg/kg'
@@ -2448,7 +2459,7 @@ module GFS_diagnostics
       ExtDiag(idx)%name = 'dt3dt_nophys'
       ExtDiag(idx)%desc = 'temperature tendency due to non-physics processes'
       ExtDiag(idx)%unit = 'K s-1'
-      ExtDiag(idx)%mod_name = 'gfs_phys'
+      ExtDiag(idx)%mod_name = 'gfs_dyn'
       ExtDiag(idx)%time_avg = .TRUE.
       allocate (ExtDiag(idx)%data(nblks))
       do nb = 1,nblks
@@ -2629,7 +2640,7 @@ module GFS_diagnostics
       ExtDiag(idx)%name = 'du3dt_nophys'
       ExtDiag(idx)%desc = 'u momentum tendency due to non-physics processes'
       ExtDiag(idx)%unit = 'm s-2'
-      ExtDiag(idx)%mod_name = 'gfs_phys'
+      ExtDiag(idx)%mod_name = 'gfs_dyn'
       ExtDiag(idx)%time_avg = .TRUE.
       allocate (ExtDiag(idx)%data(nblks))
       do nb = 1,nblks
@@ -2641,7 +2652,7 @@ module GFS_diagnostics
       ExtDiag(idx)%name = 'dv3dt_nophys'
       ExtDiag(idx)%desc = 'v momentum tendency due to non-physics processes'
       ExtDiag(idx)%unit = 'm s-2'
-      ExtDiag(idx)%mod_name = 'gfs_phys'
+      ExtDiag(idx)%mod_name = 'gfs_dyn'
       ExtDiag(idx)%time_avg = .TRUE.
       allocate (ExtDiag(idx)%data(nblks))
       do nb = 1,nblks
@@ -2788,7 +2799,7 @@ module GFS_diagnostics
       ExtDiag(idx)%name = 'dq3dt_nophys'
       ExtDiag(idx)%desc = 'water vapor specific humidity tendency due to non-physics processes'
       ExtDiag(idx)%unit = 'kg kg-1 s-1'
-      ExtDiag(idx)%mod_name = 'gfs_phys'
+      ExtDiag(idx)%mod_name = 'gfs_dyn'
       ExtDiag(idx)%time_avg = .TRUE.
       allocate (ExtDiag(idx)%data(nblks))
       do nb = 1,nblks
@@ -2800,7 +2811,7 @@ module GFS_diagnostics
       ExtDiag(idx)%name = 'dq3dt_o3nophys'
       ExtDiag(idx)%desc = 'ozone concentration tendency due to non-physics processes'
       ExtDiag(idx)%unit = 'kg kg-1 s-1'
-      ExtDiag(idx)%mod_name = 'gfs_phys'
+      ExtDiag(idx)%mod_name = 'gfs_dyn'
       ExtDiag(idx)%time_avg = .TRUE.
       allocate (ExtDiag(idx)%data(nblks))
       do nb = 1,nblks
@@ -3033,24 +3044,24 @@ module GFS_diagnostics
     if (Model%lsm == Model%lsm_ruc) then
       idx = idx + 1
       ExtDiag(idx)%axes = 2
-      ExtDiag(idx)%name = 'snowfall_acc'
-      ExtDiag(idx)%desc = 'total accumulated frozen precipitation'
+      ExtDiag(idx)%name = 'snowfall_acc_land'
+      ExtDiag(idx)%desc = 'total accumulated frozen precipitation over land'
       ExtDiag(idx)%unit = 'kg m-2'
       ExtDiag(idx)%mod_name = 'gfs_sfc'
       allocate (ExtDiag(idx)%data(nblks))
       do nb = 1,nblks
-        ExtDiag(idx)%data(nb)%var2 => Sfcprop(nb)%snowfallac(:)
+        ExtDiag(idx)%data(nb)%var2 => Sfcprop(nb)%snowfallac_land(:)
       enddo
 
       idx = idx + 1
       ExtDiag(idx)%axes = 2
-      ExtDiag(idx)%name = 'swe_snowfall_acc'
-      ExtDiag(idx)%desc = 'accumulated water equivalent of frozen precipitation'
+      ExtDiag(idx)%name = 'snowfall_acc_ice'
+      ExtDiag(idx)%desc = 'total accumulated frozen precipitation over ice'
       ExtDiag(idx)%unit = 'kg m-2'
       ExtDiag(idx)%mod_name = 'gfs_sfc'
       allocate (ExtDiag(idx)%data(nblks))
       do nb = 1,nblks
-        ExtDiag(idx)%data(nb)%var2 => Sfcprop(nb)%acsnow(:)
+        ExtDiag(idx)%data(nb)%var2 => Sfcprop(nb)%snowfallac_ice(:)
       enddo
     endif
 #endif
@@ -3724,7 +3735,7 @@ module GFS_diagnostics
     enddo
 
     !! Cloud effective radii from Microphysics
-    !if (Model%imp_physics == Model%imp_physics_thompson .or. Model%imp_physics == Model%imp_physics_wsm6) then
+    !if (Model%imp_physics == Model%imp_physics_thompson .or. Model%imp_physics == Model%imp_physics_wsm6 .or. Model%imp_physics == Model%imp_physics_fer_hires) then
     !  idx = idx + 1
     !  ExtDiag(idx)%axes = 3
     !  ExtDiag(idx)%name = 'cleffr'
