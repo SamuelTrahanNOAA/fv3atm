@@ -4453,8 +4453,8 @@ module GFS_typedefs
        have_pbl_edmf = Model%hybedmf .or. Model%satmedmf .or. Model%do_mynnedmf
        have_samf =  Model%satmedmf .or. Model%trans_trac .or. Model%ras .or. Model%do_shoc
        have_pbl = .true.
-       have_dcnv = Model%imfdeepcnv>=0 !Model%ras .or. Model%cscnv .or. Model%do_deep .or. Model%hwrf_samfdeep
-       have_scnv = Model%imfshalcnv>=0 !Model%shal_cnv
+       have_dcnv = Model%imfdeepcnv>0 !Model%ras .or. Model%cscnv .or. Model%do_deep .or. Model%hwrf_samfdeep
+       have_scnv = Model%imfshalcnv>0 !Model%shal_cnv
        have_mp = Model%imp_physics>0
        have_oz_phys = Model%oz_phys .or. Model%oz_phys_2015
 
@@ -4601,6 +4601,7 @@ module GFS_typedefs
 
           if(have_cnvtrans) then
              do itrac=2,Model%ntrac
+                if(itrac==Model%ntchs) exit ! remaining tracers are chemical
                 if ( itrac /= Model%ntcw  .and. itrac /= Model%ntiw  .and. itrac /= Model%ntclamt .and. &
                      itrac /= Model%ntrw  .and. itrac /= Model%ntsw  .and. itrac /= Model%ntrnc   .and. &
                      itrac /= Model%ntsnc .and. itrac /= Model%ntgl  .and. itrac /= Model%ntgnc) then
@@ -4612,6 +4613,7 @@ module GFS_typedefs
              enddo
           else if(have_scnv .or. have_dcnv) then
              do itrac=2,Model%ntrac
+                if(itrac==Model%ntchs) exit ! remaining tracers are chemical
                 call fill_dtidx(Model,dtend_select,100+itrac,Model%index_of_process_scnv,have_scnv)
                 call fill_dtidx(Model,dtend_select,100+itrac,Model%index_of_process_dcnv,have_dcnv)
              enddo
