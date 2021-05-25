@@ -4465,20 +4465,6 @@ module GFS_typedefs
        have_cnvtrans = (have_dcnv .or. have_scnv) .and. &
             (cscnv .or. satmedmf .or. trans_trac .or. ras)
 
-       if(Model%me==Model%master) then
-          print *,'dtend flags:'
-          print *,'have_pbl_edmf = ',have_pbl_edmf
-          print *,'have_samf     = ',have_samf
-          print *,'have_pbl      = ',have_pbl
-          print *,'have_dcnv     = ',have_dcnv
-          print *,'have_scnv     = ',have_scnv
-          print *,'have_mp       = ',have_mp
-          print *,'have_oz_phys  = ',have_oz_phys
-          print *,'have_cnvtrans = ',have_cnvtrans
-          print *,'have_rdamp    = ',have_rdamp
-          print *,''
-       endif
-       
        ! Increment idtend and fill dtidx:
         allocate(Model%dtend_var_labels(Model%ntracp100))
         allocate(Model%dtend_process_labels(Model%nprocess))
@@ -4618,33 +4604,6 @@ module GFS_typedefs
                 call fill_dtidx(Model,dtend_select,100+itrac,Model%index_of_process_dcnv,have_dcnv)
              enddo
           endif
-
-          ! FIXME: Delete this:
-          ! if(have_cnvtrans) then
-          !    ! Interstitial 3 & 4 convective transport combines
-          !    ! shallow and deep convection transport of tracers into
-          !    ! one thing, losing all information about which process
-          !    ! moved the tracer. Since that information is lost, we
-          !    ! need a new "process" for convective transport.
-
-          !    ! This must match the logic in interstitial_setup_tracers and GFS_suite_interstitial
-
-          !    call fill_dtidx(Model,dtend_select,100+Model%ntcw,Model%index_of_process_conv_trans)
-          !    if (Model%imp_physics /= Model%imp_physics_zhao_carr     .and. &
-          !         Model%imp_physics /= Model%imp_physics_zhao_carr_pdf .and. &
-          !         Model%imp_physics /= Model%imp_physics_gfdl) then
-          !       call fill_dtidx(Model,dtend_select,100+Model%ntiw,Model%index_of_process_conv_trans)
-          !    endif
-             
-          !    do itrac=2,Model%ntrac
-          !       if ( itrac /= Model%ntcw  .and. itrac /= Model%ntiw  .and. itrac /= Model%ntclamt .and. &
-          !            itrac /= Model%ntrw  .and. itrac /= Model%ntsw  .and. itrac /= Model%ntrnc   .and. &
-          !            itrac /= Model%ntsnc .and. itrac /= Model%ntgl  .and. itrac /= Model%ntgnc ) then
-          !          if(itrac==Model%ntke .and. have_samf) cycle ! TKE is handled by scnv & dcnv
-          !          call fill_dtidx(Model,dtend_select,100+itrac,Model%index_of_process_conv_trans)
-          !       endif
-          !    enddo
-          ! endif
 
           call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_of_process_pbl,have_pbl)
           call fill_dtidx(Model,dtend_select,100+Model%ntoz,Model%index_of_process_prod_loss,have_oz_phys)
