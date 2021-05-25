@@ -5994,14 +5994,16 @@ module GFS_typedefs
           Model%dtidx(itrac,icause) = Model%ndtend
           if(Model%me==Model%master) then
              print 308,'selected',trim(Model%dtend_process_labels(icause)%mod_name), trim(name), &
-               trim(Model%dtend_var_labels(itrac)%desc), trim(Model%dtend_var_labels(itrac)%unit)
+               trim(Model%dtend_var_labels(itrac)%desc), trim(Model%dtend_process_labels(icause)%desc), &
+               trim(Model%dtend_var_labels(itrac)%unit)
           endif
        elseif(Model%me==Model%master) then
              print 308,'disabled',trim(Model%dtend_process_labels(icause)%mod_name), trim(name), &
-               trim(Model%dtend_var_labels(itrac)%desc), trim(Model%dtend_var_labels(itrac)%unit)
+               trim(Model%dtend_var_labels(itrac)%desc), trim(Model%dtend_process_labels(icause)%desc), &
+               trim(Model%dtend_var_labels(itrac)%unit)
        endif
     endif
-308 format('dtend ',A,': ',A,' ',A,' = ',A,' (',A,')')
+308 format('dtend ',A,': ',A,' ',A,' = ',A,' ',A,' (',A,')')
   end subroutine fill_dtidx
 
   recursive function fglob(pattern,string) result(match)
