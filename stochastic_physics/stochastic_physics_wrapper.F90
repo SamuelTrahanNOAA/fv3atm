@@ -325,8 +325,9 @@ module stochastic_physics_wrapper_mod
               ncells=GFS_Control%ncells,nlives=GFS_Control%nlives,nfracseed=GFS_Control%nfracseed, &
               nseed=GFS_Control%nseed,nthresh=GFS_Control%nthresh,ca_global=GFS_Control%ca_global_any, &
               ca_sgs=GFS_Control%ca_sgs_emis,iseed_ca=GFS_Control%iseed_ca,ca_smooth=GFS_Control%ca_smooth, &
-              nspinup=GFS_Control%nspinup,blocksize=Atm_block%blksz(1),mpiroot=GFS_Control%master, &
-              mpicomm=GFS_Control%communicator)
+              nspinup=GFS_Control%nspinup,blocksize=Atm_block%blksz(1), &
+              cond_scale=GFS_Data(1)%Coupling%ca_sgs_emis_scale, &
+              mpiroot=GFS_Control%master, mpicomm=GFS_Control%communicator)
 
          ! Copy contiguous data back as needed
          do nb=1,Atm_block%nblks
@@ -336,6 +337,9 @@ module stochastic_physics_wrapper_mod
              GFS_Data(nb)%Coupling%ca_emis_dust(:)   = ca_emis_dust (nb,1:GFS_Control%blksz(nb))
              GFS_Data(nb)%Coupling%ca_emis_plume(:)  = ca_emis_plume (nb,1:GFS_Control%blksz(nb))
              GFS_Data(nb)%Coupling%ca_emis_seas(:)   = ca_emis_seas (nb,1:GFS_Control%blksz(nb))
+         enddo
+         do nb=2,Atm_block%nblks
+           GFS_Data(nb)%Coupling%ca_sgs_emis_scale = GFS_Data(1)%Coupling%ca_sgs_emis_scale
          enddo
          deallocate(ugrs        )
          deallocate(vgrs        )

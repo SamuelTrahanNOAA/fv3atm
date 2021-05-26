@@ -513,6 +513,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: ca_emis_dust(:)   => null()
     real (kind=kind_phys), pointer :: ca_emis_plume(:)  => null()
     real (kind=kind_phys), pointer :: ca_emis_seas(:)   => null()
+    real (kind=kind_phys)          :: ca_sgs_emis_scale
     integer, pointer :: vegtype_cpl(:)    => null()
     real (kind=kind_phys), pointer :: condition(:)   => null() !
     real (kind=kind_phys), pointer :: vfact_ca(:)    => null() !
@@ -2946,6 +2947,7 @@ module GFS_typedefs
         Coupling%ca_emis_dust = clear_val
         Coupling%ca_emis_plume = clear_val
         Coupling%ca_emis_seas = clear_val
+        Coupling%ca_sgs_emis_scale = 0 ! must be 0, not zero or clear_val
       endif
     endif
 
@@ -4399,7 +4401,8 @@ module GFS_typedefs
     if(Model%ca_sgs .and. Model%ca_sgs_emis) then
       if(Model%me==Model%master) then
         write(0,*) 'Cannot have both ca_sgs and ca_sgs_emis on at the same time.'
-        stop 1
+      endif
+      stop 1
     endif
 
     ! IAU flags
