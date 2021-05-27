@@ -4596,6 +4596,10 @@ module GFS_typedefs
                 else if(Model%ntchs<=0 .or. itrac<Model%ntchs) then
                    call fill_dtidx(Model,dtend_select,100+itrac,Model%index_of_process_conv_trans)
                 endif
+                if ( itrac == Model%ntlnc .or. itrac == Model%ntinc .or. itrac==Model%ntrnc .or. &
+                     itrac == Model%ntsnc .or. itrac == Model%ntgnc .or. itrac==Model%nqrimef) then
+                   call fill_dtidx(Model,dtend_select,100+itrac,Model%index_of_process_conv_trans)
+                endif
              enddo
           else if(have_scnv .or. have_dcnv) then
              do itrac=2,Model%ntrac
