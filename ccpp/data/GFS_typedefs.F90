@@ -4463,7 +4463,9 @@ module GFS_typedefs
 
        ! have_cnvtrans flag must match logic elsewhere in GFS_typedefs and suite interstitials.
        have_cnvtrans = (have_dcnv .or. have_scnv) .and. &
-            (cscnv .or. satmedmf .or. trans_trac .or. ras)
+            (cscnv .or. satmedmf .or. trans_trac .or. ras) &
+            .and. Model%flag_for_scnv_generic_tend &
+            .and. Model%flag_for_dcnv_generic_tend
 
        ! Increment idtend and fill dtidx:
         allocate(Model%dtend_var_labels(Model%ntracp100))
@@ -4602,6 +4604,7 @@ module GFS_typedefs
                 endif
              enddo
           else if(have_scnv .or. have_dcnv) then
+             ! Scheme does its own tendency reporting, or does not use convective transport.
              do itrac=2,Model%ntrac
                 if(itrac==Model%ntchs) exit ! remaining tracers are chemical
                 call fill_dtidx(Model,dtend_select,100+itrac,Model%index_of_process_scnv,have_scnv)
