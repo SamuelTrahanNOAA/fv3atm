@@ -317,23 +317,20 @@ module stochastic_physics_wrapper_mod
              ca_emis_seas(nb,1:GFS_Control%blksz(nb))  = GFS_Data(nb)%Coupling%ca_emis_seas(:)
          enddo
 
-! DH* COMMENTING OUT BECAUSE THE CODE HAS CHANGED SIGNIFICANTLY AND NONE OF THE CHANGES THERE OR HERE ARE MINE
-!
-!         call cellular_automata_sgs_emis(kstep=GFS_Control%kdt,ugrs=ugrs,vgrs=vgrs,qgrs=qgrs,pgr=pgr,vvl=vvl,prsl=prsl, &
-!              vfrac_cpl=vfrac,ca_emis_anthro_cpl=ca_emis_anthro,ca_emis_dust_cpl=ca_emis_dust,    &
-!              ca_emis_plume_cpl=ca_emis_plume,ca_emis_seas_cpl=ca_emis_seas,iopt_dveg=GFS_Control%iopt_dveg, &
-!              ca_condition_diag=ca_condition_diag,ca_plume_diag=ca_plume_diag,ca_sgs_gbbepx_frp=ca_sgs_gbbepx_frp, &
-!              domain_for_coupler=Atm(mygrid)%domain_for_coupler,nblks=Atm_block%nblks,    &
-!              isc=Atm_block%isc,iec=Atm_block%iec,jsc=Atm_block%jsc,jec=Atm_block%jec,npx=Atm(mygrid)%npx, &
-!              npy=Atm(mygrid)%npy, nlev=GFS_Control%levs,nca=GFS_Control%nca,fhour=GFS_Control%fhour,vegtype_cpl=vegtype, &
-!              ncells=GFS_Control%ncells,nlives=GFS_Control%nlives,nfracseed=GFS_Control%nfracseed, &
-!              nseed=GFS_Control%nseed,nthresh=GFS_Control%nthresh,ca_global=GFS_Control%ca_global_any, &
-!              ca_sgs=GFS_Control%ca_sgs_emis,iseed_ca=GFS_Control%iseed_ca,ca_smooth=GFS_Control%ca_smooth, &
-!              nspinup=GFS_Control%nspinup,blocksize=Atm_block%blksz(1), &
-!              cond_scale=GFS_Data(1)%Coupling%ca_sgs_emis_scale, &
-!              mpiroot=GFS_Control%master, mpicomm=GFS_Control%communicator)
-!
-! *DH
+
+         call cellular_automata_emis_sgs(kstep=GFS_Control%kdt,dtf=GFS_control%dtf,restart=GFS_control%restart, &
+              first_time_step=GFS_control%first_time_step,Atm(mygrid)%domain_for_coupler,ugrs=ugrs,vgrs=vgrs, &
+              qgrs=qgrs,pgr=pgr,vvl=vvl,prsl=prsl,vfrac_cpl=vfrac,fhour=GFS_control%fhour,vegtype_cpl=vegtype, &
+              iopt_dveg=GFS_Control%iopt_dveg,ca_emis_anthro_cpl=ca_emis_anthro,ca_emis_dust_cpl=ca_emis_dust, &
+              ca_emis_plume_cpl=ca_emis_plume,ca_emis_seas_cpl=ca_emis_seas,ca_condition_diag=ca_condition_diag, &
+              ca_plume_diag=ca_plume_diag,ca_sgs_gbbepx_frp=ca_sgs_gbbepx_frp,nblks=Atm_block%nblks, &
+              isc=Atm_block%isc,iec=Atm_block%iec,jsc=Atm_block%jsc,jec=Atm_block%jsc,npx=Atm(mygrid)%npx, &
+              npy=Atm(mygrid)%npy,nlev=GFS_Control%levs,nthresh=GFS_Control%nthresh,rcell=GFS_Control%rcell, &
+              nca=GFS_Control%nca,scells=GFS_Control%scells,tlives=GFS_Controll%tlives,    &
+              nfracseed=GFS_Control%nfracseed,nseed=GFS_Control%nseed,ca_global=GFS_Control%ca_global, &
+              ca_sgs=GFS_Control%ca_sgs,iseed_ca=GFS_Control%iseed_ca,ca_smooth=GFS_Control%ca_smooth, &
+              nspinup=GFS_Control%nspinup,ca_trigger=GFS_Control%ca_trigger,blocksize=Atm_block%blksz(1), &
+              mpiroot=GFS_Control%master,mpicomm=GFS_Control%communicator)
 
          ! Copy contiguous data back as needed
          do nb=1,Atm_block%nblks
