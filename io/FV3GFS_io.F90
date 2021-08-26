@@ -1,3 +1,5 @@
+#define FENGSHA_DUST12m_DATA
+#define SMOKE_OPT_GBBEPx
 module FV3GFS_io_mod
 
 !-----------------------------------------------------------------------
@@ -75,9 +77,11 @@ module FV3GFS_io_mod
   character(len=32)  :: fn_oro_ss = 'oro_data_ss.nc'
   character(len=32)  :: fn_srf = 'sfc_data.nc'
   character(len=32)  :: fn_phy = 'phy_data.nc'
+  character(len=32)  :: fn_dust12m= 'dust12m_data.nc'
+  character(len=32)  :: fn_gbbepx = 'SMOKE_GBBEPx_data.nc'
 
   !--- GFDL FMS netcdf restart data types
-  type(restart_file_type) :: Oro_restart, Sfc_restart, Phy_restart
+  type(restart_file_type) :: Oro_restart, Sfc_restart, Phy_restart, dust12m_restart, gbbepx_restart
   type(restart_file_type) :: Oro_ls_restart, Oro_ss_restart
  
   !--- GFDL FMS restart containers
@@ -86,6 +90,9 @@ module FV3GFS_io_mod
   character(len=32),    allocatable,         dimension(:)       :: oro_ls_ss_name
   real(kind=kind_phys), allocatable, target, dimension(:,:,:)   :: oro_ls_var, oro_ss_var
   real(kind=kind_phys), allocatable, target, dimension(:,:,:,:) :: sfc_var3, phy_var3
+  character(len=32),    allocatable,         dimension(:)       :: dust12m_name, gbbepx_name
+  real(kind=kind_phys), allocatable, target, dimension(:,:,:,:) :: gbbepx_var
+  real(kind=kind_phys), allocatable, target, dimension(:,:,:,:) :: dust12m_var
   !--- Noah MP restart containers
   real(kind=kind_phys), allocatable, target, dimension(:,:,:,:) :: sfc_var3sn,sfc_var3eq,sfc_var3zn
 
@@ -499,6 +506,7 @@ module FV3GFS_io_mod
     integer :: nvar_o2, nvar_s2m, nvar_s2o, nvar_s3
     integer :: nvar_oro_ls_ss
     integer :: nvar_s2mp, nvar_s3mp,isnow
+    integer :: nvar_dust12m, nvar_gbbepx
 #ifdef CCPP
     integer :: nvar_s2r
 #endif
@@ -527,6 +535,9 @@ module FV3GFS_io_mod
     nvar_o2  = 19
     nvar_oro_ls_ss = 10
     nvar_s2o = 18
+
+    nvar_dust12m   = 5
+    nvar_gbbepx = 3
 #ifdef CCPP
     if (Model%lsm == Model%lsm_ruc .and. warm_start) then
       if(Model%rdlai) then
@@ -655,6 +666,90 @@ module FV3GFS_io_mod
     !--- deallocate containers and free restart container
     deallocate(oro_name2, oro_var2)
     call free_restart_type(Oro_restart)
+
+#ifdef FENGSHA_DUST12m_DATA
+    if (.not. allocated(dust12m_name)) then
+    !--- allocate the various containers needed for fengsha dust12m data
+      allocate(dust12m_name(nvar_dust12m))
+      allocate(dust12m_var(nx,ny,12,nvar_dust12m))
+
+      dust12m_name(1)  = 'clay'
+      dust12m_name(2)  = 'rdrag'
+      dust12m_name(3)  = 'sand'
+      dust12m_name(4)  = 'ssm'
+      dust12m_name(5)  = 'uthr'
+      !--- register the 3D fields
+      mand = .false.
+      do num = 1,nvar_dust12m
+        var3_p2 => dust12m_var(:,:,:,num)
+        id_restart = register_restart_field(dust12m_restart, fn_dust12m, dust12m_name(num), var3_p2, domain=fv_domain,mandatory=mand)
+      enddo
+      nullify(var3_p2)
+    endif
+
+    !--- read new GSD created dust12m restart/data
+    call mpp_error(NOTE,'reading dust12m information from INPUT/dust12m_data.tile*.nc')
+    call restore_state(dust12m_restart)
+
+    do nb = 1, Atm_block%nblks
+      !--- 3D variables
+      do ix = 1, Atm_block%blksz(nb)
+        i = Atm_block%index(nb)%ii(ix) - isc + 1
+        j = Atm_block%index(nb)%jj(ix) - jsc + 1
+        !--- assign hprime(1:10) and hprime(15:24) with new oro stat data
+        do k = 1, 12
+          Sfcprop(nb)%dust12m_in(ix,k,1)  = dust12m_var(i,j,k,1)
+          Sfcprop(nb)%dust12m_in(ix,k,2)  = dust12m_var(i,j,k,2)
+          Sfcprop(nb)%dust12m_in(ix,k,3)  = dust12m_var(i,j,k,3)
+          Sfcprop(nb)%dust12m_in(ix,k,4)  = dust12m_var(i,j,k,4)
+          Sfcprop(nb)%dust12m_in(ix,k,5)  = dust12m_var(i,j,k,5)
+        enddo
+      enddo
+    enddo
+
+    deallocate(dust12m_name,dust12m_var)
+    call free_restart_type(dust12m_restart)
+#endif
+
+#ifdef SMOKE_OPT_GBBEPx
+    if (.not. allocated(gbbepx_name)) then
+    !--- allocate the various containers needed for gbbepx fire data
+      allocate(gbbepx_name(nvar_gbbepx))
+      allocate(gbbepx_var(nx,ny,24,nvar_gbbepx))
+
+      gbbepx_name(1)  = 'ebb_smoke_hr'
+      gbbepx_name(2)  = 'frp_avg_hr'
+      gbbepx_name(3)  = 'frp_std_hr'
+      !--- register the 3D fields
+      mand = .false.
+      do num = 1,nvar_gbbepx
+        var3_p2 => gbbepx_var(:,:,:,num)
+        id_restart = register_restart_field(gbbepx_restart, fn_gbbepx, gbbepx_name(num), var3_p2, domain=fv_domain, mandatory=mand)
+      enddo
+      nullify(var3_p2)
+    endif
+
+    !--- read new GSL created gbbepx restart/data
+    call mpp_error(NOTE,'reading gbbepx information from INPUT/SMOKE_GBBEPx_data.nc')
+    call restore_state(gbbepx_restart)
+
+    do nb = 1, Atm_block%nblks
+      !--- 3D variables
+      do ix = 1, Atm_block%blksz(nb)
+        i = Atm_block%index(nb)%ii(ix) - isc + 1
+        j = Atm_block%index(nb)%jj(ix) - jsc + 1
+        !--- assign hprime(1:10) and hprime(15:24) with new oro stat data
+        do k = 1, 24
+          Sfcprop(nb)%smoke_GBBEPx(ix,k,1)  = gbbepx_var(i,j,k,1)
+          Sfcprop(nb)%smoke_GBBEPx(ix,k,2)  = gbbepx_var(i,j,k,2)
+          Sfcprop(nb)%smoke_GBBEPx(ix,k,3)  = gbbepx_var(i,j,k,3)
+        enddo
+      enddo
+    enddo
+
+    deallocate(gbbepx_name, gbbepx_var)
+    call free_restart_type(gbbepx_restart)
+#endif
 
 #ifdef CCPP
     !--- Modify/read-in additional orographic static fields for GSL drag suite 

@@ -250,6 +250,8 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: fice   (:)   => null()  !< ice fraction over open water grid
 !   real (kind=kind_phys), pointer :: hprim  (:)   => null()  !< topographic standard deviation in m
     real (kind=kind_phys), pointer :: hprime (:,:) => null()  !< orographic metrics
+    real (kind=kind_phys), pointer :: dust12m_in  (:,:,:) => null()  !< fengsha dust input
+    real (kind=kind_phys), pointer :: smoke_GBBEPx(:,:,:) => null()  !< GBBEPx fire input
 
 !--- In (radiation only)
     real (kind=kind_phys), pointer :: sncovr (:)   => null()  !< snow cover in fraction
@@ -523,11 +525,37 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: nwfa2d  (:)     => null()  !< instantaneous water-friendly sfc aerosol source
     real (kind=kind_phys), pointer :: nifa2d  (:)     => null()  !< instantaneous ice-friendly sfc aerosol source
 
+    !--- aerosol surface emissions for Thompson microphysics & smoke
+    real (kind=kind_phys), pointer :: emdust  (:)     => null()  !< instantaneous dust emission
+    real (kind=kind_phys), pointer :: emseas  (:)     => null()  !< instantaneous sea salt emission
+!    real (kind=kind_phys), pointer :: emfroc  (:)     => null()  !< instantaneous fire oc emission
+!    real (kind=kind_phys), pointer :: emfrbc  (:)     => null()  !< instantaneous fire bc emission
+!    real (kind=kind_phys), pointer :: emfrso2 (:)     => null()  !< instantaneous fire so2 emission
+
+    !--- These 3 arrays are hourly, so their dimension is imx24 (output is hourly)
+    real (kind=kind_phys), pointer :: ebb_smoke_hr(:)    => null()  !< hourly smoke emission
+    real (kind=kind_phys), pointer :: frp_avg_hr  (:)    => null()  !< hourly avg. FRP
+    real (kind=kind_phys), pointer :: frp_std_hr  (:)    => null()  !< hourly std. FRP
+
+    !--- For fire diurnal cycle
+    real (kind=kind_phys), pointer :: fhist       (:)   => null()  !< instantaneous fire coef_bb
+    real (kind=kind_phys), pointer :: coef_bb_dc  (:)   => null()  !< instantaneous fire coef_bb
+    real (kind=kind_phys), pointer :: ebu_smoke (:,:)   => null()  !< 3D ebu array
+     
+    !--- Fire plume rise diagnostics
+    real (kind=kind_phys), pointer :: min_fplume (:)   => null()  !< minimum plume rise level
+    real (kind=kind_phys), pointer :: max_fplume (:)   => null()  !< maximum plume rise level
+    !--- hourly fire potential index
+    real (kind=kind_phys), pointer :: rrfs_hwp   (:)   => null()  !< hourly fire potential index
+
     !--- instantaneous quantities for GSDCHEM coupling
     real (kind=kind_phys), pointer :: dqdti   (:,:)   => null()  !< instantaneous total moisture tendency (kg/kg/s)
     real (kind=kind_phys), pointer :: ushfsfci(:)     => null()  !< instantaneous upward sensible heat flux (w/m**2)
     real (kind=kind_phys), pointer :: dkt     (:,:)   => null()  !< instantaneous dkt diffusion coefficient for temperature (m**2/s)
     real (kind=kind_phys), pointer :: qci_conv(:,:)   => null()  !< convective cloud condesate after rainout
+    !-- chemistry coupling
+    real (kind=kind_phys), pointer :: buffer_ebu  (:,:,:)    => null()  !<
+    real (kind=kind_phys), pointer :: faersw_cpl(:,:,:,:)    => null()  !<
 
 
     contains
@@ -1078,6 +1106,8 @@ module GFS_typedefs
     integer              :: nto2            !< tracer index for oxygen
     integer              :: ntwa            !< tracer index for water friendly aerosol
     integer              :: ntia            !< tracer index for ice friendly aerosol
+    integer              :: ntsmoke         !< tracer index for smoke
+    integer              :: ntdust          !< tracer index for dust
     integer              :: ntchm           !< number of chemical tracers
     integer              :: ntchs           !< tracer index for first chemical tracer
     logical, pointer     :: ntdiag(:) => null() !< array to control diagnostics for chemical tracers
@@ -1105,6 +1135,19 @@ module GFS_typedefs
     integer              :: nkbfshoc        !< the index of upward kinematic buoyancy flux from SHOC in phy_f3d
     integer              :: nahdshoc        !< the index of diffusivity for heat from from SHOC in phy_f3d
     integer              :: nscfshoc        !< the index of subgrid-scale cloud fraction from from SHOC in phy_f3d
+#endif
+
+#ifdef CCPP
+!-- chem nml variables for RRFS-Smoke
+    integer :: seas_opt
+    integer :: dust_opt
+    integer :: biomass_burn_opt
+    integer :: drydep_opt
+    integer :: wetdep_ls_opt
+    integer :: plumerise_flag
+    integer :: addsmoke_flag
+    logical :: do_forecast
+    logical :: dbg_opt
 #endif
 
 !--- debug flag
@@ -2236,6 +2279,8 @@ module GFS_typedefs
     allocate (Sfcprop%fice     (IM))
 !   allocate (Sfcprop%hprim    (IM))
     allocate (Sfcprop%hprime   (IM,Model%nmtvr))
+    allocate (Sfcprop%dust12m_in  (IM,12,5))
+    allocate (Sfcprop%smoke_GBBEPx(IM,24,3))
 
     Sfcprop%slmsk     = clear_val
     Sfcprop%oceanfrac = clear_val
@@ -2256,6 +2301,8 @@ module GFS_typedefs
     Sfcprop%fice      = clear_val
 !   Sfcprop%hprim     = clear_val
     Sfcprop%hprime    = clear_val
+    Sfcprop%dust12m_in= clear_val
+    Sfcprop%smoke_GBBEPx = clear_val
 
 !--- In (radiation only)
     allocate (Sfcprop%sncovr (IM))
@@ -2765,6 +2812,13 @@ module GFS_typedefs
 
     endif
 
+      !-- fire ebu chemistry coupling buffer
+      allocate (Coupling%buffer_ebu  (IM,Model%levs+1,1))
+      !-- chemistry coupling feedback to radiation
+      allocate (Coupling%faersw_cpl  (IM,Model%levr+LTP,14,3))
+      Coupling%buffer_ebu   = clear_val
+      Coupling%faersw_cpl   = clear_val
+
     ! -- GSDCHEM coupling options
     if (Model%cplchm) then
       !--- outgoing instantaneous quantities
@@ -2814,6 +2868,29 @@ module GFS_typedefs
       Coupling%nwfa2d   = clear_val
       Coupling%nifa2d   = clear_val
     endif
+    !--- needed for smoke aerosol option
+      allocate (Coupling%emdust    (IM))
+      allocate (Coupling%emseas    (IM))
+      allocate (Coupling%ebb_smoke_hr (IM))
+      allocate (Coupling%frp_avg_hr   (IM))
+      allocate (Coupling%frp_std_hr   (IM))
+      allocate (Coupling%fhist     (IM))
+      allocate (Coupling%coef_bb_dc(IM))
+      allocate (Coupling%ebu_smoke (IM,Model%levs))
+      allocate (Coupling%min_fplume(IM))
+      allocate (Coupling%max_fplume(IM))
+      allocate (Coupling%rrfs_hwp  (IM))
+      Coupling%emdust     = clear_val
+      Coupling%emseas     = clear_val
+      Coupling%ebb_smoke_hr  = clear_val
+      Coupling%frp_avg_hr    = clear_val
+      Coupling%frp_std_hr    = clear_val
+      Coupling%fhist      = 1.
+      Coupling%coef_bb_dc = clear_val
+      Coupling%ebu_smoke  = clear_val
+      Coupling%min_fplume = clear_val
+      Coupling%max_fplume = clear_val
+      Coupling%rrfs_hwp   = clear_val
 
 #ifdef CCPP
     if (Model%imfdeepcnv == Model%imfdeepcnv_gf) then
@@ -3325,6 +3402,19 @@ module GFS_typedefs
     real(kind=kind_phys) :: pertalb  = -999.
     real(kind=kind_phys) :: pertvegf = -999.
 
+#ifdef CCPP
+!-- chem nml variables for FV3/CCPP-Smoke
+    integer :: seas_opt = 2
+    integer :: dust_opt = 5
+    integer :: biomass_burn_opt = 1
+    integer :: drydep_opt  = 1
+    integer :: wetdep_ls_opt  = 1
+    integer :: plumerise_flag  = 2
+    integer :: addsmoke_flag  = 1
+    logical :: do_forecast = .true.   ! RRFS-smoke diurnal 
+    logical :: dbg_opt     = .true.   ! RRFS-smoke plumerise debug
+#endif
+
 !--- aerosol scavenging factors
     character(len=20) :: fscav_aero(20) = 'default'
 
@@ -3438,7 +3528,13 @@ module GFS_typedefs
                                max_lon, max_lat, min_lon, min_lat, rhcmax,                  &
                                phys_version,                                                &
                           !--- aerosol scavenging factors ('name:value' string array)
-                               fscav_aero
+                               fscav_aero,                                                  &
+#ifdef CCPP
+                          !--- chem namelist for smoke
+                               seas_opt, dust_opt, biomass_burn_opt, drydep_opt,            &
+                               wetdep_ls_opt, do_forecast, dbg_opt, plumerise_flag,         &
+                               addsmoke_flag
+#endif
 
 !--- other parameters 
     integer :: nctp    =  0                !< number of cloud types in CS scheme
@@ -4092,6 +4188,10 @@ module GFS_typedefs
 #endif
     Model%ntwa             = get_tracer_index(Model%tracer_names, 'liq_aero',   Model%me, Model%master, Model%debug)
     Model%ntia             = get_tracer_index(Model%tracer_names, 'ice_aero',   Model%me, Model%master, Model%debug)
+!#ifdef SMOKE
+    Model%ntsmoke          = get_tracer_index(Model%tracer_names, 'smoke',   Model%me, Model%master, Model%debug)
+    Model%ntdust           = get_tracer_index(Model%tracer_names, 'dust',   Model%me, Model%master, Model%debug)
+!#endif
     Model%ntchm            = 0
     Model%ntchs            = get_tracer_index(Model%tracer_names, 'so2',        Model%me, Model%master, Model%debug)
     if (Model%ntchs > 0) then
@@ -4143,6 +4243,18 @@ module GFS_typedefs
         endif
       enddo
     endif
+
+#ifdef CCPP
+    Model%seas_opt          = seas_opt
+    Model%dust_opt          = dust_opt
+    Model%biomass_burn_opt  = biomass_burn_opt
+    Model%drydep_opt        = drydep_opt
+    Model%wetdep_ls_opt     = wetdep_ls_opt
+    Model%plumerise_flag    = plumerise_flag
+    Model%addsmoke_flag     = addsmoke_flag
+    Model%do_forecast       = do_forecast
+    Model%dbg_opt           = dbg_opt
+#endif
 
 #ifdef CCPP
     ! To ensure that these values match what's in the physics,
@@ -5129,9 +5241,23 @@ module GFS_typedefs
       print *, ' nto2              : ', Model%nto2
       print *, ' ntwa              : ', Model%ntwa
       print *, ' ntia              : ', Model%ntia
+      print *, ' ntsmoke           : ', Model%ntsmoke
+      print *, ' ntdust            : ', Model%ntdust
       print *, ' ntchm             : ', Model%ntchm
       print *, ' ntchs             : ', Model%ntchs
       print *, ' fscav             : ', Model%fscav
+#ifdef CCPP
+      print *, ' seas_opt          : ', Model%seas_opt
+      print *, ' dust_opt          : ', Model%dust_opt
+      print *, ' biomass_burn_opt  : ', Model%biomass_burn_opt
+      print *, ' drydep_opt        : ', Model%drydep_opt
+      print *, ' wetdep_ls_opt     : ', Model%wetdep_ls_opt
+      print *, ' plumerise_flag    : ', Model%plumerise_flag
+      print *, ' addsmoke_flag     : ', Model%addsmoke_flag
+      print *, ' do_forecast       : ', Model%do_forecast
+      print *, ' dbg_opt           : ', Model%dbg_opt
+#endif
+
       print *, ' '
       print *, 'derived totals for phy_f*d'
       print *, ' ntot2d            : ', Model%ntot2d
