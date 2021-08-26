@@ -172,6 +172,24 @@ SCHEME_FILES_DEPENDENCIES = [
     'FV3/ccpp/physics/physics/namelist_soilveg_ruc.F90',
     'FV3/ccpp/physics/physics/set_soilveg_ruc.F90',
     'FV3/ccpp/physics/physics/module_soil_pre.F90',
+    # SMOKE
+    'FV3/ccpp/physics/smoke/rrfs_smoke_config.F90',
+    'FV3/ccpp/physics/smoke/rrfs_smoke_data.F90',
+    'FV3/ccpp/physics/smoke/dust_data_mod.F90',
+    'FV3/ccpp/physics/smoke/dust_fengsha_mod.F90',
+    'FV3/ccpp/physics/smoke/seas_data_mod.F90',
+    'FV3/ccpp/physics/smoke/seas_mod.F90',
+    'FV3/ccpp/physics/smoke/seas_ngac_mod.F90',
+    'FV3/ccpp/physics/smoke/plume_data_mod.F90',
+    'FV3/ccpp/physics/smoke/module_plumerise1.F90',
+    'FV3/ccpp/physics/smoke/module_smoke_plumerise.F90',
+    'FV3/ccpp/physics/smoke/module_add_emiss_burn.F90',
+    'FV3/ccpp/physics/smoke/module_zero_plumegen_coms.F90',
+    'FV3/ccpp/physics/smoke/dep_dry_gocart_mod.F90',
+    'FV3/ccpp/physics/smoke/dep_dry_mod.F90',
+    'FV3/ccpp/physics/smoke/dep_simple_mod.F90',
+    'FV3/ccpp/physics/smoke/dep_vertmx_mod.F90',
+    'FV3/ccpp/physics/smoke/dep_wet_ls_mod.F90',
     # RRTMGP
     'FV3/ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_gas_concentrations.F90',
     'FV3/ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_gas_optics.F90',
@@ -297,6 +315,8 @@ SCHEME_FILES = [
     'FV3/ccpp/physics/physics/sfc_nst.f',
     'FV3/ccpp/physics/physics/sfc_ocean.F',
     'FV3/ccpp/physics/physics/sfc_sice.f',
+    'FV3/ccpp/physics/smoke/rrfs_smoke_wrapper.F90',
+    'FV3/ccpp/physics/smoke/rrfs_smoke_lsdep_wrapper.F90',
     # HAFSFER_HIRES
     'FV3/ccpp/physics/physics/mp_fer_hires.F90',
     # RRTMGP
