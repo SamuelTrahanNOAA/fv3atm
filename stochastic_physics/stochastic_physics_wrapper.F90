@@ -108,6 +108,9 @@ module stochastic_physics_wrapper_mod
             xlat(nb,1:GFS_Control%blksz(nb)) = GFS_Data(nb)%Grid%xlat(:)
             xlon(nb,1:GFS_Control%blksz(nb)) = GFS_Data(nb)%Grid%xlon(:)
          end do
+         if(GFS_Control%me==GFS_Control%master) then
+           print *,'init stochastic physics sppt_any = ',GFS_Control%do_sppt_any
+         endif
         ! Initialize stochastic physics
         call init_stochastic_physics(GFS_Control%levs, GFS_Control%blksz, GFS_Control%dtp, GFS_Control%sppt_amp,                          &
             GFS_Control%input_nml_file, GFS_Control%fn_nml, GFS_Control%nlunit, xlon, xlat, GFS_Control%do_sppt_any, GFS_Control%do_shum, &
@@ -118,6 +121,10 @@ module stochastic_physics_wrapper_mod
                 write(6,*) 'call to init_stochastic_physics failed'
                 return
             endif
+      else
+         if(GFS_Control%me==GFS_Control%master) then
+           print *,'skip init stochastic physics'
+         endif
       end if
       if (GFS_Control%do_sppt_any) then
          allocate(sppt_wts(1:Atm_block%nblks,maxval(GFS_Control%blksz),1:GFS_Control%levs))
@@ -178,11 +185,17 @@ module stochastic_physics_wrapper_mod
     else initalize_stochastic_physics
 
       if (GFS_Control%do_sppt_any .OR. GFS_Control%do_shum .OR. GFS_Control%do_skeb .OR. (GFS_Control%lndp_type .EQ. 2) ) then
+         if(GFS_Control%me==GFS_Control%master) then
+           print *,'run stochastic physics sppt_any = ',GFS_Control%do_sppt_any
+         endif
          call run_stochastic_physics(GFS_Control%levs, GFS_Control%kdt, GFS_Control%fhour, GFS_Control%blksz, &
                                  sppt_wts=sppt_wts, shum_wts=shum_wts, skebu_wts=skebu_wts, skebv_wts=skebv_wts, sfc_wts=sfc_wts, &
                                  nthreads=nthreads)
          ! Copy contiguous data back
          if (GFS_Control%do_sppt_any) then
+           if(GFS_Control%me==GFS_Control%master) then
+             print *,'copy sppt_wts back'
+           endif
             do nb=1,Atm_block%nblks
                 GFS_Data(nb)%Coupling%sppt_wts(:,:) = sppt_wts(nb,1:GFS_Control%blksz(nb),:)
             end do
@@ -315,22 +328,24 @@ module stochastic_physics_wrapper_mod
              ca_emis_dust(nb,1:GFS_Control%blksz(nb))  = GFS_Data(nb)%Coupling%ca_emis_dust(:)
              ca_emis_plume(nb,1:GFS_Control%blksz(nb)) = GFS_Data(nb)%Coupling%ca_emis_plume(:)
              ca_emis_seas(nb,1:GFS_Control%blksz(nb))  = GFS_Data(nb)%Coupling%ca_emis_seas(:)
+             ca_condition_diag(nb,1:GFS_Control%blksz(nb)) = GFS_Data(nb)%Intdiag%ca_condition(:)
          enddo
 
 
-         call cellular_automata_emis_sgs(kstep=GFS_Control%kdt,dtf=GFS_control%dtf,restart=GFS_control%restart, &
-              first_time_step=GFS_control%first_time_step,Atm(mygrid)%domain_for_coupler,ugrs=ugrs,vgrs=vgrs, &
+         call cellular_automata_sgs_emis(kstep=GFS_Control%kdt,dtf=GFS_control%dtf,restart=GFS_control%restart, &
+              first_time_step=GFS_control%first_time_step,domain=Atm(mygrid)%domain_for_coupler,ugrs=ugrs,vgrs=vgrs, &
               qgrs=qgrs,pgr=pgr,vvl=vvl,prsl=prsl,vfrac_cpl=vfrac,fhour=GFS_control%fhour,vegtype_cpl=vegtype, &
-              iopt_dveg=GFS_Control%iopt_dveg,ca_emis_anthro_cpl=ca_emis_anthro,ca_emis_dust_cpl=ca_emis_dust, &
+              ca_emis_anthro_cpl=ca_emis_anthro,ca_emis_dust_cpl=ca_emis_dust, &
               ca_emis_plume_cpl=ca_emis_plume,ca_emis_seas_cpl=ca_emis_seas,ca_condition_diag=ca_condition_diag, &
               ca_plume_diag=ca_plume_diag,ca_sgs_gbbepx_frp=ca_sgs_gbbepx_frp,nblks=Atm_block%nblks, &
-              isc=Atm_block%isc,iec=Atm_block%iec,jsc=Atm_block%jsc,jec=Atm_block%jsc,npx=Atm(mygrid)%npx, &
+              isc=Atm_block%isc,iec=Atm_block%iec,jsc=Atm_block%jsc,jec=Atm_block%jec,npx=Atm(mygrid)%npx, &
               npy=Atm(mygrid)%npy,nlev=GFS_Control%levs,nthresh=GFS_Control%nthresh,rcell=GFS_Control%rcell, &
-              nca=GFS_Control%nca,scells=GFS_Control%scells,tlives=GFS_Controll%tlives,    &
+              nca=GFS_Control%nca,scells=GFS_Control%scells,tlives=GFS_Control%tlives,    &
               nfracseed=GFS_Control%nfracseed,nseed=GFS_Control%nseed,ca_global=GFS_Control%ca_global, &
               ca_sgs=GFS_Control%ca_sgs,iseed_ca=GFS_Control%iseed_ca,ca_smooth=GFS_Control%ca_smooth, &
-              nspinup=GFS_Control%nspinup,ca_trigger=GFS_Control%ca_trigger,blocksize=Atm_block%blksz(1), &
-              mpiroot=GFS_Control%master,mpicomm=GFS_Control%communicator)
+              nspinup=GFS_Control%nspinup,ca_trigger=GFS_Control%ca_trigger, &
+              cond_scale=GFS_Data(1)%Coupling%ca_sgs_emis_scale,emis_weight=GFS_Control%ca_emis_weight, &
+              blocksize=Atm_block%blksz(1),mpiroot=GFS_Control%master,mpicomm=GFS_Control%communicator)
 
          ! Copy contiguous data back as needed
          do nb=1,Atm_block%nblks
@@ -473,10 +488,10 @@ module stochastic_physics_wrapper_mod
 
   type(GFS_control_type),   intent(inout) :: GFS_Control
 
-  if (GFS_Control%do_sppt .OR. GFS_Control%do_shum .OR. GFS_Control%do_skeb .OR. (GFS_Control%lndp_type .GT. 0) ) then
+  if (GFS_Control%do_sppt_any .OR. GFS_Control%do_shum .OR. GFS_Control%do_skeb .OR. (GFS_Control%lndp_type .GT. 0) ) then
       if (allocated(xlat)) deallocate(xlat)
       if (allocated(xlon)) deallocate(xlon)
-      if (GFS_Control%do_sppt) then
+      if (GFS_Control%do_sppt_any) then
          if (allocated(sppt_wts)) deallocate(sppt_wts)
       end if
       if (GFS_Control%do_shum) then

@@ -1147,6 +1147,7 @@ module GFS_typedefs
     real(kind=kind_phys) :: pert_scale_dust   ! Scaling factor for emissions of dust emissions
     real(kind=kind_phys) :: pert_scale_plume  ! Scaling factor for emissions of plume rising
     real(kind=kind_phys) :: pert_scale_seas   ! Scaling factor for emissions of sea spray
+    real(kind=kind_phys) :: ca_emis_weight    ! Weight (0.0-1.0) of emissions in CA condition
 !--- tracer handling
     character(len=32), pointer :: tracer_names(:) !< array of initialized tracers from dynamic core
     integer              :: ntrac           !< number of tracers
@@ -3631,6 +3632,7 @@ module GFS_typedefs
     real(kind=kind_phys) :: pert_scale_dust = 1.0
     real(kind=kind_phys) :: pert_scale_plume = 1.0
     real(kind=kind_phys) :: pert_scale_seas = 1.0
+    real(kind=kind_phys) :: ca_emis_weight = 0.5
 
 !-- chem nml variables for FV3/CCPP-Chem
     integer              :: aer_bc_opt = 1
@@ -3748,7 +3750,7 @@ module GFS_typedefs
                                do_sppt_emis, emis_amp_anthro, emis_amp_dust,                &
                                emis_amp_plume, emis_amp_seas,                               &
                                pert_scale_anthro, pert_scale_dust, pert_scale_plume,        &
-                               pert_scale_seas,                                             &
+                               pert_scale_seas, ca_emis_weight,                             &
                                pert_mp,pert_clds,pert_radtend,                              &
                           !--- Rayleigh friction
                                prslrd0, ral_ts,  ldiag_ugwp, do_ugwp, do_tofd,              &
@@ -4499,6 +4501,7 @@ module GFS_typedefs
     Model%pert_scale_dust  = pert_scale_dust  
     Model%pert_scale_plume = pert_scale_plume 
     Model%pert_scale_seas  = pert_scale_seas  
+    Model%ca_emis_weight   = ca_emis_weight
 
     Model%emis_amp_anthro  = emis_amp_anthro
     Model%emis_amp_dust    = emis_amp_dust
