@@ -1592,6 +1592,53 @@ module GFS_diagnostics
 
 !    if(mpp_pe()==mpp_root_pe())print *,'in gfdl_diag_register,af totgrp,idx=',idx
 
+!--- RRFS Smoke ---
+  if (Model%rrfs_smoke) then
+    idx = idx + 1
+    ExtDiag(idx)%axes = 2
+    ExtDiag(idx)%name = 'ebb_smoke_hr'
+    ExtDiag(idx)%desc = 'EBB Smoke (hourly)'
+    ExtDiag(idx)%unit = 'ug m-2 s-1'
+    ExtDiag(idx)%mod_name = 'gfs_phys'
+    allocate (ExtDiag(idx)%data(nblks))
+    do nb = 1,nblks
+      ExtDiag(idx)%data(nb)%var2 => Coupling(nb)%ebb_smoke_hr(:)
+    enddo
+
+    idx = idx + 1
+    ExtDiag(idx)%axes = 2
+    ExtDiag(idx)%name = 'frp_avg_hr'
+    ExtDiag(idx)%desc = 'FRP average (hourly)'
+    ExtDiag(idx)%unit = 'MW'
+    ExtDiag(idx)%mod_name = 'gfs_phys'
+    allocate (ExtDiag(idx)%data(nblks))
+    do nb = 1,nblks
+      ExtDiag(idx)%data(nb)%var2 => Coupling(nb)%frp_avg_hr(:)
+    enddo
+
+    idx = idx + 1
+    ExtDiag(idx)%axes = 2
+    ExtDiag(idx)%name = 'frp_std_hr'
+    ExtDiag(idx)%desc = 'FRP std.dev. hourly'
+    ExtDiag(idx)%unit = 'MW'
+    ExtDiag(idx)%mod_name = 'gfs_phys'
+    allocate (ExtDiag(idx)%data(nblks))
+    do nb = 1,nblks
+      ExtDiag(idx)%data(nb)%var2 => Coupling(nb)%frp_std_hr(:)
+    enddo
+
+    idx = idx + 1
+    ExtDiag(idx)%axes = 3
+    ExtDiag(idx)%name = 'dqdti'
+    ExtDiag(idx)%desc = 'dqdti'
+    ExtDiag(idx)%unit = 'kg kg-1 s-1'
+    ExtDiag(idx)%mod_name = 'gfs_phys'
+    allocate (ExtDiag(idx)%data(nblks))
+    do nb = 1,nblks
+      ExtDiag(idx)%data(nb)%var3 => Coupling(nb)%dqdti(:,:)
+    enddo
+  endif
+
 !--- physics instantaneous diagnostics ---
     idx = idx + 1
     ExtDiag(idx)%axes = 2
@@ -2460,6 +2507,7 @@ module GFS_diagnostics
       end if if_qdiag3d
 
     end if if_ldiag3d
+
 
 !rab
 !rab    do num = 1,5+Mdl_parms%pl_coeff
