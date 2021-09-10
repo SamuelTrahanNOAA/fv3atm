@@ -241,6 +241,8 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: weasdl (:)   => null()  !< weasd over land
 !   real (kind=kind_phys), pointer :: hprim  (:)   => null()  !< topographic standard deviation in m
     real (kind=kind_phys), pointer :: hprime (:,:) => null()  !< orographic metrics
+    real (kind=kind_phys), pointer :: dust12m_in  (:,:,:) => null()  !< fengsha dust input
+    real (kind=kind_phys), pointer :: smoke_GBBEPx(:,:,:) => null()  !< GBBEPx fire input
     real (kind=kind_phys), pointer :: z0base (:)   => null()  !< background or baseline surface roughness length in m
     real (kind=kind_phys), pointer :: semisbase(:) => null()  !< background surface emissivity
     real (kind=kind_phys), pointer :: sfalb_lnd (:) => null() !< surface albedo over land for LSM
@@ -535,11 +537,29 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: nwfa2d  (:)     => null()  !< instantaneous water-friendly sfc aerosol source
     real (kind=kind_phys), pointer :: nifa2d  (:)     => null()  !< instantaneous ice-friendly sfc aerosol source
 
+    !--- aerosol surface emissions for Thompson microphysics & smoke
+    real (kind=kind_phys), pointer :: emdust  (:)     => null()  !< instantaneous dust emission
+    real (kind=kind_phys), pointer :: emseas  (:)     => null()  !< instantaneous sea salt emission
+!    real (kind=kind_phys), pointer :: emfroc  (:)     => null()  !< instantaneous fire oc emission
+!    real (kind=kind_phys), pointer :: emfrbc  (:)     => null()  !< instantaneous fire bc emission
+!    real (kind=kind_phys), pointer :: emfrso2 (:)     => null()  !< instantaneous fire so2 emission
+
     !--- These 3 arrays are hourly, so their dimension is imx24 (output is
     !hourly)
     real (kind=kind_phys), pointer :: ebb_smoke_hr(:)    => null()  !< hourly smoke emission
     real (kind=kind_phys), pointer :: frp_avg_hr  (:)    => null()  !< hourly avg. FRP
     real (kind=kind_phys), pointer :: frp_std_hr  (:)    => null()  !< hourly std. FRP
+
+    !--- For fire diurnal cycle
+    real (kind=kind_phys), pointer :: fhist       (:)   => null()  !< instantaneous fire coef_bb
+    real (kind=kind_phys), pointer :: coef_bb_dc  (:)   => null()  !< instantaneous fire coef_bb
+    real (kind=kind_phys), pointer :: ebu_smoke (:,:)   => null()  !< 3D ebu array
+     
+    !--- Fire plume rise diagnostics
+    real (kind=kind_phys), pointer :: min_fplume (:)   => null()  !< minimum plume rise level
+    real (kind=kind_phys), pointer :: max_fplume (:)   => null()  !< maximum plume rise level
+    !--- hourly fire potential index
+    real (kind=kind_phys), pointer :: rrfs_hwp   (:)   => null()  !< hourly fire potential index
 
     !--- instantaneous quantities for chemistry coupling
     real (kind=kind_phys), pointer :: ushfsfci(:)     => null()  !< instantaneous upward sensible heat flux (w/m**2)
@@ -549,6 +569,10 @@ module GFS_typedefs
 
     !--- instantaneous total moisture tendency for smoke coupling:
     real (kind=kind_phys), pointer :: dqdti   (:,:)   => null()  !< rrfs_smoke=true only; instantaneous total moisture tendency (kg/kg/s)
+    real (kind=kind_phys), pointer :: dkt     (:,:)   => null()  !< instantaneous dkt diffusion coefficient for temperature (m**2/s)
+    !-- chemistry coupling
+    real (kind=kind_phys), pointer :: buffer_ebu  (:,:,:)    => null()  !<
+    real (kind=kind_phys), pointer :: faersw_cpl(:,:,:,:)    => null()  !<
 
     contains
       procedure :: create  => coupling_create  !<   allocate array data
@@ -2991,7 +3015,7 @@ module GFS_typedefs
     endif
 
     ! -- Aerosols coupling options
-    if (Model%cplchm) then
+    if (Model%cplchm .or. Model%rrfs_smoke) then
       !--- outgoing instantaneous quantities
       allocate (Coupling%ushfsfci  (IM))
       !--- accumulated convective rainfall
@@ -3041,13 +3065,30 @@ module GFS_typedefs
     endif
 
     if(Model%rrfs_smoke) then
+    !--- needed for smoke aerosol option
+      allocate (Coupling%emdust    (IM))
+      allocate (Coupling%emseas    (IM))
       allocate (Coupling%ebb_smoke_hr (IM))
       allocate (Coupling%frp_avg_hr   (IM))
       allocate (Coupling%frp_std_hr   (IM))
+      allocate (Coupling%fhist     (IM))
+      allocate (Coupling%coef_bb_dc(IM))
+      allocate (Coupling%ebu_smoke (IM,Model%levs))
+      allocate (Coupling%min_fplume(IM))
+      allocate (Coupling%max_fplume(IM))
+      allocate (Coupling%rrfs_hwp  (IM))
       allocate (Coupling%dqdti        (IM,Model%levs))
+      Coupling%emdust     = clear_val
+      Coupling%emseas     = clear_val
       Coupling%ebb_smoke_hr  = clear_val
       Coupling%frp_avg_hr    = clear_val
       Coupling%frp_std_hr    = clear_val
+      Coupling%fhist      = 1.
+      Coupling%coef_bb_dc = clear_val
+      Coupling%ebu_smoke  = clear_val
+      Coupling%min_fplume = clear_val
+      Coupling%max_fplume = clear_val
+      Coupling%rrfs_hwp   = clear_val
       Coupling%dqdti         = clear_val
     endif
 
