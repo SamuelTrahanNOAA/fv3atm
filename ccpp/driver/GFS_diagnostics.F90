@@ -2205,6 +2205,124 @@ module GFS_diagnostics
       enddo
     endif
 
+  if (Model%do_flake .or. Model%do_clm_lake) then
+
+      idx = idx + 1
+      ExtDiag(idx)%axes = 2
+      ExtDiag(idx)%name = 'lakefrac'
+      ExtDiag(idx)%desc = 'Lake Fraction'
+      ExtDiag(idx)%unit = 'fraction'
+      ExtDiag(idx)%mod_name = 'gfs_sfc'
+      allocate (ExtDiag(idx)%data(nblks))
+      do nb = 1,nblks
+        ExtDiag(idx)%data(nb)%var2 => Sfcprop(nb)%lakefrac(:)
+      enddo
+
+      idx = idx + 1
+      ExtDiag(idx)%axes = 2
+      ExtDiag(idx)%name = 'lakedepth'
+      ExtDiag(idx)%desc = 'Lake Depth'
+      ExtDiag(idx)%unit = 'm'
+      ExtDiag(idx)%mod_name = 'gfs_sfc'
+      allocate (ExtDiag(idx)%data(nblks))
+      do nb = 1,nblks
+        ExtDiag(idx)%data(nb)%var2 => Sfcprop(nb)%lakedepth(:)
+      enddo
+    
+      if(Model%do_clm_lake) then
+        
+        idx = idx + 1
+        ExtDiag(idx)%axes = 2
+        ExtDiag(idx)%name = 'lake_t2m'
+        ExtDiag(idx)%desc = 'Temperature at 2 m from Lake Model'
+        ExtDiag(idx)%unit = 'K'
+        ExtDiag(idx)%mod_name = 'gfs_sfc'
+        allocate (ExtDiag(idx)%data(nblks))
+        do nb = 1,nblks
+          ExtDiag(idx)%data(nb)%var2 => Sfcprop(nb)%lake_t2m(:)
+        enddo
+
+        idx = idx + 1
+        ExtDiag(idx)%axes = 2
+        ExtDiag(idx)%name = 'lake_q2m'
+        ExtDiag(idx)%desc = 'Humidity at 2 m from Lake Model'
+        ExtDiag(idx)%unit = '%'
+        ExtDiag(idx)%mod_name = 'gfs_sfc'
+        allocate (ExtDiag(idx)%data(nblks))
+        do nb = 1,nblks
+          ExtDiag(idx)%data(nb)%var2 => Sfcprop(nb)%lake_q2m(:)
+        enddo
+
+        idx = idx + 1
+        ExtDiag(idx)%axes = 2
+        ExtDiag(idx)%name = 'lake_albedo'
+        ExtDiag(idx)%desc = 'mid day surface albedo over lake'
+        ExtDiag(idx)%unit = 'fraction'
+        ExtDiag(idx)%mod_name = 'gfs_sfc'
+        allocate (ExtDiag(idx)%data(nblks))
+        do nb = 1,nblks
+          ExtDiag(idx)%data(nb)%var2 => Tbd(nb)%lake_albedo(:)
+        enddo
+
+        idx = idx + 1
+        ExtDiag(idx)%axes = 2
+        ExtDiag(idx)%name = 'lake_h2osno2d'
+        ExtDiag(idx)%desc = 'water equiv of acc snow depth over lake'
+        ExtDiag(idx)%unit = 'mm'
+        ExtDiag(idx)%mod_name = 'gfs_sfc'
+        allocate (ExtDiag(idx)%data(nblks))
+        do nb = 1,nblks
+          ExtDiag(idx)%data(nb)%var2 => Tbd(nb)%lake_h2osno2d(:)
+        enddo
+
+        idx = idx + 1
+        ExtDiag(idx)%axes = 2
+        ExtDiag(idx)%name = 'lake_snowdp2d'
+        ExtDiag(idx)%desc = 'actual acc snow depth over lake in clm lake model'
+        ExtDiag(idx)%unit = 'mm'
+        ExtDiag(idx)%mod_name = 'gfs_sfc'
+        allocate (ExtDiag(idx)%data(nblks))
+        do nb = 1,nblks
+          ExtDiag(idx)%data(nb)%var2 => Tbd(nb)%lake_snowdp2d(:)
+        enddo
+
+        idx = idx + 1
+        ExtDiag(idx)%axes = 2
+        ExtDiag(idx)%name = 'lake_snl2d'
+        ExtDiag(idx)%desc = 'snow layers in clm lake model (treated as integer)'
+        ExtDiag(idx)%unit = 'count'
+        ExtDiag(idx)%mod_name = 'gfs_sfc'
+        allocate (ExtDiag(idx)%data(nblks))
+        do nb = 1,nblks
+          ExtDiag(idx)%data(nb)%var2 => Tbd(nb)%lake_snl2d(:)
+        enddo
+
+        idx = idx + 1
+        ExtDiag(idx)%axes = 2
+        ExtDiag(idx)%name = 'lake_t_grnd2d'
+        ExtDiag(idx)%desc = 'skin temperature from clm lake model'
+        ExtDiag(idx)%unit = 'K'
+        ExtDiag(idx)%mod_name = 'gfs_sfc'
+        allocate (ExtDiag(idx)%data(nblks))
+        do nb = 1,nblks
+          ExtDiag(idx)%data(nb)%var2 => Tbd(nb)%lake_t_grnd2d(:)
+        enddo
+
+        idx = idx + 1
+        ExtDiag(idx)%axes = 2
+        ExtDiag(idx)%name = 'lake_savedtke12d'
+        ExtDiag(idx)%desc = 'top level eddy conductivity from previous timestep in clm lake model'
+        ExtDiag(idx)%unit = 'kg m-3'
+        ExtDiag(idx)%mod_name = 'gfs_sfc'
+        allocate (ExtDiag(idx)%data(nblks))
+        do nb = 1,nblks
+          ExtDiag(idx)%data(nb)%var2 => Tbd(nb)%lake_savedtke12d(:)
+        enddo
+        
+      endif
+
+  endif
+
   if (Model%ldiag_ugwp) THEN
 !
 ! VAY-2018: Momentum and Temp-re tendencies

@@ -182,6 +182,7 @@ SCHEME_FILES = [
     'physics/physics/sfc_drv.f',
     'physics/physics/sfc_noahmp_drv.F90',
     'physics/physics/flake_driver.F90',
+    'physics/physics/clm_lake.F90',
     'physics/physics/sfc_nst.f',
     'physics/physics/sfc_ocean.F',
     'physics/physics/sfc_sice.f',
