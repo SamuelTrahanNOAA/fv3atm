@@ -910,8 +910,6 @@ module GFS_typedefs
     real(kind_phys)      :: clm_lake_depth_default !< minimum lake elevation in clm lake model
     logical              :: clm_lake_use_lakedepth !< initialize lake from lakedepth
 
-    logical              :: clm_lake_initialized !< lakeini was called
-
 !--- tuning parameters for physical parameterizations
     logical              :: ras             !< flag for ras convection scheme
     logical              :: flipv           !< flag for vertical direction flip (ras)
@@ -1490,6 +1488,12 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: lake_t_lake3d(:,:) => null()  !
     real (kind=kind_phys), pointer :: lake_savedtke12d(:)=> null()  !
     real (kind=kind_phys), pointer :: lake_icefrac3d(:,:)=> null()
+    real (kind=kind_phys), pointer :: lake_rho0(:)=> null()
+    real (kind=kind_phys), pointer :: lake_ht(:)=> null()
+    integer,               pointer :: clm_lake_initialized(:) => null() !< lakeini was called
+
+    integer, pointer :: xidx(:) => null()
+    integer, pointer :: yidx(:) => null()
 
     contains
       procedure :: create  => tbd_create  !<   allocate array data
@@ -1971,7 +1975,7 @@ module GFS_typedefs
     integer,               pointer      :: idxday(:)          => null()  !<
     logical,               pointer      :: icy(:)             => null()  !<
     logical,               pointer      :: lake(:)            => null()  !<
-    logical,               pointer      :: use_flake(:)       => null()  !<
+    logical,               pointer      :: lake_is_at(:)      => null()  !<
     logical,               pointer      :: ocean(:)           => null()  !<
     integer                             :: ipr                           !<
     integer,               pointer      :: islmsk(:)          => null()  !<
@@ -3264,7 +3268,7 @@ module GFS_typedefs
     integer, parameter   :: nlevsnowsoil1_clm_lake = nlevsnow_clm_lake+nlevsoil_clm_lake !< -nlevsno+1:nlevsoil dimensioned variables
 
     !--- CLM Lake configurables
-    real(kind_phys)      :: clm_lake_min_elev = 5                !< lake terrain height at which lake ice is set to zero
+    real(kind_phys)      :: clm_lake_min_elev = 250              !< lake terrain height at which lake ice is set to zero
     real(kind_phys)      :: clm_lake_depth_default = 50          !< default lake depth in clm lake model
     logical              :: clm_lake_use_lakedepth = .true.      !< initialize depth from lakedepth
 
@@ -3645,6 +3649,7 @@ module GFS_typedefs
                                lcurr_sf, pert_cd, ntsflg, sfenth,                           &
                           !--- lake model control
                                do_flake,do_clm_lake, clm_lake_use_lakedepth,                &
+                               clm_lake_min_elev,                                           &
                           !--- physical parameterizations
                                ras, trans_trac, old_monin, cnvgwd, mstrat, moist_adj,       &
                                cscnv, cal_pre, do_aw, do_shoc, shocaftcnv, shoc_cld,        &
@@ -4227,7 +4232,6 @@ module GFS_typedefs
     Model%clm_lake_min_elev = clm_lake_min_elev
     Model%clm_lake_depth_default = clm_lake_depth_default
     Model%clm_lake_use_lakedepth = clm_lake_use_lakedepth
-    Model%clm_lake_initialized = .false.
 
 !--- lake model selection
     Model%do_flake         = do_flake
@@ -6202,17 +6206,25 @@ module GFS_typedefs
        allocate(Tbd%lake_h2osno2d(IM))
        allocate(Tbd%lake_snowdp2d(IM))
        allocate(Tbd%lake_snl2d(IM))
-       allocate(Tbd%lake_z3d(IM,-Model%nlevsnow_clm_lake+1:Model%nlevsoil_clm_lake))
-       allocate(Tbd%lake_dz3d(IM,-Model%nlevsnow_clm_lake+1:Model%nlevsoil_clm_lake))
-       allocate(Tbd%lake_zi3d(IM,-Model%nlevsnow_clm_lake:Model%nlevsoil_clm_lake))
-       allocate(Tbd%lake_t_h2osoi_vol3d(IM,-Model%nlevsnow_clm_lake+1:Model%nlevsoil_clm_lake))
-       allocate(Tbd%lake_t_h2osoi_liq3d(IM,-Model%nlevsnow_clm_lake+1:Model%nlevsoil_clm_lake))
-       allocate(Tbd%lake_t_h2osoi_ice3d(IM,-Model%nlevsnow_clm_lake+1:Model%nlevsoil_clm_lake))
+       allocate(Tbd%lake_z3d(IM,Model%nlevsnowsoil1_clm_lake))
+       allocate(Tbd%lake_dz3d(IM,Model%nlevsnowsoil1_clm_lake))
+       allocate(Tbd%lake_zi3d(IM,Model%nlevsnowsoil_clm_lake))
+       allocate(Tbd%lake_t_h2osoi_vol3d(IM,Model%nlevsnowsoil1_clm_lake))
+       allocate(Tbd%lake_t_h2osoi_liq3d(IM,Model%nlevsnowsoil1_clm_lake))
+       allocate(Tbd%lake_t_h2osoi_ice3d(IM,Model%nlevsnowsoil1_clm_lake))
        allocate(Tbd%lake_t_grnd2d(IM))
-       allocate(Tbd%lake_t_soisno3d(IM,-Model%nlevsnow_clm_lake+1:Model%nlevsoil_clm_lake))
+       allocate(Tbd%lake_t_soisno3d(IM,Model%nlevsnowsoil1_clm_lake))
        allocate(Tbd%lake_t_lake3d(IM,Model%nlevlake_clm_lake))
        allocate(Tbd%lake_savedtke12d(IM))
        allocate(Tbd%lake_icefrac3d(IM,Model%nlevlake_clm_lake))
+       allocate(Tbd%lake_rho0(IM))
+       allocate(Tbd%lake_ht(IM))
+       allocate(Tbd%clm_lake_initialized(IM))
+
+       allocate(Tbd%xidx(IM))
+       allocate(Tbd%yidx(IM))
+       Tbd%xidx=clear_val
+       Tbd%yidx=clear_val
 
        Tbd%lake_albedo = clear_val
        Tbd%lake_z_3d = clear_val
@@ -6226,7 +6238,6 @@ module GFS_typedefs
        Tbd%lake_snowdp2d = clear_val
        Tbd%lake_snl2d = clear_val
        Tbd%lake_z3d = clear_val
-       Tbd%lake_z3d = clear_val
        Tbd%lake_dz3d = clear_val
        Tbd%lake_zi3d = clear_val
        Tbd%lake_t_h2osoi_vol3d = clear_val
@@ -6237,6 +6248,9 @@ module GFS_typedefs
        Tbd%lake_t_lake3d = clear_val
        Tbd%lake_savedtke12d = clear_val
        Tbd%lake_icefrac3d = clear_val
+       Tbd%lake_rho0 = -111
+       Tbd%lake_ht = -111
+       Tbd%clm_lake_initialized = 0
     endif
 
   end subroutine tbd_create
@@ -7181,7 +7195,7 @@ module GFS_typedefs
     allocate (Interstitial%idxday          (IM))
     allocate (Interstitial%icy             (IM))
     allocate (Interstitial%lake            (IM))
-    allocate (Interstitial%use_flake       (IM))
+    allocate (Interstitial%lake_is_at      (IM))
     allocate (Interstitial%ocean           (IM))
     allocate (Interstitial%islmsk          (IM))
     allocate (Interstitial%islmsk_cice     (IM))
@@ -7862,7 +7876,7 @@ module GFS_typedefs
     Interstitial%dry             = .false.
     Interstitial%icy             = .false.
     Interstitial%lake            = .false.
-    Interstitial%use_flake       = .false.
+    Interstitial%lake_is_at      = .false.
     Interstitial%ocean           = .false.
     Interstitial%islmsk          = 0
     Interstitial%islmsk_cice     = 0

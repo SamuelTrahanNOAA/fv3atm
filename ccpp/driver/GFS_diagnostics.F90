@@ -2318,6 +2318,50 @@ module GFS_diagnostics
         do nb = 1,nblks
           ExtDiag(idx)%data(nb)%var2 => Tbd(nb)%lake_savedtke12d(:)
         enddo
+
+        idx = idx + 1
+        ExtDiag(idx)%axes = 2
+        ExtDiag(idx)%name = 'lake_rho0'
+        ExtDiag(idx)%desc = 'lake_rho0'
+        ExtDiag(idx)%unit = 'unitless'
+        ExtDiag(idx)%mod_name = 'gfs_sfc'
+        allocate (ExtDiag(idx)%data(nblks))
+        do nb = 1,nblks
+          ExtDiag(idx)%data(nb)%var2 => Tbd(nb)%lake_rho0(:)
+        enddo
+
+        idx = idx + 1
+        ExtDiag(idx)%axes = 2
+        ExtDiag(idx)%name = 'lake_ht'
+        ExtDiag(idx)%desc = 'lake_ht'
+        ExtDiag(idx)%unit = 'unitless'
+        ExtDiag(idx)%mod_name = 'gfs_sfc'
+        allocate (ExtDiag(idx)%data(nblks))
+        do nb = 1,nblks
+          ExtDiag(idx)%data(nb)%var2 => Tbd(nb)%lake_ht(:)
+        enddo
+
+        idx = idx + 1
+        ExtDiag(idx)%axes = 2
+        ExtDiag(idx)%name = 'xidx'
+        ExtDiag(idx)%desc = 'xidx'
+        ExtDiag(idx)%unit = 'index'
+        ExtDiag(idx)%mod_name = 'gfs_sfc'
+        allocate (ExtDiag(idx)%data(nblks))
+        do nb = 1,nblks
+          ExtDiag(idx)%data(nb)%int2 => Tbd(nb)%xidx(:)
+        enddo
+
+        idx = idx + 1
+        ExtDiag(idx)%axes = 2
+        ExtDiag(idx)%name = 'yidx'
+        ExtDiag(idx)%desc = 'yidx'
+        ExtDiag(idx)%unit = 'index'
+        ExtDiag(idx)%mod_name = 'gfs_sfc'
+        allocate (ExtDiag(idx)%data(nblks))
+        do nb = 1,nblks
+          ExtDiag(idx)%data(nb)%int2 => Tbd(nb)%yidx(:)
+        enddo
         
       endif
 

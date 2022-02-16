@@ -230,6 +230,7 @@ subroutine update_atmos_radiation_physics (Atmos)
 !--- local variables---
     integer :: idtend, itrac
     integer :: nb, jdat(8), rc, ierr
+    integer :: ix,ib,jb,i,j
 
     if (mpp_pe() == mpp_root_pe() .and. debug) write(6,*) "statein driver"
 !--- get atmospheric state from the dynamic core
@@ -255,6 +256,17 @@ subroutine update_atmos_radiation_physics (Atmos)
       call get_date (Atmos%Time, jdat(1), jdat(2), jdat(3),  &
                                  jdat(5), jdat(6), jdat(7))
       GFS_control%jdat(:) = jdat(:)
+
+        do nb = 1, Atm_block%nblks
+            do ix = 1, Atm_block%blksz(nb)
+              ib = Atm_block%index(nb)%ii(ix)
+              jb = Atm_block%index(nb)%jj(ix)
+              i = ib - Atm_block%isc + 1
+              j = jb - Atm_block%jsc + 1
+              GFS_data(nb)%Tbd%xidx(ix) = ib
+              GFS_data(nb)%Tbd%yidx(ix) = jb
+            enddo
+        end do
 
 !--- execute the atmospheric setup step
       call mpp_clock_begin(setupClock)
