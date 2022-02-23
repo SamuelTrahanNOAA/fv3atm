@@ -6305,7 +6305,7 @@
   type = real
   kind = kind_phys
   active = (flag_for_clm_lake_surface_scheme)
-[lake_z_3d]
+[lake_z3d]
   standard_name = depth_of_lake_interface_layers
   long_name = depth of lake interface layers
   units = fraction
@@ -6313,7 +6313,7 @@
   type = real
   kind = kind_phys
   active = (flag_for_clm_lake_surface_scheme)
-[lake_dz_3d]
+[lake_dz3d]
   standard_name = thickness_of_lake_layers
   long_name = thickness of lake layers
   units = fraction
@@ -6369,7 +6369,7 @@
   type = real
   kind = kind_phys
   active = (flag_for_clm_lake_surface_scheme)
-[lake_snowdp2d]
+[lake_dp2dsno]
   standard_name = actual_snow_depth_in_clm_lake_model
   long_name = actual acc snow depth over lake in clm lake model
   units = mm
@@ -6385,7 +6385,7 @@
   type = real
   kind = kind_phys
   active = (flag_for_clm_lake_surface_scheme)
-[lake_z3d]
+[lake_snow_z3d]
   standard_name = snow_level_depth_in_clm_lake_model
   long_name = snow level depth in clm lake model
   units = m
@@ -6393,7 +6393,7 @@
   type = real
   kind = kind_phys
   active = (flag_for_clm_lake_surface_scheme)
-[lake_dz3d]
+[lake_snow_dz3d]
   standard_name = snow_level_thickness_in_clm_lake_model
   long_name = snow level thickness in clm lake model
   units = m
@@ -6401,7 +6401,7 @@
   type = real
   kind = kind_phys
   active = (flag_for_clm_lake_surface_scheme)
-[lake_zi3d]
+[lake_snow_zi3d]
   standard_name = snow_interface_depth_in_clm_lake_model
   long_name = snow interface_depth in clm lake model
   units = m
@@ -8958,9 +8958,15 @@
   units = flag
   dimensions = (horizontal_loop_extent)
   type = logical
-[lake_is_at]
-  standard_name = flag_for_running_lake_model
-  long_name = flag indicating lake points using a lake model
+[use_flake]
+  standard_name = flag_for_running_flake_lake_model
+  long_name = flag indicating lake points using the flake lake model
+  units = flag
+  dimensions = (horizontal_loop_extent)
+  type = logical
+[use_clm_lake]
+  standard_name = flag_for_running_clm_lake_model
+  long_name = flag indicating lake points using a the clm lake model
   units = flag
   dimensions = (horizontal_loop_extent)
   type = logical

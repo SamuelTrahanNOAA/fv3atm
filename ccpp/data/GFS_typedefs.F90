@@ -1467,19 +1467,19 @@ module GFS_typedefs
 
     ! CLM Lake model internal variables:
     real (kind=kind_phys), pointer :: lake_albedo(:)     => null()  !
-    real (kind=kind_phys), pointer :: lake_z_3d(:,:)     => null()  !
-    real (kind=kind_phys), pointer :: lake_dz_3d(:,:)    => null()  !
+    real (kind=kind_phys), pointer :: lake_z3d(:,:)     => null()  !
+    real (kind=kind_phys), pointer :: lake_dz3d(:,:)    => null()  !
     real (kind=kind_phys), pointer :: lake_watsat3d(:,:) => null()  !
     real (kind=kind_phys), pointer :: lake_csol3d(:,:)   => null()  !
     real (kind=kind_phys), pointer :: lake_tkmg3d(:,:)   => null()  !
     real (kind=kind_phys), pointer :: lake_tkdry3d(:,:)  => null()  !
     real (kind=kind_phys), pointer :: lake_tksatu3d(:,:) => null()  !
     real (kind=kind_phys), pointer :: lake_h2osno2d(:)   => null()  !
-    real (kind=kind_phys), pointer :: lake_snowdp2d(:)   => null()  !
+    real (kind=kind_phys), pointer :: lake_dp2dsno(:)   => null()  !
     real (kind=kind_phys), pointer :: lake_snl2d(:)      => null()  !
-    real (kind=kind_phys), pointer :: lake_z3d(:,:)      => null()  !
-    real (kind=kind_phys), pointer :: lake_dz3d(:,:)     => null()  !
-    real (kind=kind_phys), pointer :: lake_zi3d(:,:)     => null()  !
+    real (kind=kind_phys), pointer :: lake_snow_z3d(:,:)      => null()  !
+    real (kind=kind_phys), pointer :: lake_snow_dz3d(:,:)     => null()  !
+    real (kind=kind_phys), pointer :: lake_snow_zi3d(:,:)     => null()  !
     real (kind=kind_phys), pointer :: lake_t_h2osoi_vol3d(:,:)  => null()  !
     real (kind=kind_phys), pointer :: lake_t_h2osoi_liq3d(:,:)   => null()  !
     real (kind=kind_phys), pointer :: lake_t_h2osoi_ice3d(:,:)   => null()  !
@@ -1975,7 +1975,8 @@ module GFS_typedefs
     integer,               pointer      :: idxday(:)          => null()  !<
     logical,               pointer      :: icy(:)             => null()  !<
     logical,               pointer      :: lake(:)            => null()  !<
-    logical,               pointer      :: lake_is_at(:)      => null()  !<
+    logical,               pointer      :: use_clm_lake(:)    => null()  !<
+    logical,               pointer      :: use_flake(:)       => null()  !<
     logical,               pointer      :: ocean(:)           => null()  !<
     integer                             :: ipr                           !<
     integer,               pointer      :: islmsk(:)          => null()  !<
@@ -6196,19 +6197,19 @@ module GFS_typedefs
 
     if(Model%do_clm_lake) then
        allocate(Tbd%lake_albedo(IM))
-       allocate(Tbd%lake_z_3d(IM,Model%nlevlake_clm_lake))
-       allocate(Tbd%lake_dz_3d(IM,Model%nlevlake_clm_lake))
+       allocate(Tbd%lake_z3d(IM,Model%nlevlake_clm_lake))
+       allocate(Tbd%lake_dz3d(IM,Model%nlevlake_clm_lake))
        allocate(Tbd%lake_watsat3d(IM,Model%nlevlake_clm_lake))
        allocate(Tbd%lake_csol3d(IM,Model%nlevlake_clm_lake))
        allocate(Tbd%lake_tkmg3d(IM,Model%nlevlake_clm_lake))
        allocate(Tbd%lake_tkdry3d(IM,Model%nlevlake_clm_lake))
        allocate(Tbd%lake_tksatu3d(IM,Model%nlevlake_clm_lake))
        allocate(Tbd%lake_h2osno2d(IM))
-       allocate(Tbd%lake_snowdp2d(IM))
+       allocate(Tbd%lake_dp2dsno(IM))
        allocate(Tbd%lake_snl2d(IM))
-       allocate(Tbd%lake_z3d(IM,Model%nlevsnowsoil1_clm_lake))
-       allocate(Tbd%lake_dz3d(IM,Model%nlevsnowsoil1_clm_lake))
-       allocate(Tbd%lake_zi3d(IM,Model%nlevsnowsoil_clm_lake))
+       allocate(Tbd%lake_snow_z3d(IM,Model%nlevsnowsoil1_clm_lake))
+       allocate(Tbd%lake_snow_dz3d(IM,Model%nlevsnowsoil1_clm_lake))
+       allocate(Tbd%lake_snow_zi3d(IM,Model%nlevsnowsoil_clm_lake))
        allocate(Tbd%lake_t_h2osoi_vol3d(IM,Model%nlevsnowsoil1_clm_lake))
        allocate(Tbd%lake_t_h2osoi_liq3d(IM,Model%nlevsnowsoil1_clm_lake))
        allocate(Tbd%lake_t_h2osoi_ice3d(IM,Model%nlevsnowsoil1_clm_lake))
@@ -6227,19 +6228,19 @@ module GFS_typedefs
        Tbd%yidx=clear_val
 
        Tbd%lake_albedo = clear_val
-       Tbd%lake_z_3d = clear_val
-       Tbd%lake_dz_3d = clear_val
+       Tbd%lake_z3d = clear_val
+       Tbd%lake_dz3d = clear_val
        Tbd%lake_watsat3d = clear_val
        Tbd%lake_csol3d = clear_val
        Tbd%lake_tkmg3d = clear_val
        Tbd%lake_tkdry3d = clear_val
        Tbd%lake_tksatu3d = clear_val
        Tbd%lake_h2osno2d = clear_val
-       Tbd%lake_snowdp2d = clear_val
+       Tbd%lake_dp2dsno = clear_val
        Tbd%lake_snl2d = clear_val
-       Tbd%lake_z3d = clear_val
-       Tbd%lake_dz3d = clear_val
-       Tbd%lake_zi3d = clear_val
+       Tbd%lake_snow_z3d = clear_val
+       Tbd%lake_snow_dz3d = clear_val
+       Tbd%lake_snow_zi3d = clear_val
        Tbd%lake_t_h2osoi_vol3d = clear_val
        Tbd%lake_t_h2osoi_liq3d = clear_val
        Tbd%lake_t_h2osoi_ice3d = clear_val
@@ -7195,7 +7196,8 @@ module GFS_typedefs
     allocate (Interstitial%idxday          (IM))
     allocate (Interstitial%icy             (IM))
     allocate (Interstitial%lake            (IM))
-    allocate (Interstitial%lake_is_at      (IM))
+    allocate (Interstitial%use_flake       (IM))
+    allocate (Interstitial%use_clm_lake    (IM))
     allocate (Interstitial%ocean           (IM))
     allocate (Interstitial%islmsk          (IM))
     allocate (Interstitial%islmsk_cice     (IM))
@@ -7876,7 +7878,8 @@ module GFS_typedefs
     Interstitial%dry             = .false.
     Interstitial%icy             = .false.
     Interstitial%lake            = .false.
-    Interstitial%lake_is_at      = .false.
+    Interstitial%use_clm_lake    = .false.
+    Interstitial%use_flake       = .false.
     Interstitial%ocean           = .false.
     Interstitial%islmsk          = 0
     Interstitial%islmsk_cice     = 0
