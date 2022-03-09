@@ -2411,6 +2411,17 @@ module GFS_diagnostics
       do nb = 1,nblks
         ExtDiag(idx)%data(nb)%var2 => Sfcprop(nb)%lakedepth(:)
       enddo
+
+      idx = idx + 1
+      ExtDiag(idx)%axes = 2
+      ExtDiag(idx)%name = 'use_lake_model'
+      ExtDiag(idx)%desc = 'Flag for where a lake model was run (1=yes, 0=no)'
+      ExtDiag(idx)%unit = '1'
+      ExtDiag(idx)%mod_name = 'gfs_sfc'
+      allocate (ExtDiag(idx)%data(nblks))
+      do nb = 1,nblks
+        ExtDiag(idx)%data(nb)%int2 => Tbd(nb)%use_lake_model(:)
+      enddo
     
       if(Model%do_clm_lake) then
 
@@ -4001,7 +4012,19 @@ module GFS_diagnostics
     integer :: nk, idx0, iblk
     
     do iblk=1,nblks
+      call link_all_levels(Tbd(iblk)%clm_lake_test_var, 'clm_lake_test_var', 'test clm lake output', 'm')
+    enddo
+    
+    do iblk=1,nblks
       call link_all_levels(Tbd(iblk)%lake_z3d, 'lake_z3d', 'lake_depth_on_interface_levels', 'm')
+    enddo
+    
+    do iblk=1,nblks
+      call link_all_levels(Tbd(iblk)%lake_clay3d, 'lake_clay3d', 'percent clay on soil levels in clm lake model', '%')
+    enddo
+
+    do iblk=1,nblks
+      call link_all_levels(Tbd(iblk)%lake_sand3d, 'lake_sand3d', 'percent sand on soil levels in clm lake model', '%')
     enddo
     
     do iblk=1,nblks
@@ -4070,7 +4093,7 @@ module GFS_diagnostics
       implicit none
       real(kind=kind_phys), target :: var3d(:,:)
       character(len=*), intent(in) :: varname, levelname, unit
-      integer k, namelen
+      integer k, b, namelen
 
       if(iblk==1) then
         namelen = 30+max(len(varname),len(levelname))
@@ -4085,16 +4108,15 @@ module GFS_diagnostics
           write(fullname,"(A,'_',I0)") trim(varname),k
           print '("Lake 3D var: ",A)',fullname
           ExtDiag(idx)%name = trim(fullname)
-          write(fullname,"(A,' level ',I0,' of ',I0)") trim(levelname),k,nk
+          write(fullname,"(A,' level ',I0,' of ',I0)") trim(levelname),k,size(var3d,2)
           ExtDiag(idx)%desc = trim(fullname)
           ExtDiag(idx)%unit = trim(unit)
           ExtDiag(idx)%mod_name = 'gfs_sfc'
-          ExtDiag(idx)%cnvfac = cn_one
-          ExtDiag(idx)%time_avg = .TRUE.
-          ExtDiag(idx)%time_avg_kind = 'rad_sw'
-          ExtDiag(idx)%intpl_method = 'bilinear'
 
           allocate (ExtDiag(idx)%data(nblks))
+          do b=1,nblks
+            nullify(ExtDiag(idx)%data(b)%var2)
+          enddo
         endif
 
         ExtDiag(idx)%data(iblk)%var2 => var3d(:,k)

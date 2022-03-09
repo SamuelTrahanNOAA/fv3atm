@@ -5567,6 +5567,12 @@
   units = flag
   dimensions = ()
   type = logical
+[clm_lake_use_lakefrac]
+  standard_name = flag_for_initializing_clm_lake_mask_from_lake_fraction
+  long_name = flag for initializing clm lake mask from lake fraction
+  units = flag
+  dimensions = ()
+  type = logical
 
 ########################################################################
 [ccpp-table-properties]
@@ -6517,6 +6523,31 @@
   units = index
   dimensions = (horizontal_loop_extent)
   type = integer
+[use_lake_model]
+  standard_name = flag_for_running_a_lake_model
+  long_name = integer flag for where a lake model was run (1=yes, 0=no)
+  units = 1
+  dimensions = (horizontal_loop_extent)
+  type = integer
+[lake_clay3d]
+  standard_name = clm_lake_percent_clay
+  long_name = percent clay in clm lake model
+  units = percent
+  dimensions = (horizontal_loop_extent,soil_vertical_dimension_for_clm_lake_model)
+  type = integer
+[lake_sand3d]
+  standard_name = clm_lake_percent_sand
+  long_name = percent sand in clm lake model
+  units = percent
+  dimensions = (horizontal_loop_extent,soil_vertical_dimension_for_clm_lake_model)
+  type = integer
+[clm_lake_test_var]
+  standard_name = clm_lake_test_var
+  long_name = variable to test clm lake output (FIXME: delete before merging)
+  units = percent
+  dimensions = (horizontal_loop_extent,soil_vertical_dimension_for_clm_lake_model)
+  type = integer
+
 
 ########################################################################
 [ccpp-table-properties]

@@ -914,6 +914,7 @@ module GFS_typedefs
     real(kind_phys)      :: clm_lake_min_elev !< lake terrain height at which lake ice is set to zero
     real(kind_phys)      :: clm_lake_depth_default !< minimum lake elevation in clm lake model
     logical              :: clm_lake_use_lakedepth !< initialize lake from lakedepth
+    logical              :: clm_lake_use_lakefrac !< use lakefrac array when deciding where to run clm lake
 
 !--- tuning parameters for physical parameterizations
     logical              :: ras             !< flag for ras convection scheme
@@ -1494,7 +1495,13 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: lake_icefrac3d(:,:)=> null()
     real (kind=kind_phys), pointer :: lake_rho0(:)=> null()
     real (kind=kind_phys), pointer :: lake_ht(:)=> null()
+    real (kind=kind_phys), pointer :: lake_clay3d(:,:) => null()
+    real (kind=kind_phys), pointer :: lake_sand3d(:,:) => null()
+    real (kind=kind_phys), pointer :: clm_lake_test_var(:,:) => null()
     integer,               pointer :: clm_lake_initialized(:) => null() !< lakeini was called
+
+    ! Lake model diagnostic variables
+    integer,               pointer :: use_lake_model(:) => null() !< where was a lake model run?
 
     integer, pointer :: xidx(:) => null()
     integer, pointer :: yidx(:) => null()
@@ -3293,7 +3300,8 @@ module GFS_typedefs
     !--- CLM Lake configurables
     real(kind_phys)      :: clm_lake_min_elev = 250              !< lake terrain height at which lake ice is set to zero
     real(kind_phys)      :: clm_lake_depth_default = 50          !< default lake depth in clm lake model
-    logical              :: clm_lake_use_lakedepth = .true.      !< initialize depth from lakedepth
+    logical              :: clm_lake_use_lakedepth = .false.     !< initialize depth from lakedepth
+    logical              :: clm_lake_use_lakefrac = .false.      !< use lakefrac in decision of where to run clm lake
 
     !--- land/surface model parameters
     integer              :: lsm            =  1              !< flag for land surface model to use =0  for osu lsm; =1  for noah lsm; =2  for noah mp lsm; =3  for RUC lsm
@@ -3673,7 +3681,8 @@ module GFS_typedefs
                                lcurr_sf, pert_cd, ntsflg, sfenth,                           &
                           !--- lake model control
                                do_flake,do_clm_lake, clm_lake_use_lakedepth,                &
-                               clm_lake_min_elev,                                           &
+                               clm_lake_min_elev, clm_lake_use_lakefrac,                    &
+                               clm_lake_depth_default,                                      &
                           !--- physical parameterizations
                                ras, trans_trac, old_monin, cnvgwd, mstrat, moist_adj,       &
                                cscnv, cal_pre, do_aw, do_shoc, shocaftcnv, shoc_cld,        &
@@ -4256,6 +4265,7 @@ module GFS_typedefs
     Model%clm_lake_min_elev = clm_lake_min_elev
     Model%clm_lake_depth_default = clm_lake_depth_default
     Model%clm_lake_use_lakedepth = clm_lake_use_lakedepth
+    Model%clm_lake_use_lakefrac  = clm_lake_use_lakefrac
 
 !--- lake model selection
     Model%do_flake         = do_flake
@@ -5024,6 +5034,7 @@ module GFS_typedefs
         print *,'  clm_lake_min_elev      = ',Model%clm_lake_min_elev
         print *,'  clm_lake_depth_default = ',Model%clm_lake_depth_default
         print *,'  clm_lake_use_lakedepth = ',Model%clm_lake_use_lakedepth
+        print *,'  clm_lake_use_lakefrac  = ',Model%clm_lake_use_lakefrac
         print *,'  iswater                = ',Model%iswater
       endif
 
@@ -6241,7 +6252,11 @@ module GFS_typedefs
        allocate(Tbd%lake_icefrac3d(IM,Model%nlevlake_clm_lake))
        allocate(Tbd%lake_rho0(IM))
        allocate(Tbd%lake_ht(IM))
+       allocate(Tbd%lake_clay3d(IM,Model%nlevsoil_clm_lake))
+       allocate(Tbd%lake_sand3d(IM,Model%nlevsoil_clm_lake))
        allocate(Tbd%clm_lake_initialized(IM))
+       allocate(Tbd%use_lake_model(IM))
+       allocate(Tbd%clm_lake_test_var(IM,Model%nlevsoil_clm_lake))
 
        allocate(Tbd%xidx(IM))
        allocate(Tbd%yidx(IM))
@@ -6272,7 +6287,11 @@ module GFS_typedefs
        Tbd%lake_icefrac3d = clear_val
        Tbd%lake_rho0 = -111
        Tbd%lake_ht = -111
+       Tbd%lake_clay3d = clear_val
+       Tbd%lake_sand3d = clear_val
+       Tbd%clm_lake_test_var = clear_val
        Tbd%clm_lake_initialized = 0
+       Tbd%use_lake_model = 0
     endif
 
   end subroutine tbd_create
