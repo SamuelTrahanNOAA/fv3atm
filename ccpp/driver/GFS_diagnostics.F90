@@ -2396,6 +2396,7 @@ module GFS_diagnostics
       ExtDiag(idx)%desc = 'Lake Fraction'
       ExtDiag(idx)%unit = 'fraction'
       ExtDiag(idx)%mod_name = 'gfs_sfc'
+      ExtDiag(idx)%intpl_method = 'nearest_stod'
       allocate (ExtDiag(idx)%data(nblks))
       do nb = 1,nblks
         ExtDiag(idx)%data(nb)%var2 => Sfcprop(nb)%lakefrac(:)
@@ -2407,6 +2408,7 @@ module GFS_diagnostics
       ExtDiag(idx)%desc = 'Lake Depth'
       ExtDiag(idx)%unit = 'm'
       ExtDiag(idx)%mod_name = 'gfs_sfc'
+      ExtDiag(idx)%intpl_method = 'nearest_stod'
       allocate (ExtDiag(idx)%data(nblks))
       do nb = 1,nblks
         ExtDiag(idx)%data(nb)%var2 => Sfcprop(nb)%lakedepth(:)
@@ -2418,6 +2420,7 @@ module GFS_diagnostics
       ExtDiag(idx)%desc = 'Flag for where a lake model was run (1=yes, 0=no)'
       ExtDiag(idx)%unit = '1'
       ExtDiag(idx)%mod_name = 'gfs_sfc'
+        ExtDiag(idx)%intpl_method = 'nearest_stod'
       allocate (ExtDiag(idx)%data(nblks))
       do nb = 1,nblks
         ExtDiag(idx)%data(nb)%int2 => Tbd(nb)%use_lake_model(:)
@@ -2433,6 +2436,7 @@ module GFS_diagnostics
         ExtDiag(idx)%name = 'lake_t2m'
         ExtDiag(idx)%desc = 'Temperature at 2 m from Lake Model'
         ExtDiag(idx)%unit = 'K'
+        ExtDiag(idx)%intpl_method = 'nearest_stod'
         ExtDiag(idx)%mod_name = 'gfs_sfc'
         allocate (ExtDiag(idx)%data(nblks))
         do nb = 1,nblks
@@ -2445,6 +2449,7 @@ module GFS_diagnostics
         ExtDiag(idx)%desc = 'Humidity at 2 m from Lake Model'
         ExtDiag(idx)%unit = '%'
         ExtDiag(idx)%mod_name = 'gfs_sfc'
+        ExtDiag(idx)%intpl_method = 'nearest_stod'
         allocate (ExtDiag(idx)%data(nblks))
         do nb = 1,nblks
           ExtDiag(idx)%data(nb)%var2 => Sfcprop(nb)%lake_q2m(:)
@@ -2456,6 +2461,7 @@ module GFS_diagnostics
         ExtDiag(idx)%desc = 'mid day surface albedo over lake'
         ExtDiag(idx)%unit = 'fraction'
         ExtDiag(idx)%mod_name = 'gfs_sfc'
+        ExtDiag(idx)%intpl_method = 'nearest_stod'
         allocate (ExtDiag(idx)%data(nblks))
         do nb = 1,nblks
           ExtDiag(idx)%data(nb)%var2 => Tbd(nb)%lake_albedo(:)
@@ -2467,6 +2473,7 @@ module GFS_diagnostics
         ExtDiag(idx)%desc = 'water equiv of acc snow depth over lake'
         ExtDiag(idx)%unit = 'mm'
         ExtDiag(idx)%mod_name = 'gfs_sfc'
+        ExtDiag(idx)%intpl_method = 'nearest_stod'
         allocate (ExtDiag(idx)%data(nblks))
         do nb = 1,nblks
           ExtDiag(idx)%data(nb)%var2 => Tbd(nb)%lake_h2osno2d(:)
@@ -2478,6 +2485,7 @@ module GFS_diagnostics
         ExtDiag(idx)%desc = 'actual acc snow depth over lake in clm lake model'
         ExtDiag(idx)%unit = 'mm'
         ExtDiag(idx)%mod_name = 'gfs_sfc'
+        ExtDiag(idx)%intpl_method = 'nearest_stod'
         allocate (ExtDiag(idx)%data(nblks))
         do nb = 1,nblks
           ExtDiag(idx)%data(nb)%var2 => Tbd(nb)%lake_dp2dsno(:)
@@ -2489,6 +2497,7 @@ module GFS_diagnostics
         ExtDiag(idx)%desc = 'snow layers in clm lake model (treated as integer)'
         ExtDiag(idx)%unit = 'count'
         ExtDiag(idx)%mod_name = 'gfs_sfc'
+        ExtDiag(idx)%intpl_method = 'nearest_stod'
         allocate (ExtDiag(idx)%data(nblks))
         do nb = 1,nblks
           ExtDiag(idx)%data(nb)%var2 => Tbd(nb)%lake_snl2d(:)
@@ -2500,6 +2509,7 @@ module GFS_diagnostics
         ExtDiag(idx)%desc = 'skin temperature from clm lake model'
         ExtDiag(idx)%unit = 'K'
         ExtDiag(idx)%mod_name = 'gfs_sfc'
+        ExtDiag(idx)%intpl_method = 'nearest_stod'
         allocate (ExtDiag(idx)%data(nblks))
         do nb = 1,nblks
           ExtDiag(idx)%data(nb)%var2 => Tbd(nb)%lake_t_grnd2d(:)
@@ -2511,6 +2521,7 @@ module GFS_diagnostics
         ExtDiag(idx)%desc = 'top level eddy conductivity from previous timestep in clm lake model'
         ExtDiag(idx)%unit = 'kg m-3'
         ExtDiag(idx)%mod_name = 'gfs_sfc'
+        ExtDiag(idx)%intpl_method = 'nearest_stod'
         allocate (ExtDiag(idx)%data(nblks))
         do nb = 1,nblks
           ExtDiag(idx)%data(nb)%var2 => Tbd(nb)%lake_savedtke12d(:)
@@ -2522,6 +2533,7 @@ module GFS_diagnostics
         ExtDiag(idx)%desc = 'lake_rho0'
         ExtDiag(idx)%unit = 'unitless'
         ExtDiag(idx)%mod_name = 'gfs_sfc'
+        ExtDiag(idx)%intpl_method = 'nearest_stod'
         allocate (ExtDiag(idx)%data(nblks))
         do nb = 1,nblks
           ExtDiag(idx)%data(nb)%var2 => Tbd(nb)%lake_rho0(:)
@@ -2533,6 +2545,7 @@ module GFS_diagnostics
         ExtDiag(idx)%desc = 'lake_ht'
         ExtDiag(idx)%unit = 'unitless'
         ExtDiag(idx)%mod_name = 'gfs_sfc'
+        ExtDiag(idx)%intpl_method = 'nearest_stod'
         allocate (ExtDiag(idx)%data(nblks))
         do nb = 1,nblks
           ExtDiag(idx)%data(nb)%var2 => Tbd(nb)%lake_ht(:)
@@ -2544,6 +2557,7 @@ module GFS_diagnostics
         ExtDiag(idx)%desc = 'xidx'
         ExtDiag(idx)%unit = 'index'
         ExtDiag(idx)%mod_name = 'gfs_sfc'
+        ExtDiag(idx)%intpl_method = 'nearest_stod'
         allocate (ExtDiag(idx)%data(nblks))
         do nb = 1,nblks
           ExtDiag(idx)%data(nb)%int2 => Tbd(nb)%xidx(:)
@@ -2555,6 +2569,7 @@ module GFS_diagnostics
         ExtDiag(idx)%desc = 'yidx'
         ExtDiag(idx)%unit = 'index'
         ExtDiag(idx)%mod_name = 'gfs_sfc'
+        ExtDiag(idx)%intpl_method = 'nearest_stod'
         allocate (ExtDiag(idx)%data(nblks))
         do nb = 1,nblks
           ExtDiag(idx)%data(nb)%int2 => Tbd(nb)%yidx(:)
@@ -4012,10 +4027,6 @@ module GFS_diagnostics
     integer :: nk, idx0, iblk
     
     do iblk=1,nblks
-      call link_all_levels(Tbd(iblk)%clm_lake_test_var, 'clm_lake_test_var', 'test clm lake output', 'm')
-    enddo
-    
-    do iblk=1,nblks
       call link_all_levels(Tbd(iblk)%lake_z3d, 'lake_z3d', 'lake_depth_on_interface_levels', 'm')
     enddo
     
@@ -4112,6 +4123,7 @@ module GFS_diagnostics
           ExtDiag(idx)%desc = trim(fullname)
           ExtDiag(idx)%unit = trim(unit)
           ExtDiag(idx)%mod_name = 'gfs_sfc'
+          ExtDiag(idx)%intpl_method = 'nearest_stod'
 
           allocate (ExtDiag(idx)%data(nblks))
           do b=1,nblks

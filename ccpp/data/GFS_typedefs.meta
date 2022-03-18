@@ -6541,12 +6541,6 @@
   units = percent
   dimensions = (horizontal_loop_extent,soil_vertical_dimension_for_clm_lake_model)
   type = integer
-[clm_lake_test_var]
-  standard_name = clm_lake_test_var
-  long_name = variable to test clm lake output (FIXME: delete before merging)
-  units = percent
-  dimensions = (horizontal_loop_extent,soil_vertical_dimension_for_clm_lake_model)
-  type = integer
 
 
 ########################################################################

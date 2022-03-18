@@ -1497,7 +1497,6 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: lake_ht(:)=> null()
     real (kind=kind_phys), pointer :: lake_clay3d(:,:) => null()
     real (kind=kind_phys), pointer :: lake_sand3d(:,:) => null()
-    real (kind=kind_phys), pointer :: clm_lake_test_var(:,:) => null()
     integer,               pointer :: clm_lake_initialized(:) => null() !< lakeini was called
 
     ! Lake model diagnostic variables
@@ -2772,7 +2771,7 @@ module GFS_typedefs
         Sfcprop%conv_act_m = zero
     end if
 
-    if(Model%do_clm_lake) then
+    if(Model%do_clm_lake .or. Model%do_flake) then
        allocate(Sfcprop%lake_t2m(IM))
        allocate(Sfcprop%lake_q2m(IM))
        Sfcprop%lake_t2m = clear_val
@@ -6256,7 +6255,6 @@ module GFS_typedefs
        allocate(Tbd%lake_sand3d(IM,Model%nlevsoil_clm_lake))
        allocate(Tbd%clm_lake_initialized(IM))
        allocate(Tbd%use_lake_model(IM))
-       allocate(Tbd%clm_lake_test_var(IM,Model%nlevsoil_clm_lake))
 
        allocate(Tbd%xidx(IM))
        allocate(Tbd%yidx(IM))
@@ -6289,7 +6287,6 @@ module GFS_typedefs
        Tbd%lake_ht = -111
        Tbd%lake_clay3d = clear_val
        Tbd%lake_sand3d = clear_val
-       Tbd%clm_lake_test_var = clear_val
        Tbd%clm_lake_initialized = 0
        Tbd%use_lake_model = 0
     endif
