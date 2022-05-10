@@ -957,6 +957,7 @@ module GFS_typedefs
     integer              :: nlevsnowsoil_clm_lake !< -nlevsnow:nlevsoil dimensioned variables
     integer              :: nlevsnowsoil1_clm_lake !< -nlevsnow+1:nlevsoil dimensioned variables
     real(kind_phys)      :: clm_lake_min_elev !< lake terrain height at which lake ice is set to zero
+    real(kind_phys)      :: clm_lake_min_lakefrac !< minimum lake fraction for gridpoints simulated by clm lake model
     real(kind_phys)      :: clm_lake_depth_default !< minimum lake elevation in clm lake model
     logical              :: clm_lake_use_lakedepth !< initialize lake from lakedepth
     logical              :: clm_lake_use_lakefrac !< use lakefrac array when deciding where to run clm lake
@@ -3431,10 +3432,11 @@ module GFS_typedefs
     integer, parameter   :: nlevsnowsoil1_clm_lake = nlevsnow_clm_lake+nlevsoil_clm_lake !< -nlevsno+1:nlevsoil dimensioned variables
 
     !--- CLM Lake configurables
-    real(kind_phys)      :: clm_lake_min_elev = 250              !< lake terrain height at which lake ice is set to zero
-    real(kind_phys)      :: clm_lake_depth_default = 50          !< default lake depth in clm lake model
-    logical              :: clm_lake_use_lakedepth = .false.     !< initialize depth from lakedepth
-    logical              :: clm_lake_use_lakefrac = .false.      !< use lakefrac in decision of where to run clm lake
+    real(kind_phys)      :: clm_lake_min_elev = 50              !< lake terrain height at which lake ice is set to zero
+    real(kind_phys)      :: clm_lake_min_lakefrac = .005        !< minimum allowed lake fraction for running clm lake model
+    real(kind_phys)      :: clm_lake_depth_default = 50         !< default lake depth in clm lake model
+    logical              :: clm_lake_use_lakedepth = .true.     !< initialize depth from lakedepth
+    logical              :: clm_lake_use_lakefrac = .true.      !< use lakefrac in decision of where to run clm lake
 
     !--- land/surface model parameters
     integer              :: lsm            =  1              !< flag for land surface model to use =0  for osu lsm; =1  for noah lsm; =2  for noah mp lsm; =3  for RUC lsm
@@ -3826,7 +3828,7 @@ module GFS_typedefs
                           !--- lake model control
                                lkm, clm_lake_use_lakedepth,                                 &
                                clm_lake_min_elev, clm_lake_use_lakefrac,                    &
-                               clm_lake_depth_default,                                      &
+                               clm_lake_depth_default,clm_lake_min_lakefrac,                &
                           !--- physical parameterizations
                                ras, trans_trac, old_monin, cnvgwd, mstrat, moist_adj,       &
                                cscnv, cal_pre, do_aw, do_shoc, shocaftcnv, shoc_cld,        &
@@ -4433,6 +4435,7 @@ module GFS_typedefs
     Model%nlevsnowsoil_clm_lake = nlevsnowsoil_clm_lake
     Model%nlevsnowsoil1_clm_lake = nlevsnowsoil1_clm_lake
     Model%clm_lake_min_elev = clm_lake_min_elev
+    Model%clm_lake_min_lakefrac = clm_lake_min_lakefrac
     Model%clm_lake_depth_default = clm_lake_depth_default
     Model%clm_lake_use_lakedepth = clm_lake_use_lakedepth
     Model%clm_lake_use_lakefrac  = clm_lake_use_lakefrac
@@ -5323,6 +5326,7 @@ module GFS_typedefs
         print *,'  nlevsnowsoil_clm_lake  = ',Model%nlevsnowsoil_clm_lake
         print *,'  nlevsnowsoil1_clm_lake = ',Model%nlevsnowsoil1_clm_lake
         print *,'  clm_lake_min_elev      = ',Model%clm_lake_min_elev
+        print *,'  clm_lake_min_lakefrac  = ',Model%clm_lake_min_lakefrac
         print *,'  clm_lake_depth_default = ',Model%clm_lake_depth_default
         print *,'  clm_lake_use_lakedepth = ',Model%clm_lake_use_lakedepth
         print *,'  clm_lake_use_lakefrac  = ',Model%clm_lake_use_lakefrac
