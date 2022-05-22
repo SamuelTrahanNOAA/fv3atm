@@ -339,9 +339,15 @@ module module_cplfields
     character(len=*),   intent(in)            :: state
     character(len=*),   intent(in)            :: name
     integer,            intent(in),  optional :: localDe
+#ifdef CCPP_32BIT
+    real(ESMF_KIND_R4), pointer,     optional :: farrayPtr2d(:,:)
+    real(ESMF_KIND_R4), pointer,     optional :: farrayPtr3d(:,:,:)
+    real(ESMF_KIND_R4), pointer,     optional :: farrayPtr4d(:,:,:,:)
+#else
     real(ESMF_KIND_R8), pointer,     optional :: farrayPtr2d(:,:)
     real(ESMF_KIND_R8), pointer,     optional :: farrayPtr3d(:,:,:)
     real(ESMF_KIND_R8), pointer,     optional :: farrayPtr4d(:,:,:,:)
+#endif
     integer,            intent(out), optional :: rc
 
     !--- local variables
@@ -417,7 +423,11 @@ module module_cplfields
     type(FieldInfo), dimension(:),  intent(in)  :: fields_info
     character(len=*),               intent(in)  :: state_tag                              !< Import or export.
     type(ESMF_Field), dimension(:), intent(out) :: fieldList
+#ifdef CCPP_32BIT
+    real(ESMF_KIND_R4), optional  , intent(in)  :: fill_value
+#else
     real(ESMF_KIND_R8), optional  , intent(in)  :: fill_value
+#endif
     integer,                        intent(out) :: rc
 
     ! local variables
@@ -426,7 +436,14 @@ module module_cplfields
     logical          :: isConnected
     type(ESMF_Field) :: field
     real(ESMF_KIND_R8) :: l_fill_value
+#ifdef CCPP_32BIT
+    real(ESMF_KIND_R8), parameter :: d_fill_value = 0._ESMF_KIND_R4
+    type(ESMF_TypeKind_Flag), parameter :: typekind = ESMF_TYPEKIND_R4
+#else
+
     real(ESMF_KIND_R8), parameter :: d_fill_value = 0._ESMF_KIND_R8
+    type(ESMF_TypeKind_Flag), parameter :: typekind = ESMF_TYPEKIND_R8
+#endif
     type(ESMF_StateIntent_Flag) :: stateintent
     character(len=32), allocatable, dimension(:) :: tracerNames, tracerUnits
 
@@ -454,6 +471,7 @@ module module_cplfields
     do item = 1, size(fields_info)
       isConnected = NUOPC_IsConnected(state, fieldName=trim(fields_info(item)%name), rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+      write(0,'(a,l)') "ZZZ: " // trim(fields_info(item)%name) // ", connected? ", isConnected
       if (isConnected) then
         call ESMF_StateGet(state, field=field, itemName=trim(fields_info(item)%name), rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
@@ -461,15 +479,15 @@ module module_cplfields
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
         select case (fields_info(item)%type)
           case ('l','layer')
-            call ESMF_FieldEmptyComplete(field, typekind=ESMF_TYPEKIND_R8, &
+            call ESMF_FieldEmptyComplete(field, typekind=typekind, &
                                      ungriddedLBound=(/1/), ungriddedUBound=(/numLevels/), rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
           case ('i','interface')
-            call ESMF_FieldEmptyComplete(field, typekind=ESMF_TYPEKIND_R8, &
+            call ESMF_FieldEmptyComplete(field, typekind=typekind, &
                                      ungriddedLBound=(/1/), ungriddedUBound=(/numLevels+1/), rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
           case ('t','tracer')
-            call ESMF_FieldEmptyComplete(field, typekind=ESMF_TYPEKIND_R8, &
+            call ESMF_FieldEmptyComplete(field, typekind=typekind, &
                                      ungriddedLBound=(/1, 1/), ungriddedUBound=(/numLevels, numTracers/), rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
             if (allocated(tracerNames)) then
@@ -481,10 +499,10 @@ module module_cplfields
               if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
             end if
           case ('s','surface')
-            call ESMF_FieldEmptyComplete(field, typekind=ESMF_TYPEKIND_R8, rc=rc)
+            call ESMF_FieldEmptyComplete(field, typekind=typekind, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
           case ('g','soil')
-            call ESMF_FieldEmptyComplete(field, typekind=ESMF_TYPEKIND_R8, &
+            call ESMF_FieldEmptyComplete(field, typekind=typekind, &
                                      ungriddedLBound=(/1/), ungriddedUBound=(/numSoilLayers/), rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
           case default

@@ -74,7 +74,6 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
   use module_cplfields,       only: realizeConnectedCplFields
 
   use atmos_model_mod,        only: setup_exportdata
-  use CCPP_data,              only: GFS_control
 !
 !-----------------------------------------------------------------------
 !
@@ -444,10 +443,17 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
     call ESMF_GridCompGet(nest, grid=grid, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__,  file=__FILE__)) return
 
+    ! DH*
+    write(0,'(a)') "YYY: BEFORE realizeConnectedCplFields(exportState ..."
+    ! *DH
     ! -- realize connected fields in exportState
     call realizeConnectedCplFields(exportState, grid, &
                                    numLevels, numSoilLayers, numTracers, &
+#ifdef CCPP_32BIT
+                                   exportFieldsInfo, 'FV3 Export', exportFields, 0.0_ESMF_KIND_R4, rc)
+#else
                                    exportFieldsInfo, 'FV3 Export', exportFields, 0.0_ESMF_KIND_R8, rc)
+#endif
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__,  file=__FILE__)) return
 
     ! -- initialize export fields if applicable
@@ -457,7 +463,11 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
     ! -- realize connected fields in importState
     call realizeConnectedCplFields(importState, grid, &
                                    numLevels, numSoilLayers, numTracers, &
+#ifdef CCPP_32BIT
+                                   importFieldsInfo, 'FV3 Import', importFields, 9.99e20_ESMF_KIND_R4, rc)
+#else
                                    importFieldsInfo, 'FV3 Import', importFields, 9.99e20_ESMF_KIND_R8, rc)
+#endif
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__,  file=__FILE__)) return
 !
 !-----------------------------------------------------------------------

@@ -1244,7 +1244,22 @@ subroutine update_atmos_chemistry(state, rc)
   integer :: ni, nj, nk, nt, ntb, nte
   integer :: nb, ix, i, j, k, k1, it
   integer :: ib, jb
+#ifdef CCPP_32BIT
+  real(ESMF_KIND_R4), dimension(:,:,:),   pointer :: cldfra,       &
+                                                     pfils, pflls, &
+                                                     phii,  phil,  &
+                                                     prsi,  prsl,  &
+                                                     slc,   smc,   &
+                                                     stc,   temp,  &
+                                                     ua,    va
 
+  real(ESMF_KIND_R4), dimension(:,:,:,:), pointer :: q
+
+  real(ESMF_KIND_R4), dimension(:,:), pointer :: aod, area, canopy, cmm,  &
+    dqsfc, dtsfc, fice, flake, focn, fsnow, hpbl, nswsfc, oro, psfc, &
+    q2m, rain, rainc, rca, shfsfc, slmsk, stype, swet, t2m, tsfc,    &
+    u10m, uustar, v10m, vfrac, xlai, zorl
+#else
   real(ESMF_KIND_R8), dimension(:,:,:),   pointer :: cldfra,       &
                                                      pfils, pflls, &
                                                      phii,  phil,  &
@@ -1259,7 +1274,7 @@ subroutine update_atmos_chemistry(state, rc)
     dqsfc, dtsfc, fice, flake, focn, fsnow, hpbl, nswsfc, oro, psfc, &
     q2m, rain, rainc, rca, shfsfc, slmsk, stype, swet, t2m, tsfc,    &
     u10m, uustar, v10m, vfrac, xlai, zorl
-
+#endif
 ! logical, parameter :: diag = .true.
 
   ! -- begin
@@ -2731,6 +2746,10 @@ end subroutine update_atmos_chemistry
 
     do n=1, size(exportFields)
 
+      ! DH*
+      write(0,'(a,i6)') "XXX1: DH DEBUG: loop through exportFields, n=", n
+      ! *DH
+
       datar42d => null()
       datar82d => null()
       datar83d => null()
@@ -2779,7 +2798,6 @@ end subroutine update_atmos_chemistry
             ! Instantaneous u wind (m/s) 10 m above ground
             case ('inst_zonal_wind_height10m')
               call block_data_copy(datar82d, GFS_data(nb)%coupling%u10mi_cpl, Atm_block, nb, rc=localrc)
-              !call block_data_copy(datar82d, GFS_data(nb)%coupling%u10mi_cpl, Atm_block, nb, rc=localrc)
             ! Instantaneous v wind (m/s) 10 m above ground
             case ('inst_merid_wind_height10m')
               call block_data_copy(datar82d, GFS_data(nb)%coupling%v10mi_cpl, Atm_block, nb, rc=localrc)
