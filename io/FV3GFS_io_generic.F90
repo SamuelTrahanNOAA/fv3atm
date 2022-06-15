@@ -77,6 +77,8 @@ contains
     integer :: ngrids_atmos
     integer :: mygrid_atmos
     integer, pointer :: pelist(:)
+    logical :: moving_nest_parent
+    logical :: is_moving_nest
 
     logical :: any_nested
     integer :: rank_in_fcst,ierr,iostat,unit
@@ -116,7 +118,9 @@ contains
 
     call MPI_Comm_rank(fcst_mpi_comm,rank_in_fcst,ierr)
 
-    call atmosphere_domain(fv_domain,layout,regional,nested,ngrids_atmos,mygrid_atmos,pelist)
+    call atmosphere_domain ( fv_domain=fv_domain, layout=layout, regional=regional, nested=nested, &
+                                moving_nest_parent=moving_nest_parent, is_moving_nest=is_moving_nest, &
+                                ngrids_atmos=ngrids_atmos, mygrid_atmos=mygrid_atmos, pelist=pelist )
 
 38  format(I0,': is ',A)
     if(nested) then
