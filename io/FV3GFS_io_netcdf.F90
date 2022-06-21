@@ -240,7 +240,13 @@ contains ! ------------------------------------------------------------
     endif
 
     ! Give up if any process on this tile failed.
-    if(.not.allreduce_and(open_file,restart%comm)) return
+    if(.not.allreduce_and(open_file,restart%comm)) then
+      if(restart%rank==0) then
+        write(0,'(A)') "Allreduce_and returned false, so at least one process failed a sanity check."
+      endif
+      open_file=.false.
+      return
+    endif
 
     ! Get tile count from mpp_domains_mod
     restart%ntiles = mpp_get_ntile_count(domain)
@@ -284,6 +290,8 @@ contains ! ------------------------------------------------------------
         print 104,trim(fullname) 
       endif
     endif
+
+    restart%filename=fullname
 
     ! Open the file. We'll temporarily need an MPI_Info for this.
     call MPI_Info_create(info,ierr)
@@ -527,7 +535,7 @@ contains ! ------------------------------------------------------------
              count(idim) = restart%dims(var%dimindex(idim))%dimlen
              if(count(idim)<=0) then
 67              format(A,": var ",A," dimension ",I0," with id ",I0," has invalid size ",I0)
-                write(0.67) trim(restart%filename),trim(var%name),idim,var%dimindex(idim),count(idim)
+                write(0,67) trim(restart%filename),trim(var%name),idim,var%dimindex(idim),count(idim)
                 count(idim)=1
              endif
           endif
@@ -546,7 +554,7 @@ contains ! ------------------------------------------------------------
              count(idim) = restart%dims(var%dimindex(idim))%local_end - start(idim) + 1
              if(count(idim)<=0) then
 167             format(A,": var ",A," dimension ",I0," with id ",I0," has invalid size ",I0,' from start=',I0,' end=',I0)
-                write(0.67) trim(restart%filename),trim(var%name),idim,var%dimindex(idim),count(idim),restart%dims(var%dimindex(idim))%local_start,restart%dims(var%dimindex(idim))%local_end
+                write(0,67) trim(restart%filename),trim(var%name),idim,var%dimindex(idim),count(idim),restart%dims(var%dimindex(idim))%local_start,restart%dims(var%dimindex(idim))%local_end
                 start(idim) = 1
                 count(idim) = 1
              endif
@@ -686,7 +694,7 @@ return
              count(idim) = restart%dims(var%dimindex(idim))%dimlen
              if(count(idim)<=0) then
 67              format(A,": var ",A," dimension ",I0," with id ",I0," has invalid size ",I0)
-                write(0.67) trim(restart%filename),trim(var%name),idim,var%dimindex(idim),count(idim)
+                write(0,67) trim(restart%filename),trim(var%name),idim,var%dimindex(idim),count(idim)
                 count(idim) = 1
              endif
           endif
