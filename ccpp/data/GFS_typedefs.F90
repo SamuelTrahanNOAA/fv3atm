@@ -4286,17 +4286,10 @@ module GFS_typedefs
 
 !--- potential temperature reference in sfc layer
     Model%thsfc_loc        = thsfc_loc
-    if (Model%do_mynnsfclay) then
 !--- flux method in 2-m diagnostics
-      Model%diag_flux        = .true.
+    Model%diag_flux        = diag_flux
 !--- flux method in 2-m diagnostics (for stable conditions)
-      Model%diag_log         = .false.
-    else
-!--- flux method in 2-m diagnostics
-      Model%diag_flux        = diag_flux
-!--- flux method in 2-m diagnostics (for stable conditions)
-      Model%diag_log         = diag_log
-    endif
+    Model%diag_log         = diag_log
 
 !--- vertical diffusion
     Model%xkzm_m           = xkzm_m
