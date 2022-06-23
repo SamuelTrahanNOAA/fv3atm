@@ -291,8 +291,6 @@ contains ! ------------------------------------------------------------
       endif
     endif
 
-    restart%filename=fullname
-
     ! Open the file. We'll temporarily need an MPI_Info for this.
     call MPI_Info_create(info,ierr)
 16  format(A,": ",A," tile ",I0)
