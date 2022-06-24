@@ -6948,14 +6948,6 @@
   type = real
   kind = kind_phys
   active = (control_for_lake_surface_scheme == 3)
-[lake_rho0]
-  standard_name = test_lake_rho0
-  long_name = test_lake_rho0
-  dimensions = (horizontal_loop_extent)
-  units = unitless
-  type = real
-  kind = kind_phys
-  active = (control_for_lake_surface_scheme == 3)
 [lake_ht]
   standard_name = test_lake_ht
   long_name = test_lake_ht

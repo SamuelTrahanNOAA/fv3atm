@@ -1558,14 +1558,10 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: lake_t_lake3d(:,:) => null()  !
     real (kind=kind_phys), pointer :: lake_savedtke12d(:)=> null()  !
     real (kind=kind_phys), pointer :: lake_icefrac3d(:,:)=> null()
-    real (kind=kind_phys), pointer :: lake_rho0(:)=> null()
     real (kind=kind_phys), pointer :: lake_ht(:)=> null()
     real (kind=kind_phys), pointer :: lake_clay3d(:,:) => null()
     real (kind=kind_phys), pointer :: lake_sand3d(:,:) => null()
     integer,               pointer :: clm_lake_initialized(:) => null() !< lakeini was called
-
-    ! Lake model diagnostic variables
-    integer,               pointer :: use_lake_model(:) => null() !< where was a lake model run?
 
     !--- DFI Radar
     real (kind=kind_phys), pointer :: dfi_radar_tten(:,:,:) => null() !
@@ -6673,12 +6669,10 @@ module GFS_typedefs
        allocate(Tbd%lake_t_lake3d(IM,Model%nlevlake_clm_lake))
        allocate(Tbd%lake_savedtke12d(IM))
        allocate(Tbd%lake_icefrac3d(IM,Model%nlevlake_clm_lake))
-       allocate(Tbd%lake_rho0(IM))
        allocate(Tbd%lake_ht(IM))
        allocate(Tbd%lake_clay3d(IM,Model%nlevsoil_clm_lake))
        allocate(Tbd%lake_sand3d(IM,Model%nlevsoil_clm_lake))
        allocate(Tbd%clm_lake_initialized(IM))
-       allocate(Tbd%use_lake_model(IM))
 
        Tbd%lake_albedo = clear_val
        Tbd%lake_z3d = clear_val
@@ -6702,7 +6696,6 @@ module GFS_typedefs
        Tbd%lake_t_lake3d = clear_val
        Tbd%lake_savedtke12d = clear_val
        Tbd%lake_icefrac3d = clear_val
-       Tbd%lake_rho0 = -111
        Tbd%lake_ht = -111
        Tbd%lake_clay3d = clear_val
        Tbd%lake_sand3d = clear_val

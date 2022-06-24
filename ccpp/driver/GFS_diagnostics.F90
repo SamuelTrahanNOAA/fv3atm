@@ -2482,13 +2482,13 @@ module GFS_diagnostics
       idx = idx + 1
       ExtDiag(idx)%axes = 2
       ExtDiag(idx)%name = 'use_lake_model'
-      ExtDiag(idx)%desc = 'Flag for where a lake model was run (1=yes, 0=no)'
+      ExtDiag(idx)%desc = 'Which lake model was run? (0=no 1=flake 2=flake+nsst 3=clm_lake)'
       ExtDiag(idx)%unit = '1'
       ExtDiag(idx)%mod_name = 'gfs_sfc'
         ExtDiag(idx)%intpl_method = 'nearest_stod'
       allocate (ExtDiag(idx)%data(nblks))
       do nb = 1,nblks
-        ExtDiag(idx)%data(nb)%int2 => Tbd(nb)%use_lake_model(:)
+        ExtDiag(idx)%data(nb)%int2 => SfcProp(nb)%use_lake_model(:)
       enddo
     
       if(Model%lkm==3) then
@@ -2590,18 +2590,6 @@ module GFS_diagnostics
         allocate (ExtDiag(idx)%data(nblks))
         do nb = 1,nblks
           ExtDiag(idx)%data(nb)%var2 => Tbd(nb)%lake_savedtke12d(:)
-        enddo
-
-        idx = idx + 1
-        ExtDiag(idx)%axes = 2
-        ExtDiag(idx)%name = 'lake_rho0'
-        ExtDiag(idx)%desc = 'lake_rho0'
-        ExtDiag(idx)%unit = 'unitless'
-        ExtDiag(idx)%mod_name = 'gfs_sfc'
-        ExtDiag(idx)%intpl_method = 'nearest_stod'
-        allocate (ExtDiag(idx)%data(nblks))
-        do nb = 1,nblks
-          ExtDiag(idx)%data(nb)%var2 => Tbd(nb)%lake_rho0(:)
         enddo
 
         idx = idx + 1
@@ -4179,7 +4167,6 @@ module GFS_diagnostics
         if(iblk==1) then
           ExtDiag(idx)%axes = 2
           write(fullname,"(A,'_',I0)") trim(varname),k
-          print '("Lake 3D var: ",A)',fullname
           ExtDiag(idx)%name = trim(fullname)
           write(fullname,"(A,' level ',I0,' of ',I0)") trim(levelname),k,size(var3d,2)
           ExtDiag(idx)%desc = trim(fullname)
