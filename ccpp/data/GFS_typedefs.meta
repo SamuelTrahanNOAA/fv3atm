@@ -5995,22 +5995,20 @@
   units = flag
   dimensions = ()
   type = logical
-[clm_lake_min_elev]
-  standard_name = minimum_lake_elevation_in_clm_lake_model
-  long_name = minimum lake elevation in clm lake model
-  units = m
+[min_lakefrac]
+  standard_name = minimum_lake_fraction_for_lake_models
+  long_name = lake fraction must be higher than this to run lake models on a gridpoint
+  units = frac
   dimensions = ()
   type = real
   kind = kind_phys
-  active = (control_for_lake_surface_scheme == 3)
-[clm_lake_min_lakefrac]
-  standard_name = minimum_lake_fraction_in_clm_lake_model
-  long_name = minimum lake fraction in clm lake model
-  units = m
+[min_lakedepth]
+  standard_name = minimum_lake_depth_for_lake_models
+  long_name = lake depth must be higher than this to run lake models on a gridpoint
+  units = depth
   dimensions = ()
   type = real
   kind = kind_phys
-  active = (control_for_lake_surface_scheme == 3)
 [clm_lake_depth_default]
   standard_name = default_lake_depth_in_clm_lake_model
   long_name = default lake depth in clm lake model
@@ -6022,13 +6020,6 @@
 [clm_lake_use_lakedepth]
   standard_name = flag_for_initializing_clm_lake_depth_from_lake_depth
   long_name = flag for initializing clm lake depth from lake depth
-  units = flag
-  dimensions = ()
-  type = logical
-  active = (control_for_lake_surface_scheme == 3)
-[clm_lake_use_lakefrac]
-  standard_name = flag_for_initializing_clm_lake_mask_from_lake_fraction
-  long_name = flag for initializing clm lake mask from lake fraction
   units = flag
   dimensions = ()
   type = logical
@@ -6945,14 +6936,6 @@
   long_name = lake fractional ice cover on clm lake levels
   units = kg m-3
   dimensions = (horizontal_loop_extent,lake_vertical_dimension_for_clm_lake_model)
-  type = real
-  kind = kind_phys
-  active = (control_for_lake_surface_scheme == 3)
-[lake_ht]
-  standard_name = test_lake_ht
-  long_name = test_lake_ht
-  dimensions = (horizontal_loop_extent)
-  units = unitless
   type = real
   kind = kind_phys
   active = (control_for_lake_surface_scheme == 3)

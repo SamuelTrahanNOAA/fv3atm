@@ -2591,18 +2591,6 @@ module GFS_diagnostics
         do nb = 1,nblks
           ExtDiag(idx)%data(nb)%var2 => Tbd(nb)%lake_savedtke12d(:)
         enddo
-
-        idx = idx + 1
-        ExtDiag(idx)%axes = 2
-        ExtDiag(idx)%name = 'lake_ht'
-        ExtDiag(idx)%desc = 'lake_ht'
-        ExtDiag(idx)%unit = 'unitless'
-        ExtDiag(idx)%mod_name = 'gfs_sfc'
-        ExtDiag(idx)%intpl_method = 'nearest_stod'
-        allocate (ExtDiag(idx)%data(nblks))
-        do nb = 1,nblks
-          ExtDiag(idx)%data(nb)%var2 => Tbd(nb)%lake_ht(:)
-        enddo
         
       endif
 
