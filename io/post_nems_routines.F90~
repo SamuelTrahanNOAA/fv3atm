@@ -156,6 +156,8 @@
                              isf_surface_physics,modelname,submodelname
 #ifdef USE_IFI
       use upp_ifi_mod, only: write_ifi_debug_files
+#else
+      logical :: write_ifi_debug_files = .false.
 #endif
 !
 !    revision history:
@@ -163,10 +165,6 @@
 !
       implicit none
 !---
-#ifndef USE_IFI
-      logical :: write_ifi_debug_files = .false.
-#endif
-
       character (len=*), intent(in) :: post_namelist
       integer :: kpo,kth,kpv,nlunit
       real :: untcnvt
