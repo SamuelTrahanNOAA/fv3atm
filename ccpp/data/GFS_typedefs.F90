@@ -954,8 +954,22 @@ module GFS_typedefs
     integer              :: ntsflg          !< flag for updating skin temperature in the GFDL surface layer scheme
     real(kind=kind_phys) :: sfenth          !< enthalpy flux factor 0 zot via charnock ..>0 zot enhanced>15m/s
 
-!--- flake model parameters
-    integer              :: lkm             !< flag for flake model
+!--- lake model parameters
+    integer              :: lkm             !< lake model master flag
+    integer              :: lake_model      !< lake model selection
+    integer              :: lake_model_flake = 1 !< lake_model selection for flake model
+    integer              :: lake_model_clm   = 2 !< lake model selection for CLM lake model
+    real(kind_phys)      :: lakdedepth_threshold = 1.0  !< lakedepth must be GREATER than this value to enable a lake model
+    real(kind_phys)      :: lakefrac_threshold   = 0.15 !< lakefrac must be GREATER than this value to enable a lake model
+
+!--- clm lake model parameters
+    integer              :: nlevlake_clm_lake !< Number of lake levels for clm lake model
+    integer              :: nlevsoil_clm_lake !< Number of soil levels for clm lake model
+    integer              :: nlevsnow_clm_lake !< Number of snow levels for clm lake model
+    integer              :: nlevsnowsoil_clm_lake !< -nlevsnow:nlevsoil dimensioned variables
+    integer              :: nlevsnowsoil1_clm_lake !< -nlevsnow+1:nlevsoil dimensioned variables
+    real(kind_phys)      :: clm_lake_depth_default !< minimum lake elevation in clm lake model
+    logical              :: clm_lake_use_lakedepth !< initialize lake from lakedepth
 
 !--- tuning parameters for physical parameterizations
     logical              :: ras             !< flag for ras convection scheme
@@ -1570,6 +1584,35 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: phy_myj_a1u(:)     => null()  !
     real (kind=kind_phys), pointer :: phy_myj_a1t(:)     => null()  !
     real (kind=kind_phys), pointer :: phy_myj_a1q(:)     => null()  !
+
+    ! CLM Lake model internal variables:
+    real (kind=kind_phys), pointer :: lake_albedo(:)     => null()  !
+    real (kind=kind_phys), pointer :: lake_z3d(:,:)     => null()  !
+    real (kind=kind_phys), pointer :: lake_dz3d(:,:)    => null()  !
+    real (kind=kind_phys), pointer :: lake_watsat3d(:,:) => null()  !
+    real (kind=kind_phys), pointer :: lake_csol3d(:,:)   => null()  !
+    real (kind=kind_phys), pointer :: lake_tkmg3d(:,:)   => null()  !
+    real (kind=kind_phys), pointer :: lake_tkdry3d(:,:)  => null()  !
+    real (kind=kind_phys), pointer :: lake_tksatu3d(:,:) => null()  !
+    real (kind=kind_phys), pointer :: lake_h2osno2d(:)   => null()  !
+    real (kind=kind_phys), pointer :: lake_dp2dsno(:)   => null()  !
+    real (kind=kind_phys), pointer :: lake_snl2d(:)      => null()  !
+    real (kind=kind_phys), pointer :: lake_snow_z3d(:,:)      => null()  !
+    real (kind=kind_phys), pointer :: lake_snow_dz3d(:,:)     => null()  !
+    real (kind=kind_phys), pointer :: lake_snow_zi3d(:,:)     => null()  !
+    real (kind=kind_phys), pointer :: lake_t_h2osoi_vol3d(:,:)  => null()  !
+    real (kind=kind_phys), pointer :: lake_t_h2osoi_liq3d(:,:)   => null()  !
+    real (kind=kind_phys), pointer :: lake_t_h2osoi_ice3d(:,:)   => null()  !
+    real (kind=kind_phys), pointer :: lake_t_grnd2d(:)   => null()  !
+    real (kind=kind_phys), pointer :: lake_t_soisno3d(:,:) => null()  !
+    real (kind=kind_phys), pointer :: lake_t_lake3d(:,:) => null()  !
+    real (kind=kind_phys), pointer :: lake_savedtke12d(:)=> null()  !
+    real (kind=kind_phys), pointer :: lake_icefrac3d(:,:)=> null()
+    real (kind=kind_phys), pointer :: lake_rho0(:)=> null()
+    real (kind=kind_phys), pointer :: lake_ht(:)=> null()
+    real (kind=kind_phys), pointer :: lake_clay3d(:,:) => null()
+    real (kind=kind_phys), pointer :: lake_sand3d(:,:) => null()
+    integer,               pointer :: clm_lake_initialized(:) => null() !< lakeini was called
 
     !--- DFI Radar
     real (kind=kind_phys), pointer :: dfi_radar_tten(:,:,:) => null() !
@@ -3082,6 +3125,17 @@ module GFS_typedefs
     !--- Thompson,GFDL microphysical parameter
     logical              :: lrefres        = .false.            !< flag for radar reflectivity in restart file
 
+    !--- CLM Lake Model parameters (MUST match clm_lake.F90)
+    integer, parameter   :: nlevlake_clm_lake = 10           !< number of lake levels
+    integer, parameter   :: nlevsoil_clm_lake = 10           !< number of soil levels
+    integer, parameter   :: nlevsnow_clm_lake = 5            !< number of snow levels
+    integer, parameter   :: nlevsnowsoil_clm_lake = nlevsnow_clm_lake+nlevsoil_clm_lake+1 !< -nlevsno:nlevsoil dimensioned variables
+    integer, parameter   :: nlevsnowsoil1_clm_lake = nlevsnow_clm_lake+nlevsoil_clm_lake !< -nlevsno+1:nlevsoil dimensioned variables
+
+    !--- CLM Lake configurables
+    real(kind_phys)      :: clm_lake_depth_default = 50         !< default lake depth in clm lake model
+    logical              :: clm_lake_use_lakedepth = .true.     !< initialize depth from lakedepth
+
     !--- land/surface model parameters
     integer              :: lsm            =  1              !< flag for land surface model to use =0  for osu lsm; =1  for noah lsm; =2  for noah mp lsm; =3  for RUC lsm
     integer              :: lsoil          =  4              !< number of soil layers
@@ -3126,8 +3180,9 @@ module GFS_typedefs
     integer              :: ntsflg         = 0                        !< flag for updating skin temperature in the GFDL surface layer scheme
     real(kind=kind_phys) :: sfenth         = 0.0                      !< enthalpy flux factor 0 zot via charnock ..>0 zot enhanced>15m/s
 
-!--- flake model parameters
-    integer              :: lkm            =  0                       !< flag for flake model - default no flake
+!--- lake model parameters
+    integer              :: lkm            =  0                       !< 0=don't run a lake model, 1=run a lake model
+    integer              :: lake_model     =  1                       !< 1=flake model, 2=clm lake model
 
 !--- tuning parameters for physical parameterizations
     logical              :: ras            = .false.                  !< flag for ras convection scheme
@@ -3496,7 +3551,8 @@ module GFS_typedefs
                           !    GFDL surface layer options
                                lcurr_sf, pert_cd, ntsflg, sfenth,                           &
                           !--- lake model control
-                               lkm,                                                         &
+                               lkm, lake_model,                                             &
+                               clm_lake_depth_default, clm_lake_use_lakedepth,              &
                           !--- physical parameterizations
                                ras, trans_trac, old_monin, cnvgwd, mstrat, moist_adj,       &
                                cscnv, cal_pre, do_aw, do_shoc, shocaftcnv, shoc_cld,        &
@@ -4124,8 +4180,18 @@ module GFS_typedefs
     Model%ntsflg           = ntsflg
     Model%sfenth           = sfenth
 
-!--- flake  model parameters
+!--- lake model parameters
     Model%lkm              = lkm
+    Model%lake_model       = lake_model
+
+!--- clm lake model parameters
+    Model%nlevlake_clm_lake = nlevlake_clm_lake
+    Model%nlevsoil_clm_lake = nlevsoil_clm_lake
+    Model%nlevsnow_clm_lake = nlevsnow_clm_lake
+    Model%nlevsnowsoil_clm_lake = nlevsnowsoil_clm_lake
+    Model%nlevsnowsoil1_clm_lake = nlevsnowsoil1_clm_lake
+    Model%clm_lake_depth_default = clm_lake_depth_default
+    Model%clm_lake_use_lakedepth = clm_lake_use_lakedepth
 
 ! Noah MP options from namelist
 !
@@ -5049,8 +5115,19 @@ module GFS_typedefs
       print *,' min_lakeice=',Model%min_lakeice,' min_seaice=',Model%min_seaice,                &
               'min_lake_height=',Model%min_lake_height
 
-      print *, 'flake model parameters'
-      print *, 'lkm                : ', Model%lkm
+      print *, 'lake model parameters'
+      print *, ' lake master flag lkm   : ', Model%lkm
+      if(Model%lkm>0) then
+        print *, ' lake model selection   : ', Model%lake_model
+        if(Model%lake_model==Model%lake_model_clm) then
+          print *,'  CLM Lake model configuration'
+          print *,'   nlevlake_clm_lake      = ',Model%nlevlake_clm_lake
+          print *,'   nlevsoil_clm_lake      = ',Model%nlevsoil_clm_lake
+          print *,'   nlevsnow_clm_lake      = ',Model%nlevsnow_clm_lake
+          print *,'   nlevsnowsoil_clm_lake  = ',Model%nlevsnowsoil_clm_lake
+          print *,'   nlevsnowsoil1_clm_lake = ',Model%nlevsnowsoil1_clm_lake
+        endif
+      endif
 
       if (Model%nstf_name(1) > 0 ) then
         print *,' NSSTM is active '
@@ -5897,8 +5974,11 @@ module GFS_typedefs
       print *, ' ntsflg            : ', Model%ntsflg
       print *, ' sfenth            : ', Model%sfenth
       print *, ' '
-      print *, 'flake model parameters'
-      print *, 'lkm                : ', Model%lkm
+      print *, 'lake model parameters'
+      print *, 'lake master flag (lkm) : ', Model%lkm
+      if(Model%lkm>0) then
+        print *, '  lake model selection : ', Model%lake_model
+      endif
       print *, ' '
       print *, 'tuning parameters for physical parameterizations'
       print *, ' ras               : ', Model%ras
@@ -6414,6 +6494,63 @@ module GFS_typedefs
        Tbd%phy_myj_a1t    = clear_val
        Tbd%phy_myj_a1q    = clear_val
     end if
+    if(Model%lkm==Model%lkm_clm_lake) then
+       allocate(Tbd%lake_albedo(IM))
+       allocate(Tbd%lake_z3d(IM,Model%nlevlake_clm_lake))
+       allocate(Tbd%lake_dz3d(IM,Model%nlevlake_clm_lake))
+       allocate(Tbd%lake_watsat3d(IM,Model%nlevlake_clm_lake))
+       allocate(Tbd%lake_csol3d(IM,Model%nlevlake_clm_lake))
+       allocate(Tbd%lake_tkmg3d(IM,Model%nlevlake_clm_lake))
+       allocate(Tbd%lake_tkdry3d(IM,Model%nlevlake_clm_lake))
+       allocate(Tbd%lake_tksatu3d(IM,Model%nlevlake_clm_lake))
+       allocate(Tbd%lake_h2osno2d(IM))
+       allocate(Tbd%lake_dp2dsno(IM))
+       allocate(Tbd%lake_snl2d(IM))
+       allocate(Tbd%lake_snow_z3d(IM,Model%nlevsnowsoil1_clm_lake))
+       allocate(Tbd%lake_snow_dz3d(IM,Model%nlevsnowsoil1_clm_lake))
+       allocate(Tbd%lake_snow_zi3d(IM,Model%nlevsnowsoil_clm_lake))
+       allocate(Tbd%lake_t_h2osoi_vol3d(IM,Model%nlevsnowsoil1_clm_lake))
+       allocate(Tbd%lake_t_h2osoi_liq3d(IM,Model%nlevsnowsoil1_clm_lake))
+       allocate(Tbd%lake_t_h2osoi_ice3d(IM,Model%nlevsnowsoil1_clm_lake))
+       allocate(Tbd%lake_t_grnd2d(IM))
+       allocate(Tbd%lake_t_soisno3d(IM,Model%nlevsnowsoil1_clm_lake))
+       allocate(Tbd%lake_t_lake3d(IM,Model%nlevlake_clm_lake))
+       allocate(Tbd%lake_savedtke12d(IM))
+       allocate(Tbd%lake_icefrac3d(IM,Model%nlevlake_clm_lake))
+       allocate(Tbd%lake_rho0(IM))
+       allocate(Tbd%lake_ht(IM))
+       allocate(Tbd%lake_clay3d(IM,Model%nlevsoil_clm_lake))
+       allocate(Tbd%lake_sand3d(IM,Model%nlevsoil_clm_lake))
+       allocate(Tbd%clm_lake_initialized(IM))
+
+       Tbd%lake_albedo = clear_val
+       Tbd%lake_z3d = clear_val
+       Tbd%lake_dz3d = clear_val
+       Tbd%lake_watsat3d = clear_val
+       Tbd%lake_csol3d = clear_val
+       Tbd%lake_tkmg3d = clear_val
+       Tbd%lake_tkdry3d = clear_val
+       Tbd%lake_tksatu3d = clear_val
+       Tbd%lake_h2osno2d = clear_val
+       Tbd%lake_dp2dsno = clear_val
+       Tbd%lake_snl2d = clear_val
+       Tbd%lake_snow_z3d = clear_val
+       Tbd%lake_snow_dz3d = clear_val
+       Tbd%lake_snow_zi3d = clear_val
+       Tbd%lake_t_h2osoi_vol3d = clear_val
+       Tbd%lake_t_h2osoi_liq3d = clear_val
+       Tbd%lake_t_h2osoi_ice3d = clear_val
+       Tbd%lake_t_grnd2d = clear_val
+       Tbd%lake_t_soisno3d = clear_val
+       Tbd%lake_t_lake3d = clear_val
+       Tbd%lake_savedtke12d = clear_val
+       Tbd%lake_icefrac3d = clear_val
+       Tbd%lake_rho0 = -111
+       Tbd%lake_ht = -111
+       Tbd%lake_clay3d = clear_val
+       Tbd%lake_sand3d = clear_val
+       Tbd%clm_lake_initialized = 0
+    endif
 
   end subroutine tbd_create
 
