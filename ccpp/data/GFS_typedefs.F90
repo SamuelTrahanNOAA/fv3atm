@@ -212,6 +212,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: lakedepth(:) => null()  !< lake  depth [ m ]
     real (kind=kind_phys), pointer :: tsfc   (:)   => null()  !< surface air temperature in K
                                                               !< [tsea in gbphys.f]
+    real (kind=kind_phys), pointer :: T_snow (:)   => null()  !temperature of snow on a lake [K]
     real (kind=kind_phys), pointer :: tsfco  (:)   => null()  !< sst in K
     real (kind=kind_phys), pointer :: tsfcl  (:)   => null()  !< surface land temperature in K
     real (kind=kind_phys), pointer :: tisfc  (:)   => null()  !< surface temperature over ice fraction
@@ -290,6 +291,12 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: t2m    (:)   => null()  !< 2 meter temperature
     real (kind=kind_phys), pointer :: th2m   (:)   => null()  !< 2 meter potential temperature
     real (kind=kind_phys), pointer :: q2m    (:)   => null()  !< 2 meter humidity
+
+    integer,               pointer :: use_lake_model(:) => null()  !< should a lake model be run here?
+
+!--- Overrides frm CLM Lake Model
+    real (kind=kind_phys), pointer :: lake_t2m (:)   => null()  !< 2 meter temperature from CLM Lake model 
+    real (kind=kind_phys), pointer :: lake_q2m (:)   => null()  !< 2 meter humidity from CLM Lake model
 
 ! -- In/Out for Noah MP
     real (kind=kind_phys), pointer :: snowxy  (:)  => null()  !<
@@ -958,9 +965,9 @@ module GFS_typedefs
     integer              :: lkm             !< lake model master flag
     integer              :: lake_model      !< lake model selection
     integer              :: lake_model_flake = 1 !< lake_model selection for flake model
-    integer              :: lake_model_clm   = 2 !< lake model selection for CLM lake model
-    real(kind_phys)      :: lakdedepth_threshold = 1.0  !< lakedepth must be GREATER than this value to enable a lake model
-    real(kind_phys)      :: lakefrac_threshold   = 0.15 !< lakefrac must be GREATER than this value to enable a lake model
+    integer              :: lake_model_clm = 2  !< lake model selection for CLM lake model
+    real(kind_phys)      :: lakedepth_threshold !< lakedepth must be GREATER than this value to enable a lake model
+    real(kind_phys)      :: lakefrac_threshold  !< lakefrac must be GREATER than this value to enable a lake model
 
 !--- clm lake model parameters
     integer              :: nlevlake_clm_lake !< Number of lake levels for clm lake model
@@ -2105,6 +2112,7 @@ module GFS_typedefs
     allocate (Sfcprop%lakefrac (IM))
     allocate (Sfcprop%lakedepth(IM))
     allocate (Sfcprop%tsfc     (IM))
+    allocate (Sfcprop%T_snow   (IM))
     allocate (Sfcprop%tsfco    (IM))
     allocate (Sfcprop%tsfcl    (IM))
     allocate (Sfcprop%tisfc    (IM))
@@ -2138,6 +2146,7 @@ module GFS_typedefs
     Sfcprop%lakefrac  = clear_val
     Sfcprop%lakedepth = clear_val
     Sfcprop%tsfc      = clear_val
+    Sfcprop%T_snow    = clear_val
     Sfcprop%tsfco     = clear_val
     Sfcprop%tsfcl     = clear_val
     Sfcprop%tisfc     = clear_val
@@ -2505,6 +2514,16 @@ module GFS_typedefs
         Sfcprop%conv_act = zero
         Sfcprop%conv_act_m = zero
     end if
+
+    allocate(Sfcprop%use_lake_model(IM))
+    Sfcprop%use_lake_model = zero
+
+    if(Model%lkm/=0) then
+       allocate(Sfcprop%lake_t2m(IM))
+       allocate(Sfcprop%lake_q2m(IM))
+       Sfcprop%lake_t2m = clear_val
+       Sfcprop%lake_q2m = clear_val
+    endif
 
   end subroutine sfcprop_create
 
@@ -3183,6 +3202,8 @@ module GFS_typedefs
 !--- lake model parameters
     integer              :: lkm            =  0                       !< 0=don't run a lake model, 1=run a lake model
     integer              :: lake_model     =  1                       !< 1=flake model, 2=clm lake model
+    real(kind_phys)      :: lakedepth_threshold = 1.0                 !< lakedepth must be GREATER than this value to enable a lake model
+    real(kind_phys)      :: lakefrac_threshold   = 0.15               !< lakefrac must be GREATER than this value to enable a lake model
 
 !--- tuning parameters for physical parameterizations
     logical              :: ras            = .false.                  !< flag for ras convection scheme
@@ -3551,7 +3572,7 @@ module GFS_typedefs
                           !    GFDL surface layer options
                                lcurr_sf, pert_cd, ntsflg, sfenth,                           &
                           !--- lake model control
-                               lkm, lake_model,                                             &
+                               lkm, lake_model, lakedepth_threshold, lakefrac_threshold,    &
                                clm_lake_depth_default, clm_lake_use_lakedepth,              &
                           !--- physical parameterizations
                                ras, trans_trac, old_monin, cnvgwd, mstrat, moist_adj,       &
@@ -4183,6 +4204,8 @@ module GFS_typedefs
 !--- lake model parameters
     Model%lkm              = lkm
     Model%lake_model       = lake_model
+    Model%lakedepth_threshold = lakedepth_threshold
+    Model%lakefrac_threshold = lakefrac_threshold
 
 !--- clm lake model parameters
     Model%nlevlake_clm_lake = nlevlake_clm_lake
@@ -6494,7 +6517,7 @@ module GFS_typedefs
        Tbd%phy_myj_a1t    = clear_val
        Tbd%phy_myj_a1q    = clear_val
     end if
-    if(Model%lkm==Model%lkm_clm_lake) then
+    if(Model%lake_model==Model%lake_model_clm) then
        allocate(Tbd%lake_albedo(IM))
        allocate(Tbd%lake_z3d(IM,Model%nlevlake_clm_lake))
        allocate(Tbd%lake_dz3d(IM,Model%nlevlake_clm_lake))

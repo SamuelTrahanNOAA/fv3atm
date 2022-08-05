@@ -2482,20 +2482,21 @@ module GFS_diagnostics
       do nb = 1,nblks
         ExtDiag(idx)%data(nb)%var2 => Sfcprop(nb)%lakedepth(:)
       enddo
+    
 
       idx = idx + 1
       ExtDiag(idx)%axes = 2
       ExtDiag(idx)%name = 'use_lake_model'
-      ExtDiag(idx)%desc = 'Which lake model was run? (0=no 1=flake 2=flake+nsst 3=clm_lake)'
-      ExtDiag(idx)%unit = '1'
+      ExtDiag(idx)%desc = 'Lake Model Flag'
+      ExtDiag(idx)%unit = 'flag'
       ExtDiag(idx)%mod_name = 'gfs_sfc'
-        ExtDiag(idx)%intpl_method = 'nearest_stod'
+      ExtDiag(idx)%intpl_method = 'nearest_stod'
       allocate (ExtDiag(idx)%data(nblks))
       do nb = 1,nblks
-        ExtDiag(idx)%data(nb)%int2 => SfcProp(nb)%use_lake_model(:)
+        ExtDiag(idx)%data(nb)%int2 => Sfcprop(nb)%use_lake_model(:)
       enddo
     
-      if(Model%lkm==3) then
+      if(Model%lake_model==Model%lake_model_clm) then
 
         ! Populate the 3D arrays separately since the code is complicated:
         call clm_lake_externaldiag_populate(ExtDiag, Model, Tbd, idx, cn_one, nblks)

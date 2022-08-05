@@ -647,6 +647,14 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
+[T_snow]
+  standard_name = temperature_of_snow_on_lake
+  long_name = the temperature of snow on a lake
+  units = K
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  intent = inout
 [tiice]
   standard_name = temperature_in_ice_layer
   long_name = sea ice internal temperature
@@ -1071,6 +1079,28 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
+[use_lake_model]
+  standard_name = flag_for_using_lake_model
+  long_name = flag indicating lake points using a lake model
+  units = flag
+  dimensions = (horizontal_loop_extent)
+  type = logical
+[lake_t2m]
+  standard_name =  temperature_at_2m_from_clm_lake
+  long_name = temperature at 2m from clm lake
+  units = frac
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (control_for_lake_model_selection > 0)
+[lake_q2m]
+  standard_name =  specific_humidity_at_2m_from_clm_lake
+  long_name = specific humidity at 2m from clm lake
+  units = frac
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (control_for_lake_model_selection > 0)
 [tref]
   standard_name = reference_sea_surface_temperature
   long_name = sea surface reference temperature
@@ -4104,6 +4134,41 @@
   units = count
   dimensions = ()
   type = integer
+[nlevlake_clm_lake]
+  standard_name = lake_vertical_dimension_for_clm_lake_model
+  long_name = lake vertical dimension for clm lake model
+  units = count
+  dimensions = ()
+  type = integer
+  active = (control_for_lake_surface_scheme == 3)
+[nlevsoil_clm_lake]
+  standard_name = soil_vertical_dimension_for_clm_lake_model
+  long_name = soil vertical dimension for clm lake model
+  units = count
+  dimensions = ()
+  type = integer
+  active = (control_for_lake_surface_scheme == 3)
+[nlevsnow_clm_lake]
+  standard_name = snow_vertical_dimension_for_clm_lake_model
+  long_name = snow vertical dimension for clm lake model
+  units = count
+  dimensions = ()
+  type = integer
+  active = (control_for_lake_surface_scheme == 3)
+[nlevsnowsoil_clm_lake]
+  standard_name = snow_plus_soil_vertical_dimension_for_clm_lake_model
+  long_name = snow plus soil vertical dimension for clm lake model
+  units = count
+  dimensions = ()
+  type = integer
+  active = (control_for_lake_surface_scheme == 3)
+[nlevsnowsoil1_clm_lake]
+  standard_name = snow_plus_soil_minus_one_vertical_dimension_for_clm_lake_model
+  long_name = snow plus soil minus one vertical dimension for clm lake model
+  units = count
+  dimensions = ()
+  type = integer
+  active = (control_for_lake_surface_scheme == 3)
 [lsoil]
   standard_name = vertical_dimension_of_soil
   long_name = number of soil layers
@@ -4337,14 +4402,14 @@
   standard_name = lakefrac_threshold_for_enabling_lake_model
   long_name = fraction of horizontal grid area occupied by lake must be greater than this value to enable a lake model
   units = frac
-  dimensions = (horizontal_loop_extent)
+  dimensions = ()
   type = real
   kind = kind_phys
 [lakedepth_threshold]
   standard_name = lake_depth_threshold_for_enabling_lake_model
   long_name = lake depth must be greater than this value to enable a lake model
   units = m
-  dimensions = (horizontal_loop_extent)
+  dimensions = ()
   type = real
   kind = kind_phys
 [lake_model]
@@ -7167,6 +7232,14 @@
   type = real
   kind = kind_phys
   active = (flag_for_mellor_yamada_janjic_surface_layer_scheme .or. flag_for_mellor_yamada_janjic_pbl_scheme)
+[lake_albedo]
+  standard_name = mid_day_surface_albedo_over_lake
+  long_name = mid day surface albedo over lake
+  units = fraction
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (control_for_lake_model_selection == 3)
 [lake_z3d]
   standard_name = depth_of_lake_interface_layers
   long_name = depth of lake interface layers
