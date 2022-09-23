@@ -229,7 +229,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: hprime (:,:) => null()  !< orographic metrics
     real (kind=kind_phys), pointer :: dust12m_in  (:,:,:) => null()  !< fengsha dust input
     real (kind=kind_phys), pointer :: emi_in (:,:) => null()  !< anthropogenic background input
-    real (kind=kind_phys), pointer :: smoke_GBBEPx(:,:,:) => null()  !< GBBEPx fire input
+    real (kind=kind_phys), pointer :: smoke_RRFS(:,:,:) => null()  !< RRFS fire input
     real (kind=kind_phys), pointer :: z0base (:)   => null()  !< background or baseline surface roughness length in m
     real (kind=kind_phys), pointer :: semisbase(:) => null()  !< background surface emissivity
     real (kind=kind_phys), pointer :: sfalb_lnd (:) => null() !< surface albedo over land for LSM
@@ -555,6 +555,7 @@ module GFS_typedefs
     !--- For smoke and dust optical extinction
     real (kind=kind_phys), pointer :: smoke_ext (:,:)   => null()  !< 3D aod array
     real (kind=kind_phys), pointer :: dust_ext  (:,:)   => null()  !< 3D aod array
+    real (kind=kind_phys), pointer :: fire_in   (:,:)   => null()  !< fire auxeliary inputs
     !--- For MYNN PBL transport of  smoke and dust
     real (kind=kind_phys), pointer :: chem3d  (:,:,:)   => null()  !< 3D aod array
     real (kind=kind_phys), pointer :: ddvel   (:,:  )   => null()  !< 2D dry deposition velocity
@@ -667,7 +668,6 @@ module GFS_typedefs
     logical              :: cplaqm          !< default no cplaqm collection
     logical              :: cplchm          !< default no cplchm collection
     logical              :: rrfs_sd         !< default no rrfs_sd collection
-    integer              :: dust_smoke_rrtmg_band_number !< band number to affect in rrtmg_pre from smoke and dust
     logical              :: use_cice_alb    !< default .false. - i.e. don't use albedo imported from the ice model
     logical              :: cpl_imp_mrg     !< default no merge import with internal forcings
     logical              :: cpl_imp_dbg     !< default no write import data to file post merge
@@ -1348,7 +1348,7 @@ module GFS_typedefs
     logical              :: do_plumerise
     integer              :: addsmoke_flag
     integer              :: plumerisefire_frq
-    logical              :: smoke_forecast
+    integer              :: smoke_forecast
     logical              :: aero_ind_fdb  ! WFA/IFA indirect
     logical              :: aero_dir_fdb  ! smoke/dust direct
     logical              :: rrfs_smoke_debug
@@ -2067,7 +2067,7 @@ module GFS_typedefs
     allocate (Sfcprop%weasdi   (IM))
     allocate (Sfcprop%hprime   (IM,Model%nmtvr))
     allocate (Sfcprop%dust12m_in  (IM,12,5))
-    allocate (Sfcprop%smoke_GBBEPx(IM,24,3))
+    allocate (Sfcprop%smoke_RRFS(IM,24,3))
     allocate (Sfcprop%emi_in   (IM,1))
     allocate(Sfcprop%albdirvis_lnd (IM))
     allocate(Sfcprop%albdirnir_lnd (IM))
@@ -2101,7 +2101,7 @@ module GFS_typedefs
     Sfcprop%hprime    = clear_val
     Sfcprop%dust12m_in= clear_val
     Sfcprop%emi_in    = clear_val
-    Sfcprop%smoke_GBBEPx = clear_val
+    Sfcprop%smoke_RRFS = clear_val
     Sfcprop%albdirvis_lnd = clear_val
     Sfcprop%albdirnir_lnd = clear_val
     Sfcprop%albdifvis_lnd = clear_val
@@ -2772,6 +2772,7 @@ module GFS_typedefs
       allocate (Coupling%ebu_smoke (IM,Model%levs))
       allocate (Coupling%smoke_ext (IM,Model%levs))
       allocate (Coupling%dust_ext  (IM,Model%levs))
+      allocate (Coupling%fire_in   (IM,10))
       allocate (Coupling%chem3d    (IM,Model%levs,2))
       allocate (Coupling%ddvel     (IM,2))
       allocate (Coupling%min_fplume(IM))
@@ -2789,6 +2790,7 @@ module GFS_typedefs
       Coupling%ebu_smoke  = clear_val
       Coupling%smoke_ext  = clear_val
       Coupling%dust_ext   = clear_val
+      Coupling%fire_in    = clear_val
       Coupling%chem3d     = clear_val
       Coupling%ddvel      = clear_val
       Coupling%min_fplume = clear_val
@@ -2894,7 +2896,6 @@ module GFS_typedefs
     logical              :: cplaqm         = .false.         !< default no cplaqm collection
     logical              :: cplchm         = .false.         !< default no cplchm collection
     logical              :: rrfs_sd        = .false.         !< default no rrfs_sd collection
-    integer              :: dust_smoke_rrtmg_band_number = 10!< band number to affect in rrtmg_pre from smoke and dust
     logical              :: use_cice_alb   = .false.         !< default no cice albedo
     logical              :: cpl_imp_mrg    = .false.         !< default no merge import with internal forcings
     logical              :: cpl_imp_dbg    = .false.         !< default no write import data to file post merge
@@ -3392,7 +3393,7 @@ module GFS_typedefs
     logical :: do_plumerise   = .false.
     integer :: addsmoke_flag  = 1
     integer :: plumerisefire_frq = 60
-    logical :: smoke_forecast = .false.   ! RRFS-smoke diurnal 
+    integer :: smoke_forecast = 0         ! RRFS-smoke read in ebb_smoke
     logical :: aero_ind_fdb = .false.     ! RRFS-smoke wfa/ifa emission
     logical :: aero_dir_fdb = .false.     ! RRFS-smoke smoke/dust radiation feedback
     logical :: rrfs_smoke_debug = .false. ! RRFS-smoke plumerise debug
@@ -3415,8 +3416,7 @@ module GFS_typedefs
                                thermodyn_id, sfcpress_id,                                   &
                           !--- coupling parameters
                                cplflx, cplice, cplocn2atm, cplwav, cplwav2atm, cplaqm,      &
-                               cplchm, cpl_imp_mrg, cpl_imp_dbg, rrfs_sd,                   &
-                               use_cice_alb, dust_smoke_rrtmg_band_number,                  &
+                               cplchm, cpl_imp_mrg, cpl_imp_dbg, rrfs_sd, use_cice_alb,     &
 #ifdef IDEA_PHYS
                                lsidea, weimer_model, f107_kp_size, f107_kp_interval,        &
                                f107_kp_skip_size, f107_kp_data_size, f107_kp_read_in_start, &
@@ -3746,7 +3746,6 @@ module GFS_typedefs
 
 !--- RRFS-SD
     Model%rrfs_sd           = rrfs_sd
-    Model%dust_smoke_rrtmg_band_number = dust_smoke_rrtmg_band_number
     Model%dust_alpha        = dust_alpha
     Model%dust_gamma        = dust_gamma
     Model%wetdep_ls_alpha   = wetdep_ls_alpha
@@ -5633,7 +5632,6 @@ module GFS_typedefs
       if(model%rrfs_sd) then
         print *, ' '
         print *, 'smoke parameters'
-        print *, 'dust_smoke_rrtmg_band_number : ',Model%dust_smoke_rrtmg_band_number
         print *, 'dust_alpha       : ',Model%dust_alpha
         print *, 'dust_gamma       : ',Model%dust_gamma
         print *, 'wetdep_ls_alpha  : ',Model%wetdep_ls_alpha

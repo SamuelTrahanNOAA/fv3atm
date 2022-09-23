@@ -70,7 +70,6 @@
       <scheme>mp_thompson_post</scheme>
       <scheme>GFS_MP_generic_post</scheme>
       <scheme>maximum_hourly_diagnostics</scheme>
-      <scheme>rrfs_smoke_lsdep_wrapper</scheme>
       <scheme>phys_tend</scheme>
     </subcycle>
   </group>

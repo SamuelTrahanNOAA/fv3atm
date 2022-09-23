@@ -62,10 +62,10 @@ module FV3GFS_io_mod
   character(len=32)  :: fn_phy    = 'phy_data.nc'
   character(len=32)  :: fn_dust12m= 'dust12m_data.nc'
   character(len=32)  :: fn_emi    = 'emi_data.nc'
-  character(len=32)  :: fn_gbbepx = 'SMOKE_GBBEPx_data.nc'
+  character(len=32)  :: fn_rrfssd = 'SMOKE_RRFS_data.nc'
 
   !--- GFDL FMS netcdf restart data types defined in fms2_io
-  type(GFS_io_generic_type) :: Oro_restart, Sfc_restart, Phy_restart, dust12m_restart, emi_restart, gbbepx_restart
+  type(GFS_io_generic_type) :: Oro_restart, Sfc_restart, Phy_restart, dust12m_restart, emi_restart, rrfssd_restart
   type(GFS_io_generic_type) :: Oro_ls_restart, Oro_ss_restart
 
   !--- GFDL FMS restart containers
@@ -74,8 +74,8 @@ module FV3GFS_io_mod
   character(len=32),    allocatable,         dimension(:)       :: oro_ls_ss_name
   real(kind=kind_phys), allocatable, target, dimension(:,:,:)   :: oro_ls_var, oro_ss_var
   real(kind=kind_phys), allocatable, target, dimension(:,:,:,:) :: sfc_var3, phy_var3
-  character(len=32),    allocatable,         dimension(:)       :: dust12m_name, emi_name, gbbepx_name
-  real(kind=kind_phys), allocatable, target, dimension(:,:,:,:) :: gbbepx_var
+  character(len=32),    allocatable,         dimension(:)       :: dust12m_name, emi_name, rrfssd_name
+  real(kind=kind_phys), allocatable, target, dimension(:,:,:,:) :: rrfssd_var
   real(kind=kind_phys), allocatable, target, dimension(:,:,:,:) :: dust12m_var
   real(kind=kind_phys), allocatable, target, dimension(:,:,:)   :: emi_var
   !--- Noah MP restart containers
@@ -522,7 +522,7 @@ module FV3GFS_io_mod
     integer :: nvar_o2, nvar_s2m, nvar_s2o, nvar_s3
     integer :: nvar_oro_ls_ss
     integer :: nvar_s2r, nvar_s2mp, nvar_s3mp, isnow
-    integer :: nvar_emi, nvar_dust12m, nvar_gbbepx
+    integer :: nvar_emi, nvar_dust12m, nvar_rrfssd
     real(kind=kind_phys), pointer, dimension(:,:)   :: var2_p  => NULL()
     real(kind=kind_phys), pointer, dimension(:,:,:) :: var3_p  => NULL()
     real(kind=kind_phys), pointer, dimension(:,:,:) :: var3_p1 => NULL()
@@ -544,11 +544,11 @@ module FV3GFS_io_mod
     nvar_s2o = 18
     if(Model%rrfs_sd) then
       nvar_dust12m = 5
-      nvar_gbbepx  = 3
+      nvar_rrfssd  = 3
       nvar_emi     = 1
     else
       nvar_dust12m = 0
-      nvar_gbbepx  = 0
+      nvar_rrfssd  = 0
       nvar_emi     = 0
     endif
 
@@ -787,37 +787,37 @@ module FV3GFS_io_mod
 
     !--- Dust input FILE
     !--- open file
-    infile=trim(indir)//'/'//trim(fn_gbbepx)
-    amiopen=open_file(gbbepx_restart, trim(infile), 'read', domain=fv_domain, is_restart=.true., dont_add_res_to_filename=.true.)
+    infile=trim(indir)//'/'//trim(fn_rrfssd)
+    amiopen=open_file(rrfssd_restart, trim(infile), 'read', domain=fv_domain, is_restart=.true., dont_add_res_to_filename=.true.)
     if (.not.amiopen) call mpp_error( FATAL, 'Error with opening file'//trim(infile) )
 
-    if (.not. allocated(gbbepx_name)) then
-      !--- allocate the various containers needed for gbbepx fire data
-      allocate(gbbepx_name(nvar_gbbepx))
-      allocate(gbbepx_var(nx,ny,24,nvar_gbbepx))
+    if (.not. allocated(rrfssd_name)) then
+      !--- allocate the various containers needed for rrfssd fire data
+      allocate(rrfssd_name(nvar_rrfssd))
+      allocate(rrfssd_var(nx,ny,24,nvar_rrfssd))
 
-      gbbepx_name(1)  = 'ebb_smoke_hr'
-      gbbepx_name(2)  = 'frp_avg_hr'
-      gbbepx_name(3)  = 'frp_std_hr'
+      rrfssd_name(1)  = 'ebb_smoke_hr'
+      rrfssd_name(2)  = 'frp_avg_hr'
+      rrfssd_name(3)  = 'frp_std_hr'
 
       !--- register axis
-      call register_axis(gbbepx_restart, 'lon', 'X')
-      call register_axis(gbbepx_restart, 'lat', 'Y')
-      call register_axis(gbbepx_restart, 't', 24)
+      call register_axis(rrfssd_restart, 'lon', 'X')
+      call register_axis(rrfssd_restart, 'lat', 'Y')
+      call register_axis(rrfssd_restart, 't', 24)
       !--- register the 3D fields
       mand = .false.
-      do num = 1,nvar_gbbepx
-       var3_p2 => gbbepx_var(:,:,:,num)
-       call register_restart_field(gbbepx_restart, gbbepx_name(num), var3_p2, dimensions=(/'t  ', 'lat', 'lon'/),&
+      do num = 1,nvar_rrfssd
+       var3_p2 => rrfssd_var(:,:,:,num)
+       call register_restart_field(rrfssd_restart, rrfssd_name(num), var3_p2, dimensions=(/'t  ', 'lat', 'lon'/),&
                                   &is_optional=.not.mand)
       enddo
       nullify(var3_p2)
     endif
 
-    !--- read new GSL created gbbepx restart/data
-    call mpp_error(NOTE,'reading gbbepx information from INPUT/SMOKE_GBBEPx_data.nc')
-    call read_restart(gbbepx_restart)
-    call close_file(gbbepx_restart)
+    !--- read new GSL created rrfssd restart/data
+    call mpp_error(NOTE,'reading rrfssd information from INPUT/SMOKE_RRFS_data.nc')
+    call read_restart(rrfssd_restart)
+    call close_file(rrfssd_restart)
 
     do nb = 1, Atm_block%nblks
       !--- 3D variables
@@ -826,14 +826,14 @@ module FV3GFS_io_mod
         j = Atm_block%index(nb)%jj(ix) - jsc + 1
         !--- assign hprime(1:10) and hprime(15:24) with new oro stat data
         do k = 1, 24
-          Sfcprop(nb)%smoke_GBBEPx(ix,k,1)  = gbbepx_var(i,j,k,1)
-          Sfcprop(nb)%smoke_GBBEPx(ix,k,2)  = gbbepx_var(i,j,k,2)
-          Sfcprop(nb)%smoke_GBBEPx(ix,k,3)  = gbbepx_var(i,j,k,3)
+          Sfcprop(nb)%smoke_RRFS(ix,k,1)  = rrfssd_var(i,j,k,1)
+          Sfcprop(nb)%smoke_RRFS(ix,k,2)  = rrfssd_var(i,j,k,2)
+          Sfcprop(nb)%smoke_RRFS(ix,k,3)  = rrfssd_var(i,j,k,3)
         enddo
       enddo
     enddo
 
-    deallocate(gbbepx_name, gbbepx_var)
+    deallocate(rrfssd_name, rrfssd_var)
     endif if_smoke  ! RRFS_Smoke
 
     !--- Modify/read-in additional orographic static fields for GSL drag suite

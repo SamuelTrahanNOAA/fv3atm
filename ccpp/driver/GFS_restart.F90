@@ -124,6 +124,9 @@ module GFS_restart
     if (Model%do_cap_suppress .and. Model%num_dfi_radar>0) then
       Restart%num2d = Restart%num2d + Model%num_dfi_radar
     endif
+    if (Model%rrfs_sd) then
+      Restart%num2d = Restart%num2d + 1
+    endif
 
     Restart%num3d = Model%ntot3d
     if (Model%num_dfi_radar>0) then
@@ -412,6 +415,15 @@ module GFS_restart
             Restart%data(nb,num)%var2p => Tbd(nb)%cap_suppress(:,Model%ix_dfi_radar(itime))
           enddo
         endif
+      enddo
+    endif
+
+    ! RRFS-SD
+    if (Model%rrfs_sd) then
+      num = num + 1
+      Restart%name2d(num) = 'rrfs_hwp'
+      do nb = 1,nblks
+        Restart%data(nb,num)%var2p => Coupling(nb)%rrfs_hwp(:)
       enddo
     endif
 
