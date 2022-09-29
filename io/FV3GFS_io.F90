@@ -77,7 +77,7 @@ module FV3GFS_io_mod
   character(len=32),    allocatable,         dimension(:)       :: dust12m_name, emi_name, rrfssd_name
   real(kind=kind_phys), allocatable, target, dimension(:,:,:,:) :: rrfssd_var
   real(kind=kind_phys), allocatable, target, dimension(:,:,:,:) :: dust12m_var
-  real(kind=kind_phys), allocatable, target, dimension(:,:,:)   :: emi_var
+  real(kind=kind_phys), allocatable, target, dimension(:,:,:,:) :: emi_var
   !--- Noah MP restart containers
   real(kind=kind_phys), allocatable, target, dimension(:,:,:,:) :: sfc_var3sn,sfc_var3eq,sfc_var3zn
 
@@ -770,44 +770,51 @@ module FV3GFS_io_mod
 
     deallocate(dust12m_name,dust12m_var)
 
+    read_emi: if(nvar_emi>0) then
     !--- open anthropogenic emission file
     infile=trim(indir)//'/'//trim(fn_emi)
     amiopen=open_file(emi_restart, trim(infile), 'read', domain=fv_domain, is_restart=.true., dont_add_res_to_filename=.true.)
     if (.not.amiopen) call mpp_error( FATAL, 'Error with opening file'//trim(infile) )
 
-    if (.not. allocated(emi_name)) then
+    !if (.not. allocated(emi_name)) then
      !--- allocate the various containers needed for anthropogenic emission data
+      if(allocated(emi_name)) deallocate(emi_name)
+      if(allocated(emi_var)) deallocate(emi_var)
       allocate(emi_name(nvar_emi))
-      allocate(emi_var(nx,ny,nvar_emi))
+      allocate(emi_var(1,nx,ny,nvar_emi))
 
       emi_name(1)  = 'e_oc'
       !--- register axis
+      call register_axis( emi_restart, 'time', 1) ! only read first time level, even if multiple are present
       call register_axis( emi_restart, "grid_xt", 'X' )
       call register_axis( emi_restart, "grid_yt", 'Y' )
       !--- register the 2D fields
       do num = 1,nvar_emi
-        var2_p => emi_var(:,:,num)
-        call register_restart_field(emi_restart, emi_name(num), var2_p, dimensions=(/'grid_yt','grid_xt'/))
+        var3_p => emi_var(:,:,:,num)
+        call register_restart_field(emi_restart, emi_name(num), var3_p, dimensions=(/'time   ','grid_yt','grid_xt'/))
       enddo
       nullify(var2_p)
-    endif
+    !endif
 
     !--- read new GSL created emi restart/data
     call mpp_error(NOTE,'reading emi information from INPUT/emi_data.tile*.nc')
     call read_restart(emi_restart)
     call close_file(emi_restart)
 
+    do num=1,nvar_emi
     do nb = 1, Atm_block%nblks
       !--- 2D variables
       do ix = 1, Atm_block%blksz(nb)
         i = Atm_block%index(nb)%ii(ix) - isc + 1
         j = Atm_block%index(nb)%jj(ix) - jsc + 1
-        Sfcprop(nb)%emi_in(ix,1)  = emi_var(i,j,1)
+        Sfcprop(nb)%emi_in(ix,num)  = emi_var(1,i,j,num)
       enddo
+    enddo
     enddo
 
     !--- deallocate containers and free restart container
     deallocate(emi_name, emi_var)
+    endif read_emi
 
     !--- Dust input FILE
     !--- open file
