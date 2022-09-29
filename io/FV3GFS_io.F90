@@ -781,7 +781,7 @@ module FV3GFS_io_mod
       if(allocated(emi_name)) deallocate(emi_name)
       if(allocated(emi_var)) deallocate(emi_var)
       allocate(emi_name(nvar_emi))
-      allocate(emi_var(1,nx,ny,nvar_emi))
+      allocate(emi_var(nx,ny,1,nvar_emi))
 
       emi_name(1)  = 'e_oc'
       !--- register axis
@@ -790,10 +790,10 @@ module FV3GFS_io_mod
       call register_axis( emi_restart, "grid_yt", 'Y' )
       !--- register the 2D fields
       do num = 1,nvar_emi
-        var3_p => emi_var(:,:,:,num)
-        call register_restart_field(emi_restart, emi_name(num), var3_p, dimensions=(/'time   ','grid_yt','grid_xt'/))
+        var3_p2 => emi_var(:,:,:,num)
+        call register_restart_field(emi_restart, emi_name(num), var3_p2, dimensions=(/'time   ','grid_yt','grid_xt'/))
       enddo
-      nullify(var2_p)
+      nullify(var3_p2)
     !endif
 
     !--- read new GSL created emi restart/data
@@ -807,7 +807,7 @@ module FV3GFS_io_mod
       do ix = 1, Atm_block%blksz(nb)
         i = Atm_block%index(nb)%ii(ix) - isc + 1
         j = Atm_block%index(nb)%jj(ix) - jsc + 1
-        Sfcprop(nb)%emi_in(ix,num)  = emi_var(1,i,j,num)
+        Sfcprop(nb)%emi_in(ix,num)  = emi_var(i,j,1,num)
       enddo
     enddo
     enddo
