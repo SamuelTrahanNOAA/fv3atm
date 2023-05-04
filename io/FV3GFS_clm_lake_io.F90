@@ -12,6 +12,14 @@ module clm_lake_io
                                 get_global_io_domain_indices, variable_exists
 
   implicit none
+  private
+
+  public :: clm_lake_data_type
+
+  ! These should not need to be public, but some older compilers require it:
+  public :: clm_lake_register_axes, clm_lake_allocate_data, clm_lake_register_fields, &
+       clm_lake_deallocate_data, clm_lake_write_axes, clm_lake_copy_to_temporaries, &
+       clm_lake_copy_from_temporaries, clm_lake_final
 
   type clm_lake_data_type
     ! The clm_lake_data_type derived type is a class that stores
