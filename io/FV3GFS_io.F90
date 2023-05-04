@@ -113,6 +113,8 @@ module FV3GFS_io_mod
   logical :: use_wrtgridcomp_output = .FALSE.
   logical :: module_is_initialized  = .FALSE.
 
+    type(Sfc_io_data_type) :: sfcprop_io
+
   CONTAINS
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -569,7 +571,6 @@ module FV3GFS_io_mod
 
     type(clm_lake_data_type) :: clm_lake
     type(rrfs_sd_data_type) :: rrfs_sd_data
-    type(Sfc_io_data_type) :: sfcprop_io
 
     nvar_o2  = 19
     nvar_oro_ls_ss = 10
@@ -1006,11 +1007,11 @@ module FV3GFS_io_mod
         call rrfs_sd_data%register_fields(Sfc_restart)
       endif
 
-      call sfcprop_io%register_2d_fields(Model,Sfc_restart)
+      call sfcprop_io%register_2d_fields(Model,Sfc_restart,.false.,warm_start)
    endif  ! if not allocated
 
    call sfcprop_io%fill_3d_names(Model,warm_start)
-   call sfcprop_io%register_3d_fields(Model,Sfc_restart,warm_start)
+   call sfcprop_io%register_3d_fields(Model,Sfc_restart,.false.,warm_start)
    call sfcprop_io%init_fields(Model)
 
     !--- read the surface restart/data
@@ -1131,9 +1132,9 @@ module FV3GFS_io_mod
      call rrfs_sd_data%register_fields(Sfc_restart)
    endif
 
-   call sfcprop_io%register_2d_fields(Model, Sfc_restart)
+   call sfcprop_io%register_2d_fields(Model, Sfc_restart, .true., .true.)
    call sfcprop_io%fill_3d_names(Model, .true.)
-   call sfcprop_io%register_3d_fields(Model, Sfc_restart, .true.)
+   call sfcprop_io%register_3d_fields(Model, Sfc_restart, .true., .true.)
 
     ! Tell clm_lake to copy Sfcprop data to its internal temporary arrays.
     if(Model%lkm>0 .and. Model%iopt_lake==Model%iopt_lake_clm) then

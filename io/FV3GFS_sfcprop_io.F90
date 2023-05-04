@@ -1312,15 +1312,28 @@ subroutine Sfc_io_write_axes(sfc, Model, Sfc_restart)
   call write_data( Sfc_restart, 'Time', 1)
 end subroutine Sfc_io_write_axes
 
-subroutine Sfc_io_register_2d_fields(sfc,Model,Sfc_restart)
+subroutine Sfc_io_register_2d_fields(sfc,Model,Sfc_restart,for_write,warm_start)
   implicit none
   class(Sfc_io_data_type)             :: sfc
   type(GFS_control_type),      intent(in) :: Model
   type(FmsNetcdfDomainFile_t) :: Sfc_restart
+  logical, intent(in) :: for_write, warm_start
 
   real(kind=kind_phys), pointer, dimension(:,:)   :: var2_p  => NULL()
+  real(kind=kind_phys), pointer, dimension(:,:,:) :: var3_p  => NULL()
+  real(kind=kind_phys), pointer, dimension(:,:,:) :: var3_p1 => NULL()
+  real(kind=kind_phys), pointer, dimension(:,:,:) :: var3_p2 => NULL()
+  real(kind=kind_phys), pointer, dimension(:,:,:) :: var3_p3 => NULL()
   integer :: num
   logical :: mand
+
+  character(len=7) :: time2d(3)
+
+  if(for_write) then
+    time2d=(/'xaxis_1','yaxis_1','Time   '/)
+  else
+    time2d=(/'Time   ','yaxis_1','xaxis_1'/)
+  endif
 
   !--- register the 2D fields
   do num = 1,sfc%nvar2m
@@ -1336,17 +1349,17 @@ subroutine Sfc_io_register_2d_fields(sfc,Model,Sfc_restart)
          .or. trim(sfc%name2(num)) == 'albdifvis_ice' .or. trim(sfc%name2(num)) == 'albdifnir_ice' &
          .or. trim(sfc%name2(num)) == 'emis_lnd'      .or. trim(sfc%name2(num)) == 'emis_ice'      &
          .or. trim(sfc%name2(num)) == 'sncovr_ice') then
-      if(sfc%is_lsoil) then
+      if(.not.for_write .and. sfc%is_lsoil) then
         call register_restart_field(Sfc_restart, sfc%name2(num), var2_p, dimensions=(/'lat','lon'/), is_optional=.true.)
       else
-        call register_restart_field(Sfc_restart, sfc%name2(num), var2_p, dimensions=(/'Time   ','yaxis_1','xaxis_1'/),&
+        call register_restart_field(Sfc_restart, sfc%name2(num), var2_p, dimensions=time2d,&
              &is_optional=.true.)
       end if
     else
-      if(sfc%is_lsoil) then
+      if(.not.for_write .and. sfc%is_lsoil) then
         call register_restart_field(Sfc_restart,sfc%name2(num),var2_p, dimensions=(/'lat','lon'/))
       else
-        call register_restart_field(Sfc_restart,sfc%name2(num),var2_p, dimensions=(/'Time   ','yaxis_1','xaxis_1'/))
+        call register_restart_field(Sfc_restart,sfc%name2(num),var2_p, dimensions=time2d)
       end if
     endif
   enddo
@@ -1359,8 +1372,7 @@ subroutine Sfc_io_register_2d_fields(sfc,Model,Sfc_restart)
       if(sfc%is_lsoil) then
         call register_restart_field(Sfc_restart, sfc%name2(num), var2_p, dimensions=(/'lat','lon'/), is_optional=.not.mand)
       else
-        call register_restart_field(Sfc_restart, sfc%name2(num), var2_p, dimensions=(/'Time   ','yaxis_1','xaxis_1'/), &
-             &is_optional=.not.mand)
+        call register_restart_field(Sfc_restart, sfc%name2(num), var2_p, dimensions=time2d, is_optional=.not.mand)
       endif
     enddo
   endif
@@ -1371,48 +1383,46 @@ subroutine Sfc_io_register_2d_fields(sfc,Model,Sfc_restart)
       if(sfc%is_lsoil) then
         call register_restart_field(Sfc_restart, sfc%name2(num), var2_p, dimensions=(/'lat','lon'/) )
       else
-        call register_restart_field(Sfc_restart, sfc%name2(num), var2_p, dimensions=(/'Time   ','yaxis_1','xaxis_1'/) )
+        call register_restart_field(Sfc_restart, sfc%name2(num), var2_p, dimensions=time2d)
       end if
     enddo
   endif ! mp/ruc
 
-
   ! Noah MP register only necessary only lsm = 2, not necessary has values
-  if (sfc%nvar2mp > 0) then
-    mand = .false.
+  if ( (for_write .and. Model%lsm == Model%lsm_noahmp) &
+       .or. (.not. for_write .and. sfc%nvar2mp > 0) ) then
+    mand = for_write
     do num = sfc%nvar2m+sfc%nvar2o+1,sfc%nvar2m+sfc%nvar2o+sfc%nvar2mp
       var2_p => sfc%var2(:,:,num)
       if(sfc%is_lsoil) then
         call register_restart_field(Sfc_restart, sfc%name2(num), var2_p, dimensions=(/'lat','lon'/), is_optional=.not.mand)
       else
-        call register_restart_field(Sfc_restart, sfc%name2(num), var2_p, dimensions=(/'Time   ','yaxis_1','xaxis_1'/), &
-             &is_optional=.not.mand)
+        call register_restart_field(Sfc_restart, sfc%name2(num), var2_p, dimensions=time2d, is_optional=.not.mand)
       end if
     enddo
   endif ! noahmp
 
   ! Flake
   if (Model%lkm > 0 .and. Model%iopt_lake==Model%iopt_lake_flake) then
-    mand = .false.
+    mand = for_write
     do num = sfc%nvar_before_lake+1,sfc%nvar_before_lake+sfc%nvar2l
       var2_p => sfc%var2(:,:,num)
       if(sfc%is_lsoil) then
         call register_restart_field(Sfc_restart, sfc%name2(num),var2_p,dimensions=(/'lat','lon'/), is_optional=.not.mand) 
       else
-        call register_restart_field(Sfc_restart, sfc%name2(num),var2_p,dimensions=(/'Time   ','yaxis_1','xaxis_1'/), is_optional=.not.mand)
+        call register_restart_field(Sfc_restart, sfc%name2(num),var2_p,dimensions=time2d, is_optional=.not.mand)
       endif
     enddo
   endif
 
-  nullify(var2_p)
 end subroutine Sfc_io_register_2d_fields
 
-subroutine Sfc_io_register_3d_fields(sfc,Model,Sfc_restart,warm_start)
+subroutine Sfc_io_register_3d_fields(sfc,Model,Sfc_restart,for_write,warm_start)
   implicit none
   class(Sfc_io_data_type)             :: sfc
   type(GFS_control_type),      intent(in) :: Model
   type(FmsNetcdfDomainFile_t) :: Sfc_restart
-  logical, intent(in) :: warm_start
+  logical, intent(in) :: for_write, warm_start
 
   real(kind=kind_phys), pointer, dimension(:,:,:) :: var3_p  => NULL()
   real(kind=kind_phys), pointer, dimension(:,:,:) :: var3_p1 => NULL()
@@ -1422,41 +1432,44 @@ subroutine Sfc_io_register_3d_fields(sfc,Model,Sfc_restart,warm_start)
   integer :: num
   logical :: mand
 
+  character(len=7), parameter :: xyz1_time(4) = (/'xaxis_1', 'yaxis_1', 'zaxis_1', 'Time   '/)
+  character(len=7), parameter :: xyz2_time(4) = (/'xaxis_1', 'yaxis_1', 'zaxis_2', 'Time   '/)
+  character(len=7), parameter :: xyz3_time(4) = (/'xaxis_1', 'yaxis_1', 'zaxis_3', 'Time   '/)
+  character(len=7), parameter :: xyz4_time(4) = (/'xaxis_1', 'yaxis_1', 'zaxis_4', 'Time   '/)
+
   !--- register the 3D fields
   var3_p => sfc%var3ice(:,:,:)
-  call register_restart_field(Sfc_restart, sfc%name3(0), var3_p, dimensions=(/'xaxis_1', 'yaxis_1', 'zaxis_1', 'Time   '/),&
-       &is_optional=.true.)
+  call register_restart_field(Sfc_restart, sfc%name3(0), var3_p, dimensions=xyz1_time, is_optional=.true.)
 
-  do num = 1,sfc%nvar3
-    var3_p => sfc%var3(:,:,:,num)
-    if ( warm_start ) then
-      call register_restart_field(Sfc_restart, sfc%name3(num), var3_p, dimensions=(/'xaxis_1', 'yaxis_1', 'lsoil  ', 'Time   '/),&
-           &is_optional=.true.)
-    else
-      if(sfc%is_lsoil) then
-        call register_restart_field(Sfc_restart, sfc%name3(num), var3_p, dimensions=(/'lat  ', 'lon  ', 'lsoil'/), is_optional=.true.)
-      else
-        call register_restart_field(Sfc_restart, sfc%name3(num), var3_p, dimensions=(/'xaxis_1','yaxis_1','zaxis_1','Time   '/),&
+  if(.not. for_write) then
+    do num = 1,sfc%nvar3
+      var3_p => sfc%var3(:,:,:,num)
+      if ( warm_start ) then
+        call register_restart_field(Sfc_restart, sfc%name3(num), var3_p, dimensions=(/'xaxis_1', 'yaxis_1', 'lsoil  ', 'Time   '/),&
              &is_optional=.true.)
+      else
+        if(sfc%is_lsoil) then
+          call register_restart_field(Sfc_restart, sfc%name3(num), var3_p, dimensions=(/'lat  ', 'lon  ', 'lsoil'/), is_optional=.true.)
+        else
+          call register_restart_field(Sfc_restart, sfc%name3(num), var3_p, dimensions=xyz1_time,&
+               &is_optional=.true.)
+        end if
       end if
-    end if
-  enddo
+    enddo
+  endif
 
   if (Model%lsm == Model%lsm_noahmp) then
-    mand = .false.
+    mand = for_write
     do num = sfc%nvar3+1,sfc%nvar3+3
       var3_p1 => sfc%var3sn(:,:,:,num)
-      call register_restart_field(Sfc_restart, sfc%name3(num), var3_p1, dimensions=(/'xaxis_1', 'yaxis_1','zaxis_2', 'Time   '/),&
-           &is_optional=.not.mand)
+      call register_restart_field(Sfc_restart, sfc%name3(num), var3_p1, dimensions=xyz3_time, is_optional=.not.mand)
     enddo
 
     var3_p2 => sfc%var3eq(:,:,:,7)
-    call register_restart_field(Sfc_restart, sfc%name3(7), var3_p2, dimensions=(/'xaxis_1', 'yaxis_1', 'zaxis_3', 'Time   '/),&
-         &is_optional=.not.mand)
+    call register_restart_field(Sfc_restart, sfc%name3(7), var3_p2, dimensions=xyz2_time, is_optional=.not.mand)
 
     var3_p3 => sfc%var3zn(:,:,:,8)
-    call register_restart_field(Sfc_restart, sfc%name3(8), var3_p3, dimensions=(/'xaxis_1', 'yaxis_1', 'zaxis_4', 'Time   '/),&
-         &is_optional=.not.mand)
+    call register_restart_field(Sfc_restart, sfc%name3(8), var3_p3, dimensions=xyz4_time, is_optional=.not.mand)
   endif   !mp
 
 end subroutine Sfc_io_register_3d_fields
