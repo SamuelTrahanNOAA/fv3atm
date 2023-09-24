@@ -431,8 +431,6 @@ module GFS_typedefs
 
     ! CLM Lake model internal variables:
     real (kind=kind_phys), pointer :: lake_albedo(:)     => null()  !
-    real (kind=kind_phys), pointer :: lake_z3d(:,:)     => null()  !
-    real (kind=kind_phys), pointer :: lake_dz3d(:,:)    => null()  !
     real (kind=kind_phys), pointer :: lake_h2osno2d(:)   => null()  !
     real (kind=kind_phys), pointer :: lake_sndpth2d(:)   => null()  !
     real (kind=kind_phys), pointer :: lake_snl2d(:)      => null()  !
@@ -2708,8 +2706,6 @@ module GFS_typedefs
        allocate(Sfcprop%lake_t2m(IM))
        allocate(Sfcprop%lake_q2m(IM))
        allocate(Sfcprop%lake_albedo(IM))
-       allocate(Sfcprop%lake_z3d(IM,Model%nlevlake_clm_lake))
-       allocate(Sfcprop%lake_dz3d(IM,Model%nlevlake_clm_lake))
        allocate(Sfcprop%lake_h2osno2d(IM))
        allocate(Sfcprop%lake_sndpth2d(IM))
        allocate(Sfcprop%lake_snl2d(IM))
@@ -2733,8 +2729,6 @@ module GFS_typedefs
        Sfcprop%lake_t2m = clear_val
        Sfcprop%lake_q2m = clear_val
        Sfcprop%lake_albedo = clear_val
-       Sfcprop%lake_z3d = clear_val
-       Sfcprop%lake_dz3d = clear_val
        Sfcprop%lake_h2osno2d = clear_val
        Sfcprop%lake_sndpth2d = clear_val
        Sfcprop%lake_snl2d = clear_val

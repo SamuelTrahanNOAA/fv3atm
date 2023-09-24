@@ -2034,22 +2034,6 @@
   type = real
   kind = kind_phys
   active = (control_for_lake_model_selection == 2 .and. control_for_lake_model_execution_method > 0)
-[lake_z3d]
-  standard_name = depth_of_lake_interface_layers
-  long_name = depth of lake interface layers
-  units = fraction
-  dimensions = (horizontal_loop_extent, lake_vertical_dimension_for_clm_lake_model)
-  type = real
-  kind = kind_phys
-  active = (control_for_lake_model_selection == 2 .and. control_for_lake_model_execution_method > 0)
-[lake_dz3d]
-  standard_name = thickness_of_lake_layers
-  long_name = thickness of lake layers
-  units = fraction
-  dimensions = (horizontal_loop_extent, lake_vertical_dimension_for_clm_lake_model)
-  type = real
-  kind = kind_phys
-  active = (control_for_lake_model_selection == 2 .and. control_for_lake_model_execution_method > 0)
 [lake_h2osno2d]
   standard_name = water_equivalent_accumulated_snow_depth_in_clm_lake_model
   long_name = water equiv of acc snow depth over lake in clm lake model

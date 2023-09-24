@@ -5086,13 +5086,6 @@ module GFS_diagnostics
 
     integer :: nk, idx0, iblk
     
-    do iblk=1,nblks
-      call link_all_levels(Sfcprop(iblk)%lake_z3d, 'lake_z3d', 'lake_depth_on_interface_levels', 'm')
-    enddo
-    
-    do iblk=1,nblks
-      call link_all_levels(Sfcprop(iblk)%lake_dz3d, 'lake_dz3d', 'lake level thickness', 'm')
-    enddo
 
     do iblk=1,nblks
       call link_all_levels(Sfcprop(iblk)%lake_snow_z3d, 'lake_snow_z3d', 'lake snow level depth', 'm')
