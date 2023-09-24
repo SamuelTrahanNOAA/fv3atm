@@ -5095,22 +5095,6 @@ module GFS_diagnostics
     enddo
 
     do iblk=1,nblks
-      call link_all_levels(Sfcprop(iblk)%lake_csol3d, 'lake_csol3d', 'soil heat capacity', 'J m-3 K-1')
-    enddo
-
-    do iblk=1,nblks
-      call link_all_levels(Sfcprop(iblk)%lake_soil_tkmg3d, 'lake_soil_tkmg3d', 'soil thermal conductivity, minerals', 'W m-1 K-1')
-    enddo
-
-    do iblk=1,nblks
-      call link_all_levels(Sfcprop(iblk)%lake_soil_tkdry3d, 'lake_soil_tkdry3d', 'soil thermal conductivity, dry soil', 'W m-1 K-1')
-    enddo
-
-    do iblk=1,nblks
-      call link_all_levels(Sfcprop(iblk)%lake_soil_tksatu3d, 'lake_soil_tksatu3d', 'soil thermal conductivity, saturated soil', 'W m-1 K-1')
-    enddo
-
-    do iblk=1,nblks
       call link_all_levels(Sfcprop(iblk)%lake_snow_z3d, 'lake_snow_z3d', 'lake snow level depth', 'm')
     enddo
 

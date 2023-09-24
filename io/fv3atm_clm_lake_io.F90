@@ -44,8 +44,7 @@ module fv3atm_clm_lake_io
     ! All 3D variables needed for a restart
     real(kind_phys), pointer, private, dimension(:,:,:) :: &
          lake_z3d=>null(), lake_dz3d=>null(), &
-         lake_csol3d=>null(), lake_soil_tkmg3d=>null(), lake_soil_tkdry3d=>null(), &
-         lake_soil_tksatu3d=>null(), lake_snow_z3d=>null(), lake_snow_dz3d=>null(), &
+         lake_snow_z3d=>null(), lake_snow_dz3d=>null(), &
          lake_snow_zi3d=>null(), lake_h2osoi_vol3d=>null(), lake_h2osoi_liq3d=>null(), &
          lake_h2osoi_ice3d=>null(), lake_t_soisno3d=>null(), lake_t_lake3d=>null(), &
          lake_icefrac3d=>null()
@@ -120,10 +119,6 @@ CONTAINS
 
     allocate(clm_lake%lake_z3d(nx,ny,Model%nlevlake_clm_lake))
     allocate(clm_lake%lake_dz3d(nx,ny,Model%nlevlake_clm_lake))
-    allocate(clm_lake%lake_csol3d(nx,ny,Model%nlevlake_clm_lake))
-    allocate(clm_lake%lake_soil_tkmg3d(nx,ny,Model%nlevlake_clm_lake))
-    allocate(clm_lake%lake_soil_tkdry3d(nx,ny,Model%nlevlake_clm_lake))
-    allocate(clm_lake%lake_soil_tksatu3d(nx,ny,Model%nlevlake_clm_lake))
     allocate(clm_lake%lake_snow_z3d(nx,ny,Model%nlevsnowsoil1_clm_lake))
     allocate(clm_lake%lake_snow_dz3d(nx,ny,Model%nlevsnowsoil1_clm_lake))
     allocate(clm_lake%lake_snow_zi3d(nx,ny,Model%nlevsnowsoil_clm_lake))
@@ -220,10 +215,6 @@ CONTAINS
 
         clm_lake%lake_z3d(i,j,:) = zero
         clm_lake%lake_dz3d(i,j,:) = zero
-        clm_lake%lake_csol3d(i,j,:) = zero
-        clm_lake%lake_soil_tkmg3d(i,j,:) = zero
-        clm_lake%lake_soil_tkdry3d(i,j,:) = zero
-        clm_lake%lake_soil_tksatu3d(i,j,:) = zero
         clm_lake%lake_snow_z3d(i,j,:) = zero
         clm_lake%lake_snow_dz3d(i,j,:) = zero
         clm_lake%lake_snow_zi3d(i,j,:) = zero
@@ -272,10 +263,6 @@ CONTAINS
 
         clm_lake%lake_z3d(i,j,:) = Sfcprop(nb)%lake_z3d(ix,:)
         clm_lake%lake_dz3d(i,j,:) = Sfcprop(nb)%lake_dz3d(ix,:)
-        clm_lake%lake_csol3d(i,j,:) = Sfcprop(nb)%lake_csol3d(ix,:)
-        clm_lake%lake_soil_tkmg3d(i,j,:) = Sfcprop(nb)%lake_soil_tkmg3d(ix,:)
-        clm_lake%lake_soil_tkdry3d(i,j,:) = Sfcprop(nb)%lake_soil_tkdry3d(ix,:)
-        clm_lake%lake_soil_tksatu3d(i,j,:) = Sfcprop(nb)%lake_soil_tksatu3d(ix,:)
         clm_lake%lake_snow_z3d(i,j,:) = Sfcprop(nb)%lake_snow_z3d(ix,:)
         clm_lake%lake_snow_dz3d(i,j,:) = Sfcprop(nb)%lake_snow_dz3d(ix,:)
         clm_lake%lake_snow_zi3d(i,j,:) = Sfcprop(nb)%lake_snow_zi3d(ix,:)
@@ -323,10 +310,6 @@ CONTAINS
 
         Sfcprop(nb)%lake_z3d(ix,:) = clm_lake%lake_z3d(i,j,:)
         Sfcprop(nb)%lake_dz3d(ix,:) = clm_lake%lake_dz3d(i,j,:)
-        Sfcprop(nb)%lake_csol3d(ix,:) = clm_lake%lake_csol3d(i,j,:)
-        Sfcprop(nb)%lake_soil_tkmg3d(ix,:) = clm_lake%lake_soil_tkmg3d(i,j,:)
-        Sfcprop(nb)%lake_soil_tkdry3d(ix,:) = clm_lake%lake_soil_tkdry3d(i,j,:)
-        Sfcprop(nb)%lake_soil_tksatu3d(ix,:) = clm_lake%lake_soil_tksatu3d(i,j,:)
         Sfcprop(nb)%lake_snow_z3d(ix,:) = clm_lake%lake_snow_z3d(i,j,:)
         Sfcprop(nb)%lake_snow_dz3d(ix,:) = clm_lake%lake_snow_dz3d(i,j,:)
         Sfcprop(nb)%lake_snow_zi3d(ix,:) = clm_lake%lake_snow_zi3d(i,j,:)
@@ -382,18 +365,6 @@ CONTAINS
          dimensions=(/'xaxis_1              ', 'yaxis_1              ', &
          'levlake_clm_lake     ', 'Time                 '/), chunksizes=chunksizes3d, is_optional=.true.)
     call register_restart_field(Sfc_restart, 'lake_dz3d', clm_lake%lake_dz3d, &
-         dimensions=(/'xaxis_1              ', 'yaxis_1              ', &
-         'levlake_clm_lake     ', 'Time                 '/), chunksizes=chunksizes3d, is_optional=.true.)
-    call register_restart_field(Sfc_restart,'lake_csol3d', clm_lake%lake_csol3d, &
-         dimensions=(/'xaxis_1              ', 'yaxis_1              ', &
-         'levlake_clm_lake     ', 'Time                 '/), chunksizes=chunksizes3d, is_optional=.true.)
-    call register_restart_field(Sfc_restart,'lake_soil_tkmg3d', clm_lake%lake_soil_tkmg3d, &
-         dimensions=(/'xaxis_1              ', 'yaxis_1              ', &
-         'levlake_clm_lake     ', 'Time                 '/), chunksizes=chunksizes3d, is_optional=.true.)
-    call register_restart_field(Sfc_restart,'lake_soil_tkdry3d', clm_lake%lake_soil_tkdry3d, &
-         dimensions=(/'xaxis_1              ', 'yaxis_1              ', &
-         'levlake_clm_lake     ', 'Time                 '/), chunksizes=chunksizes3d, is_optional=.true.)
-    call register_restart_field(Sfc_restart,'lake_soil_tksatu3d', clm_lake%lake_soil_tksatu3d, &
          dimensions=(/'xaxis_1              ', 'yaxis_1              ', &
          'levlake_clm_lake     ', 'Time                 '/), chunksizes=chunksizes3d, is_optional=.true.)
     call register_restart_field(Sfc_restart,'lake_snow_z3d', clm_lake%lake_snow_z3d, &
@@ -460,14 +431,6 @@ CONTAINS
          clm_lake%levlake_clm_lake, trim(outputfile), grid, bundle)
     call create_3d_field_and_add_to_bundle(clm_lake%lake_dz3d, 'lake_dz3d', 'levlake_clm_lake', &
          clm_lake%levlake_clm_lake, trim(outputfile), grid, bundle)
-    call create_3d_field_and_add_to_bundle(clm_lake%lake_csol3d, 'lake_csol3d', 'levlake_clm_lake', &
-         clm_lake%levlake_clm_lake, trim(outputfile), grid, bundle)
-    call create_3d_field_and_add_to_bundle(clm_lake%lake_soil_tkmg3d, 'lake_soil_tkmg3d', 'levlake_clm_lake', &
-         clm_lake%levlake_clm_lake, trim(outputfile), grid, bundle)
-    call create_3d_field_and_add_to_bundle(clm_lake%lake_soil_tkdry3d, 'lake_soil_tkdry3d', 'levlake_clm_lake', &
-         clm_lake%levlake_clm_lake, trim(outputfile), grid, bundle)
-    call create_3d_field_and_add_to_bundle(clm_lake%lake_soil_tksatu3d, 'lake_soil_tksatu3d', 'levlake_clm_lake', &
-         clm_lake%levlake_clm_lake, trim(outputfile), grid, bundle)
     call create_3d_field_and_add_to_bundle(clm_lake%lake_snow_z3d, 'lake_snow_z3d', 'levsnowsoil1_clm_lake', &
          clm_lake%levsnowsoil1_clm_lake, trim(outputfile), grid, bundle)
     call create_3d_field_and_add_to_bundle(clm_lake%lake_snow_dz3d, 'lake_snow_dz3d', 'levsnowsoil1_clm_lake', &
@@ -527,10 +490,6 @@ CONTAINS
 
     IF_ASSOC_DEALLOC_NULL(lake_z3d)
     IF_ASSOC_DEALLOC_NULL(lake_dz3d)
-    IF_ASSOC_DEALLOC_NULL(lake_csol3d)
-    IF_ASSOC_DEALLOC_NULL(lake_soil_tkmg3d)
-    IF_ASSOC_DEALLOC_NULL(lake_soil_tkdry3d)
-    IF_ASSOC_DEALLOC_NULL(lake_soil_tksatu3d)
     IF_ASSOC_DEALLOC_NULL(lake_snow_z3d)
     IF_ASSOC_DEALLOC_NULL(lake_snow_dz3d)
     IF_ASSOC_DEALLOC_NULL(lake_snow_zi3d)
