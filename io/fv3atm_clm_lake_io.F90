@@ -43,16 +43,16 @@ module fv3atm_clm_lake_io
 
     ! All 3D variables needed for a restart
     real(kind_phys), pointer, private, dimension(:,:,:) :: &
-         lake_z3d=>null(), lake_dz3d=>null(), lake_soil_watsat3d=>null(), &
+         lake_z3d=>null(), lake_dz3d=>null(), &
          lake_csol3d=>null(), lake_soil_tkmg3d=>null(), lake_soil_tkdry3d=>null(), &
          lake_soil_tksatu3d=>null(), lake_snow_z3d=>null(), lake_snow_dz3d=>null(), &
          lake_snow_zi3d=>null(), lake_h2osoi_vol3d=>null(), lake_h2osoi_liq3d=>null(), &
          lake_h2osoi_ice3d=>null(), lake_t_soisno3d=>null(), lake_t_lake3d=>null(), &
-         lake_icefrac3d=>null(),  lake_clay3d=>null(), lake_sand3d=>null()
+         lake_icefrac3d=>null()
 
     ! Axis indices in 1-based array, containing non-1-based indices
     real(kind_phys), pointer, private, dimension(:) :: &
-         levlake_clm_lake, levsoil_clm_lake, levsnowsoil_clm_lake, &
+         levlake_clm_lake, levsnowsoil_clm_lake, &
          levsnowsoil1_clm_lake
   contains
 
@@ -120,7 +120,6 @@ CONTAINS
 
     allocate(clm_lake%lake_z3d(nx,ny,Model%nlevlake_clm_lake))
     allocate(clm_lake%lake_dz3d(nx,ny,Model%nlevlake_clm_lake))
-    allocate(clm_lake%lake_soil_watsat3d(nx,ny,Model%nlevlake_clm_lake))
     allocate(clm_lake%lake_csol3d(nx,ny,Model%nlevlake_clm_lake))
     allocate(clm_lake%lake_soil_tkmg3d(nx,ny,Model%nlevlake_clm_lake))
     allocate(clm_lake%lake_soil_tkdry3d(nx,ny,Model%nlevlake_clm_lake))
@@ -134,19 +133,13 @@ CONTAINS
     allocate(clm_lake%lake_t_soisno3d(nx,ny,Model%nlevsnowsoil1_clm_lake))
     allocate(clm_lake%lake_t_lake3d(nx,ny,Model%nlevlake_clm_lake))
     allocate(clm_lake%lake_icefrac3d(nx,ny,Model%nlevlake_clm_lake))
-    allocate(clm_lake%lake_clay3d(nx,ny,Model%nlevsoil_clm_lake))
-    allocate(clm_lake%lake_sand3d(nx,ny,Model%nlevsoil_clm_lake))
 
     allocate(clm_lake%levlake_clm_lake(Model%nlevlake_clm_lake))
-    allocate(clm_lake%levsoil_clm_lake(Model%nlevsoil_clm_lake))
     allocate(clm_lake%levsnowsoil_clm_lake(Model%nlevsnowsoil_clm_lake))
     allocate(clm_lake%levsnowsoil1_clm_lake(Model%nlevsnowsoil1_clm_lake))
 
     do i=1,Model%nlevlake_clm_lake
       clm_lake%levlake_clm_lake(i) = i
-    enddo
-    do i=1,Model%nlevsoil_clm_lake
-      clm_lake%levsoil_clm_lake(i) = i
     enddo
     do i=-Model%nlevsnow_clm_lake,Model%nlevsoil_clm_lake
       clm_lake%levsnowsoil_clm_lake(i+Model%nlevsnow_clm_lake+1) = i
@@ -165,7 +158,6 @@ CONTAINS
     type(FmsNetcdfDomainFile_t) :: Sfc_restart
 
     call register_axis(Sfc_restart, 'levlake_clm_lake', dimension_length=Model%nlevlake_clm_lake)
-    call register_axis(Sfc_restart, 'levsoil_clm_lake', dimension_length=Model%nlevsoil_clm_lake)
     call register_axis(Sfc_restart, 'levsnowsoil_clm_lake', dimension_length=Model%nlevsnowsoil_clm_lake)
     call register_axis(Sfc_restart, 'levsnowsoil1_clm_lake', dimension_length=Model%nlevsnowsoil1_clm_lake)
   end subroutine clm_lake_register_axes
@@ -182,9 +174,6 @@ CONTAINS
     call register_field(Sfc_restart, 'levlake_clm_lake', 'double', (/'levlake_clm_lake'/))
     call register_variable_attribute(Sfc_restart, 'levlake_clm_lake', 'cartesian_axis' ,'Z', str_len=1)
 
-    call register_field(Sfc_restart, 'levsoil_clm_lake', 'double', (/'levsoil_clm_lake'/))
-    call register_variable_attribute(Sfc_restart, 'levsoil_clm_lake', 'cartesian_axis' ,'Z', str_len=1)
-
     call register_field(Sfc_restart, 'levsnowsoil_clm_lake', 'double', (/'levsnowsoil_clm_lake'/))
     call register_variable_attribute(Sfc_restart, 'levsnowsoil_clm_lake', 'cartesian_axis' ,'Z', str_len=1)
 
@@ -192,7 +181,6 @@ CONTAINS
     call register_variable_attribute(Sfc_restart, 'levsnowsoil1_clm_lake', 'cartesian_axis' ,'Z', str_len=1)
 
     call write_data(Sfc_restart, 'levlake_clm_lake', clm_lake%levlake_clm_lake)
-    call write_data(Sfc_restart, 'levsoil_clm_lake', clm_lake%levsoil_clm_lake)
     call write_data(Sfc_restart, 'levsnowsoil_clm_lake', clm_lake%levsnowsoil_clm_lake)
     call write_data(Sfc_restart, 'levsnowsoil1_clm_lake', clm_lake%levsnowsoil1_clm_lake)
   end subroutine clm_lake_write_axes
@@ -232,7 +220,6 @@ CONTAINS
 
         clm_lake%lake_z3d(i,j,:) = zero
         clm_lake%lake_dz3d(i,j,:) = zero
-        clm_lake%lake_soil_watsat3d(i,j,:) = zero
         clm_lake%lake_csol3d(i,j,:) = zero
         clm_lake%lake_soil_tkmg3d(i,j,:) = zero
         clm_lake%lake_soil_tkdry3d(i,j,:) = zero
@@ -246,8 +233,6 @@ CONTAINS
         clm_lake%lake_t_soisno3d(i,j,:) = zero
         clm_lake%lake_t_lake3d(i,j,:) = zero
         clm_lake%lake_icefrac3d(i,j,:) = zero
-        clm_lake%lake_clay3d(i,j,:) = zero
-        clm_lake%lake_sand3d(i,j,:) = zero
       enddo
     enddo
   end subroutine clm_lake_fill_data
@@ -287,7 +272,6 @@ CONTAINS
 
         clm_lake%lake_z3d(i,j,:) = Sfcprop(nb)%lake_z3d(ix,:)
         clm_lake%lake_dz3d(i,j,:) = Sfcprop(nb)%lake_dz3d(ix,:)
-        clm_lake%lake_soil_watsat3d(i,j,:) = Sfcprop(nb)%lake_soil_watsat3d(ix,:)
         clm_lake%lake_csol3d(i,j,:) = Sfcprop(nb)%lake_csol3d(ix,:)
         clm_lake%lake_soil_tkmg3d(i,j,:) = Sfcprop(nb)%lake_soil_tkmg3d(ix,:)
         clm_lake%lake_soil_tkdry3d(i,j,:) = Sfcprop(nb)%lake_soil_tkdry3d(ix,:)
@@ -301,8 +285,6 @@ CONTAINS
         clm_lake%lake_t_soisno3d(i,j,:) = Sfcprop(nb)%lake_t_soisno3d(ix,:)
         clm_lake%lake_t_lake3d(i,j,:) = Sfcprop(nb)%lake_t_lake3d(ix,:)
         clm_lake%lake_icefrac3d(i,j,:) = Sfcprop(nb)%lake_icefrac3d(ix,:)
-        clm_lake%lake_clay3d(i,j,:) = Sfcprop(nb)%lake_clay3d(ix,:)
-        clm_lake%lake_sand3d(i,j,:) = Sfcprop(nb)%lake_sand3d(ix,:)
       enddo
     enddo
   end subroutine clm_lake_copy_from_grid
@@ -341,7 +323,6 @@ CONTAINS
 
         Sfcprop(nb)%lake_z3d(ix,:) = clm_lake%lake_z3d(i,j,:)
         Sfcprop(nb)%lake_dz3d(ix,:) = clm_lake%lake_dz3d(i,j,:)
-        Sfcprop(nb)%lake_soil_watsat3d(ix,:) = clm_lake%lake_soil_watsat3d(i,j,:)
         Sfcprop(nb)%lake_csol3d(ix,:) = clm_lake%lake_csol3d(i,j,:)
         Sfcprop(nb)%lake_soil_tkmg3d(ix,:) = clm_lake%lake_soil_tkmg3d(i,j,:)
         Sfcprop(nb)%lake_soil_tkdry3d(ix,:) = clm_lake%lake_soil_tkdry3d(i,j,:)
@@ -355,8 +336,6 @@ CONTAINS
         Sfcprop(nb)%lake_t_soisno3d(ix,:) = clm_lake%lake_t_soisno3d(i,j,:)
         Sfcprop(nb)%lake_t_lake3d(ix,:) = clm_lake%lake_t_lake3d(i,j,:)
         Sfcprop(nb)%lake_icefrac3d(ix,:) = clm_lake%lake_icefrac3d(i,j,:)
-        Sfcprop(nb)%lake_clay3d(ix,:) = clm_lake%lake_clay3d(i,j,:)
-        Sfcprop(nb)%lake_sand3d(ix,:) = clm_lake%lake_sand3d(i,j,:)
       enddo
     enddo
   end subroutine clm_lake_copy_to_grid
@@ -405,9 +384,6 @@ CONTAINS
     call register_restart_field(Sfc_restart, 'lake_dz3d', clm_lake%lake_dz3d, &
          dimensions=(/'xaxis_1              ', 'yaxis_1              ', &
          'levlake_clm_lake     ', 'Time                 '/), chunksizes=chunksizes3d, is_optional=.true.)
-    call register_restart_field(Sfc_restart,'lake_soil_watsat3d', clm_lake%lake_soil_watsat3d, &
-         dimensions=(/'xaxis_1              ', 'yaxis_1              ', &
-         'levlake_clm_lake     ', 'Time                 '/), chunksizes=chunksizes3d, is_optional=.true.)
     call register_restart_field(Sfc_restart,'lake_csol3d', clm_lake%lake_csol3d, &
          dimensions=(/'xaxis_1              ', 'yaxis_1              ', &
          'levlake_clm_lake     ', 'Time                 '/), chunksizes=chunksizes3d, is_optional=.true.)
@@ -447,12 +423,6 @@ CONTAINS
     call register_restart_field(Sfc_restart,'lake_icefrac3d', clm_lake%lake_icefrac3d, &
          dimensions=(/'xaxis_1              ', 'yaxis_1              ', &
          'levlake_clm_lake     ', 'Time                 '/), chunksizes=chunksizes3d, is_optional=.true.)
-    call register_restart_field(Sfc_restart,'lake_clay3d', clm_lake%lake_clay3d, &
-         dimensions=(/'xaxis_1              ', 'yaxis_1              ', &
-         'levsoil_clm_lake     ', 'Time                 '/), chunksizes=chunksizes3d, is_optional=.true.)
-    call register_restart_field(Sfc_restart,'lake_sand3d', clm_lake%lake_sand3d, &
-         dimensions=(/'xaxis_1              ', 'yaxis_1              ', &
-         'levsoil_clm_lake     ', 'Time                 '/), chunksizes=chunksizes3d, is_optional=.true.)
   end subroutine clm_lake_register_fields
 
   !>@ This is clm_lake%bundle_fields, and it is only used in the
@@ -490,8 +460,6 @@ CONTAINS
          clm_lake%levlake_clm_lake, trim(outputfile), grid, bundle)
     call create_3d_field_and_add_to_bundle(clm_lake%lake_dz3d, 'lake_dz3d', 'levlake_clm_lake', &
          clm_lake%levlake_clm_lake, trim(outputfile), grid, bundle)
-    call create_3d_field_and_add_to_bundle(clm_lake%lake_soil_watsat3d, 'lake_soil_watsat3d', 'levlake_clm_lake', &
-         clm_lake%levlake_clm_lake, trim(outputfile), grid, bundle)
     call create_3d_field_and_add_to_bundle(clm_lake%lake_csol3d, 'lake_csol3d', 'levlake_clm_lake', &
          clm_lake%levlake_clm_lake, trim(outputfile), grid, bundle)
     call create_3d_field_and_add_to_bundle(clm_lake%lake_soil_tkmg3d, 'lake_soil_tkmg3d', 'levlake_clm_lake', &
@@ -518,10 +486,6 @@ CONTAINS
          clm_lake%levlake_clm_lake, trim(outputfile), grid, bundle)
     call create_3d_field_and_add_to_bundle(clm_lake%lake_icefrac3d, 'lake_icefrac3d', 'levlake_clm_lake', &
          clm_lake%levlake_clm_lake, trim(outputfile), grid, bundle)
-    call create_3d_field_and_add_to_bundle(clm_lake%lake_clay3d, 'lake_clay3d', 'levsoil_clm_lake', &
-         clm_lake%levsoil_clm_lake, trim(outputfile), grid, bundle)
-    call create_3d_field_and_add_to_bundle(clm_lake%lake_sand3d, 'lake_sand3d', 'levsoil_clm_lake', &
-         clm_lake%levsoil_clm_lake, trim(outputfile), grid, bundle)
 
   end subroutine Clm_lake_bundle_fields
 
@@ -563,7 +527,6 @@ CONTAINS
 
     IF_ASSOC_DEALLOC_NULL(lake_z3d)
     IF_ASSOC_DEALLOC_NULL(lake_dz3d)
-    IF_ASSOC_DEALLOC_NULL(lake_soil_watsat3d)
     IF_ASSOC_DEALLOC_NULL(lake_csol3d)
     IF_ASSOC_DEALLOC_NULL(lake_soil_tkmg3d)
     IF_ASSOC_DEALLOC_NULL(lake_soil_tkdry3d)
@@ -577,8 +540,6 @@ CONTAINS
     IF_ASSOC_DEALLOC_NULL(lake_t_soisno3d)
     IF_ASSOC_DEALLOC_NULL(lake_t_lake3d)
     IF_ASSOC_DEALLOC_NULL(lake_icefrac3d)
-    IF_ASSOC_DEALLOC_NULL(lake_clay3d)
-    IF_ASSOC_DEALLOC_NULL(lake_sand3d)
 
 #undef IF_ASSOC_DEALLOC_NULL
   end subroutine clm_lake_deallocate_data

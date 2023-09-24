@@ -5091,19 +5091,7 @@ module GFS_diagnostics
     enddo
     
     do iblk=1,nblks
-      call link_all_levels(Sfcprop(iblk)%lake_clay3d, 'lake_clay3d', 'percent clay on soil levels in clm lake model', '%')
-    enddo
-
-    do iblk=1,nblks
-      call link_all_levels(Sfcprop(iblk)%lake_sand3d, 'lake_sand3d', 'percent sand on soil levels in clm lake model', '%')
-    enddo
-    
-    do iblk=1,nblks
       call link_all_levels(Sfcprop(iblk)%lake_dz3d, 'lake_dz3d', 'lake level thickness', 'm')
-    enddo
-
-    do iblk=1,nblks
-      call link_all_levels(Sfcprop(iblk)%lake_soil_watsat3d, 'lake_soil_watsat3d', 'saturated volumetric soil water', 'm3 m-3')
     enddo
 
     do iblk=1,nblks

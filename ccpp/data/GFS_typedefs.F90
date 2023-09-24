@@ -433,7 +433,6 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: lake_albedo(:)     => null()  !
     real (kind=kind_phys), pointer :: lake_z3d(:,:)     => null()  !
     real (kind=kind_phys), pointer :: lake_dz3d(:,:)    => null()  !
-    real (kind=kind_phys), pointer :: lake_soil_watsat3d(:,:) => null()  !
     real (kind=kind_phys), pointer :: lake_csol3d(:,:)   => null()  !
     real (kind=kind_phys), pointer :: lake_soil_tkmg3d(:,:)   => null()  !
     real (kind=kind_phys), pointer :: lake_soil_tkdry3d(:,:)  => null()  !
@@ -454,8 +453,6 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: lake_icefrac3d(:,:)=> null()
     real (kind=kind_phys), pointer :: lake_rho0(:)=> null()
     real (kind=kind_phys), pointer :: lake_ht(:)=> null()
-    real (kind=kind_phys), pointer :: lake_clay3d(:,:) => null()
-    real (kind=kind_phys), pointer :: lake_sand3d(:,:) => null()
     integer, pointer :: lake_is_salty(:) => null()
     integer, pointer :: lake_cannot_freeze(:) => null()
     real (kind=kind_phys), pointer :: clm_lake_initialized(:) => null() !< lakeini was called
@@ -2717,7 +2714,6 @@ module GFS_typedefs
        allocate(Sfcprop%lake_albedo(IM))
        allocate(Sfcprop%lake_z3d(IM,Model%nlevlake_clm_lake))
        allocate(Sfcprop%lake_dz3d(IM,Model%nlevlake_clm_lake))
-       allocate(Sfcprop%lake_soil_watsat3d(IM,Model%nlevlake_clm_lake))
        allocate(Sfcprop%lake_csol3d(IM,Model%nlevlake_clm_lake))
        allocate(Sfcprop%lake_soil_tkmg3d(IM,Model%nlevlake_clm_lake))
        allocate(Sfcprop%lake_soil_tkdry3d(IM,Model%nlevlake_clm_lake))
@@ -2738,8 +2734,6 @@ module GFS_typedefs
        allocate(Sfcprop%lake_icefrac3d(IM,Model%nlevlake_clm_lake))
        allocate(Sfcprop%lake_rho0(IM))
        allocate(Sfcprop%lake_ht(IM))
-       allocate(Sfcprop%lake_clay3d(IM,Model%nlevsoil_clm_lake))
-       allocate(Sfcprop%lake_sand3d(IM,Model%nlevsoil_clm_lake))
        allocate(Sfcprop%lake_is_salty(IM))
        allocate(Sfcprop%lake_cannot_freeze(IM))
        allocate(Sfcprop%clm_lake_initialized(IM))
@@ -2749,7 +2743,6 @@ module GFS_typedefs
        Sfcprop%lake_albedo = clear_val
        Sfcprop%lake_z3d = clear_val
        Sfcprop%lake_dz3d = clear_val
-       Sfcprop%lake_soil_watsat3d = clear_val
        Sfcprop%lake_csol3d = clear_val
        Sfcprop%lake_soil_tkmg3d = clear_val
        Sfcprop%lake_soil_tkdry3d = clear_val
@@ -2770,8 +2763,6 @@ module GFS_typedefs
        Sfcprop%lake_icefrac3d = clear_val
        Sfcprop%lake_rho0 = -111
        Sfcprop%lake_ht = -111
-       Sfcprop%lake_clay3d = clear_val
-       Sfcprop%lake_sand3d = clear_val
        Sfcprop%lake_is_salty = zero
        Sfcprop%lake_cannot_freeze = zero
        Sfcprop%clm_lake_initialized = zero

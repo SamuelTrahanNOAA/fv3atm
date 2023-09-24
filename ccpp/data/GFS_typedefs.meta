@@ -2050,14 +2050,6 @@
   type = real
   kind = kind_phys
   active = (control_for_lake_model_selection == 2 .and. control_for_lake_model_execution_method > 0)
-[lake_soil_watsat3d]
-  standard_name = saturated_volumetric_soil_water_in_lake_model
-  long_name = saturated volumetric soil water in lake model
-  units = m
-  dimensions = (horizontal_loop_extent, lake_vertical_dimension_for_clm_lake_model)
-  type = real
-  kind = kind_phys
-  active = (control_for_lake_model_selection == 2 .and. control_for_lake_model_execution_method > 0)
 [lake_csol3d]
   standard_name = soil_heat_capacity_in_lake_model
   long_name = soil heat capacity in lake model
@@ -2217,20 +2209,6 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (control_for_lake_model_selection == 2 .and. control_for_lake_model_execution_method > 0)
-[lake_clay3d]
-  standard_name = clm_lake_percent_clay
-  long_name = percent clay in clm lake model
-  units = percent
-  dimensions = (horizontal_loop_extent,soil_vertical_dimension_for_clm_lake_model)
-  type = integer
-  active = (control_for_lake_model_selection == 2 .and. control_for_lake_model_execution_method > 0)
-[lake_sand3d]
-  standard_name = clm_lake_percent_sand
-  long_name = percent sand in clm lake model
-  units = percent
-  dimensions = (horizontal_loop_extent,soil_vertical_dimension_for_clm_lake_model)
-  type = integer
   active = (control_for_lake_model_selection == 2 .and. control_for_lake_model_execution_method > 0)
 [lake_is_salty]
   standard_name = clm_lake_is_salty
