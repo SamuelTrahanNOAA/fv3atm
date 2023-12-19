@@ -621,6 +621,9 @@ module GFS_typedefs
     logical              :: cplchm          !< default no cplchm collection
 #ifdef CCPP
     logical              :: cplchm_rad_opt  !< default no cplchm radiation feedback
+
+    integer              :: num_ebu         !< length of internal gsdchem ebu buffer
+    integer              :: num_aecm        !< length of aecm buffer
 #endif
 
 !--- integrated dynamics through earth's atmosphere
@@ -1114,6 +1117,7 @@ module GFS_typedefs
     integer              :: ntsulf          !< tracer index for sulf
     integer              :: ntdms           !< tracer index for DMS
     integer              :: ntmsa           !< tracer index for msa
+    integer              :: ntco            !< tracer index for co
     integer              :: ntpp25          !< tracer index for pp25
     integer              :: ntbc1           !< tracer index for bc1
     integer              :: ntbc2           !< tracer index for bc2
@@ -1168,6 +1172,9 @@ module GFS_typedefs
     integer :: chem_conv_tr
     integer :: chem_in_opt
     integer :: chem_opt
+    ! These must match gsd_chem_config.F90:
+    integer :: chem_opt_gocart      !< chem_opt for simple scheme
+    integer :: chem_opt_gocart_co   !< chem_opt for simple scheme with co
     integer :: chemdt
     integer :: cldchem_onoff
     integer :: dmsemis_opt
@@ -1736,7 +1743,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: abem  (:,:) => null()    !< instantaneous anthopogenic and biomass burning emissions
                                                                !< for black carbon, organic carbon, and sulfur dioxide         ( ug/m**2/s )
     real (kind=kind_phys), pointer :: aecm  (:,:) => null()    !< instantaneous aerosol column mass densities for
-                                                               !< pm2.5, black carbon, organic carbon, sulfate, dust, sea salt ( g/m**2 )
+                                                               !< pm2.5, black carbon, organic carbon, sulfate, dust, sea salt, CO ( g/m**2 )
     real (kind=kind_phys), pointer :: wetdpc_deep(:,:) => null()    !< instantaneous deep convective wet deposition                ( kg/m**2/s )
     real (kind=kind_phys), pointer :: wetdpc_mid (:,:) => null()    !< instantaneous mid convective wet deposition                ( kg/m**2/s )
     real (kind=kind_phys), pointer :: wetdpc_shal(:,:) => null()    !< instantaneous shallow convective wet deposition                ( kg/m**2/s )
@@ -2334,10 +2341,18 @@ module GFS_typedefs
 !   allocate (Sfcprop%hprim    (IM))
     allocate (Sfcprop%hprime   (IM,Model%nmtvr))
     allocate (Sfcprop%dust_in  (IM,5))
-    allocate (Sfcprop%emi_in   (IM,10))
+    if(Model%chem_opt == Model%CHEM_OPT_GOCART_CO) then
+       allocate (Sfcprop%emi_in   (IM,11))
+    else
+       allocate (Sfcprop%emi_in   (IM,10))
+    endif
     allocate (Sfcprop%emi2_in  (IM,64,3))
     allocate (Sfcprop%fire_MODIS (IM,13))
-    allocate (Sfcprop%fire_GBBEPx(IM,5))
+    if(Model%chem_opt == Model%CHEM_OPT_GOCART_CO) then
+       allocate (Sfcprop%fire_GBBEPx(IM,6))
+    else
+       allocate (Sfcprop%fire_GBBEPx(IM,5))
+    endif
 
     Sfcprop%slmsk     = clear_val
     Sfcprop%oceanfrac = clear_val
@@ -2892,7 +2907,7 @@ module GFS_typedefs
       !--- accumulated convective rainfall
       allocate (Coupling%rainc_cpl (IM))
       !-- chemistry coupling buffer
-      allocate (Coupling%buffer_ebu  (IM,Model%levs+1,1,7))
+      allocate (Coupling%buffer_ebu  (IM,Model%levs+1,1,Model%num_ebu))
       !-- chemistry coupling feedback to radiation
       allocate (Coupling%faersw_cpl  (IM,Model%levr+LTP,14,3))
 
@@ -3458,6 +3473,8 @@ module GFS_typedefs
 
 #ifdef CCPP
 !-- chem nml variables for FV3/CCPP-Chem
+    integer, parameter :: chem_opt_gocart = 300
+    integer, parameter :: chem_opt_gocart_co = 499
     integer :: aer_bc_opt = 1
     integer :: aer_ic_opt = 1
     integer :: aer_ra_feedback  = 0
@@ -3466,7 +3483,7 @@ module GFS_typedefs
     integer :: biomass_burn_opt = 1
     integer :: chem_conv_tr = 0
     integer :: chem_in_opt = 0
-    integer :: chem_opt =300
+    integer :: chem_opt = chem_opt_gocart
     integer :: chemdt = 3
     integer :: cldchem_onoff = 0
     integer :: dmsemis_opt = 1
@@ -3639,7 +3656,6 @@ module GFS_typedefs
 
 !--- convective clouds
     integer :: ncnvcld3d = 0       !< number of convective 3d clouds fields
-
 
 !--- read in the namelist
 #ifdef INTERNAL_FILE_NML
@@ -4300,6 +4316,7 @@ module GFS_typedefs
     Model%ntsulf           = get_tracer_index(Model%tracer_names, 'sulf',       Model%me, Model%master, Model%debug)
     Model%ntdms            = get_tracer_index(Model%tracer_names, 'dms',        Model%me, Model%master, Model%debug)
     Model%ntmsa            = get_tracer_index(Model%tracer_names, 'msa',        Model%me, Model%master, Model%debug)
+    Model%ntco             = get_tracer_index(Model%tracer_names, 'co',         Model%me, Model%master, Model%debug)
     Model%ntpp25           = get_tracer_index(Model%tracer_names, 'pp25',       Model%me, Model%master, Model%debug)
     Model%ntbc1            = get_tracer_index(Model%tracer_names, 'bc1',        Model%me, Model%master, Model%debug)
     Model%ntbc2            = get_tracer_index(Model%tracer_names, 'bc2',        Model%me, Model%master, Model%debug)
@@ -4376,7 +4393,16 @@ module GFS_typedefs
     Model%biomass_burn_opt  = biomass_burn_opt
     Model%chem_conv_tr      = chem_conv_tr
     Model%chem_in_opt       = chem_in_opt
+    Model%chem_opt_gocart   = chem_opt_gocart
+    Model%chem_opt_gocart_co= chem_opt_gocart_co
     Model%chem_opt          = chem_opt
+    if(chem_opt==chem_opt_gocart_co) then
+      Model%num_ebu=8
+      Model%num_aecm=7
+    else
+      Model%num_ebu=7
+      Model%num_aecm=6
+    endif
     Model%chemdt            = chemdt
     Model%cldchem_onoff     = cldchem_onoff
     Model%dmsemis_opt       = dmsemis_opt
@@ -5401,6 +5427,7 @@ module GFS_typedefs
       print *, ' ntsulf            : ', Model%ntsulf
       print *, ' ntdms             : ', Model%ntdms
       print *, ' ntmsa             : ', Model%ntmsa
+      print *, ' ntco              : ', Model%ntco
       print *, ' ntpp25            : ', Model%ntpp25
       print *, ' ntbc1             : ', Model%ntbc1
       print *, ' ntbc2             : ', Model%ntbc2
@@ -6499,7 +6526,7 @@ module GFS_typedefs
     ! -- for aerosol species (in order): pm2.5
     ! -- black carbon, organic carbon, sulfate,
     ! -- dust, sea salt
-    allocate (Diag%aecm(IM,6))
+    allocate (Diag%aecm(IM,Model%num_aecm))
     Diag%aecm = zero
 
   contains

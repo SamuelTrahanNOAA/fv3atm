@@ -2142,7 +2142,7 @@
   standard_name = chem_buffer_ebu
   long_name = chemistry buffer of ebu
   units = various
-  dimensions = (horizontal_dimension,vertical_dimension_plus_one,1,7)
+  dimensions = (horizontal_dimension,vertical_dimension_plus_one,1,buffer_ebu_length)
   type = real
   kind = kind_phys
 [faersw_cpl]
@@ -2419,6 +2419,24 @@
   units = flag
   dimensions = ()
   type = logical
+[num_chem]
+  standard_name = number_of_gsd_chem_chemistry_components
+  long_name = number of gsd chem chemistry components
+  units = count
+  dimensions = ()
+  type = integer
+[num_ebu]
+  standard_name = buffer_ebu_length
+  long_name = buffer ebu length
+  units = count
+  dimensions = ()
+  type = integer
+[num_aecm]
+  standard_name = number_of_aerosol_column_mass_densities
+  long_name = number of aerosol column mass densities
+  units = count
+  dimensions = ()
+  type = integer
 [lsidea]
   standard_name = flag_idealized_physics
   long_name = flag for idealized physics
@@ -4219,6 +4237,12 @@
 [ntmsa]
   standard_name = index_for_msa
   long_name = tracer index for msa
+  units = index
+  dimensions = ()
+  type = integer
+[ntco]
+  standard_name = index_for_co
+  long_name = tracer index for co
   units = index
   dimensions = ()
   type = integer
@@ -6873,7 +6897,7 @@
   standard_name = instantaneous_aerosol_column_mass_densities
   long_name = instantaneous aerosol column mass densities for pm2.5, black carbon, organic carbon, sulfate, dust, sea salt
   units = kg m-2
-  dimensions = (horizontal_dimension,6)
+  dimensions = (horizontal_dimension,number_of_aerosol_column_mass_densities)
   type = real
   kind = kind_phys
 [edmf_a]

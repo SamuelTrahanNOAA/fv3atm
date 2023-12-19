@@ -548,6 +548,10 @@ module FV3GFS_io_mod
       nvar_emi2   = 3
       nvar_gbbepx = 5
       nvar_modis  = 13
+      if(Model%chem_opt == Model%CHEM_OPT_GOCART_CO) then
+        nvar_emi = nvar_emi+1
+        nvar_gbbepx = nvar_gbbepx+1
+      endif
     else
       nvar_dust   = 0
       nvar_emi    = 0
@@ -762,6 +766,9 @@ module FV3GFS_io_mod
       emi_name(8)  = 'ero1'
       emi_name(9)  = 'ero2'
       emi_name(10) = 'ero3'
+      if(Model%chem_opt==Model%CHEM_OPT_GOCART_CO) then
+         emi_name(11) = 'e_co'
+      endif
       !--- register the 2D fields
       do num = 1,nvar_emi
         var2_p => emi_var(:,:,num)
@@ -791,6 +798,9 @@ module FV3GFS_io_mod
         Sfcprop(nb)%emi_in(ix,8)  = emi_var(i,j,8)
         Sfcprop(nb)%emi_in(ix,9)  = emi_var(i,j,9)
         Sfcprop(nb)%emi_in(ix,10) = emi_var(i,j,10)
+        if(Model%chem_opt==Model%CHEM_OPT_GOCART_CO) then
+          Sfcprop(nb)%emi_in(ix,11) = emi_var(i,j,11)
+        endif
       enddo
     enddo
 
@@ -847,6 +857,9 @@ module FV3GFS_io_mod
       gbbepx_name(3)  = 'ebu_pm_25'
       gbbepx_name(4)  = 'ebu_so2'
       gbbepx_name(5)  = 'ebu_frp'
+      if(Model%chem_opt == Model%CHEM_OPT_GOCART_CO) then
+         gbbepx_name(6)  = 'ebu_co'
+      endif
       !--- register the 2D fields
       do num = 1,nvar_gbbepx
         var2_p => gbbepx_var(:,:,num)
@@ -871,6 +884,9 @@ module FV3GFS_io_mod
         Sfcprop(nb)%fire_GBBEPx(ix,3)  = gbbepx_var(i,j,3)
         Sfcprop(nb)%fire_GBBEPx(ix,4)  = gbbepx_var(i,j,4)
         Sfcprop(nb)%fire_GBBEPx(ix,5)  = gbbepx_var(i,j,5)
+        if(Model%chem_opt == Model%CHEM_OPT_GOCART_CO) then
+          Sfcprop(nb)%fire_GBBEPx(ix,6)  = gbbepx_var(i,j,6)
+        endif
       enddo
     enddo
 
