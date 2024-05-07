@@ -126,7 +126,17 @@ module fv_moving_nest_types_mod
     real, _ALLOCATABLE                  :: slmsk(:,:)       _NULL   !< land sea mask -- 0 for ocean/lakes, 1, for land.  Perhaps 2 for sea ice.
     real (kind=kind_phys), _ALLOCATABLE :: smc (:,:,:)      _NULL   !< soil moisture content
     real (kind=kind_phys), _ALLOCATABLE :: stc (:,:,:)      _NULL   !< soil temperature
+    real (kind=kind_phys), _ALLOCATABLE :: tiice (:,:,:)    _NULL   !< sea ice internal temperature
     real (kind=kind_phys), _ALLOCATABLE :: slc (:,:,:)      _NULL   !< soil liquid water content
+
+    real (kind=kind_phys), _ALLOCATABLE :: vegtype_frac (:,:,:) _NULL   !< fraction of horizontal grid area occupied by given vegetation category
+    real (kind=kind_phys), _ALLOCATABLE :: soiltype_frac (:,:,:) _NULL   !< fraction of horizontal grid area occupied by given soil category
+
+    real (kind=kind_phys), _ALLOCATABLE :: sh2o (:,:,:)      _NULL   !< volume fraction of unfrozen soil moisture for lsm
+    real (kind=kind_phys), _ALLOCATABLE :: tslb (:,:,:)      _NULL   !< soil temperature for land surface model
+    real (kind=kind_phys), _ALLOCATABLE :: smois (:,:,:)     _NULL   !< volumetric fraction of soil moisture for lsm
+    real (kind=kind_phys), _ALLOCATABLE :: keepsmfr (:,:,:)     _NULL   !< volume fraction of frozen soil moisture for lsm
+    real (kind=kind_phys), _ALLOCATABLE :: flag_frsoil (:,:,:)     _NULL   !< flag for frozen soil physics (RUC)
 
     real (kind=kind_phys), _ALLOCATABLE :: u10m (:,:)       _NULL   !< 10m u wind (a-grid?)
     real (kind=kind_phys), _ALLOCATABLE :: v10m (:,:)       _NULL   !< 10m v wind (a-grid?)
@@ -136,7 +146,7 @@ module fv_moving_nest_types_mod
 
     real (kind=kind_phys), _ALLOCATABLE :: zorl (:,:)       _NULL   !< roughness length
     real (kind=kind_phys), _ALLOCATABLE :: zorll (:,:)      _NULL   !< land roughness length
-    !real (kind=kind_phys), _ALLOCATABLE :: zorli (:,:)     _NULL   !< ice surface roughness length ! TODO do we need this?
+    real (kind=kind_phys), _ALLOCATABLE :: zorli (:,:)      _NULL   !< ice surface roughness length
     real (kind=kind_phys), _ALLOCATABLE :: zorlw (:,:)      _NULL   !< wave surface roughness length
     real (kind=kind_phys), _ALLOCATABLE :: zorlwav (:,:)    _NULL   !< wave surface roughness in cm derived from wave model
 
@@ -144,14 +154,15 @@ module fv_moving_nest_types_mod
     real (kind=kind_phys), _ALLOCATABLE :: vsfco (:,:)      _NULL   !< sea surface current (meridional)
 
     real (kind=kind_phys), _ALLOCATABLE :: sfalb_lnd(:,:)   _NULL   !< surface albedo over land for LSM
+    real (kind=kind_phys), _ALLOCATABLE :: sfalb_ice(:,:)   _NULL   !< mean surface diffused sw albedo over ice
     real (kind=kind_phys), _ALLOCATABLE :: emis_lnd(:,:)    _NULL   !< surface emissivity over land for LSM
     real (kind=kind_phys), _ALLOCATABLE :: emis_ice(:,:)    _NULL   !< surface emissivity over ice for LSM
     real (kind=kind_phys), _ALLOCATABLE :: emis_wat(:,:)    _NULL   !< surface emissivity over water for LSM
     real (kind=kind_phys), _ALLOCATABLE :: sfalb_lnd_bck(:,:) _NULL !< snow-free albedo over land
 
-    !real (kind=kind_phys), _ALLOCATABLE :: semis(:,:)       _NULL   !< surface lw emissivity in fraction
-    !real (kind=kind_phys), _ALLOCATABLE :: semisbase(:,:)   _NULL   !< background surface emissivity
-    !real (kind=kind_phys), _ALLOCATABLE :: sfalb(:,:)       _NULL   !< mean surface diffused sw albedo
+    real (kind=kind_phys), _ALLOCATABLE :: semis(:,:)       _NULL   !< surface lw emissivity in fraction
+    real (kind=kind_phys), _ALLOCATABLE :: semisbase(:,:)   _NULL   !< background surface emissivity
+    real (kind=kind_phys), _ALLOCATABLE :: sfalb(:,:)       _NULL   !< mean surface diffused sw albedo
 
     real (kind=kind_phys), _ALLOCATABLE :: alvsf(:,:)       _NULL   !< visible black sky albedo
     real (kind=kind_phys), _ALLOCATABLE :: alvwf(:,:)       _NULL   !< visible white sky albedo
@@ -163,6 +174,11 @@ module fv_moving_nest_types_mod
     real (kind=kind_phys), _ALLOCATABLE :: albdifvis_lnd(:,:)       _NULL   !<
     real (kind=kind_phys), _ALLOCATABLE :: albdifnir_lnd(:,:)       _NULL   !<
 
+    real (kind=kind_phys), _ALLOCATABLE :: albdirvis_ice(:,:)       _NULL   !<
+    real (kind=kind_phys), _ALLOCATABLE :: albdirnir_ice(:,:)       _NULL   !<
+    real (kind=kind_phys), _ALLOCATABLE :: albdifvis_ice(:,:)       _NULL   !<
+    real (kind=kind_phys), _ALLOCATABLE :: albdifnir_ice(:,:)       _NULL   !<
+
     real (kind=kind_phys), _ALLOCATABLE :: facsf(:,:)       _NULL   !< fractional coverage for strong zenith angle albedo
     real (kind=kind_phys), _ALLOCATABLE :: facwf(:,:)       _NULL   !< fractional coverage for strong zenith angle albedo
 
@@ -170,13 +186,61 @@ module fv_moving_nest_types_mod
     real (kind=kind_phys), _ALLOCATABLE :: lakedepth (:,:)  _NULL   !< lake  depth [ m ]
 
     real (kind=kind_phys), _ALLOCATABLE :: canopy (:,:)     _NULL   !< canopy water content
+    real (kind=kind_phys), _ALLOCATABLE :: trans (:,:)     _NULL   !< transpiration_flux
     real (kind=kind_phys), _ALLOCATABLE :: vegfrac (:,:)    _NULL   !< vegetation fraction
     real (kind=kind_phys), _ALLOCATABLE :: uustar (:,:)     _NULL   !< u* wind in similarity theory
     real (kind=kind_phys), _ALLOCATABLE :: shdmin (:,:)     _NULL   !< min fractional coverage of green vegetation
     real (kind=kind_phys), _ALLOCATABLE :: shdmax (:,:)     _NULL   !< max fractional coverage of green vegetation
     real (kind=kind_phys), _ALLOCATABLE :: tsfco (:,:)      _NULL   !< surface temperature ocean
     real (kind=kind_phys), _ALLOCATABLE :: tsfcl (:,:)      _NULL   !< surface temperature land
+    real (kind=kind_phys), _ALLOCATABLE :: tisfc (:,:)      _NULL   !< surface temperature ice
+    real (kind=kind_phys), _ALLOCATABLE :: chh (:,:)      _NULL   !< surface_drag_mass_flux_for_heat_and_moisture_in_air
+    real (kind=kind_phys), _ALLOCATABLE :: cmm (:,:)      _NULL   !< surface_drag_mass_flux_for_momentum_in_air
+    real (kind=kind_phys), _ALLOCATABLE :: sbsno (:,:)      _NULL   !< latent heat flux from snow depo/subl
+    real (kind=kind_phys), _ALLOCATABLE :: rhofr (:,:)      _NULL   !< density of frozen precipitation
+    real (kind=kind_phys), _ALLOCATABLE :: snowmt_land (:,:)      _NULL   !< snow melt during timestep over land
+    real (kind=kind_phys), _ALLOCATABLE :: acsnow_land (:,:)      _NULL   !< run-total snowfall water equivalent over land
+    real (kind=kind_phys), _ALLOCATABLE :: snowmt_ice (:,:)      _NULL   !< snow melt during timestep over ice
+    real (kind=kind_phys), _ALLOCATABLE :: acsnow_ice (:,:)      _NULL   !< run-total snowfall water equivalent over ice
+    real (kind=kind_phys), _ALLOCATABLE :: snowfallac_land (:,:)      _NULL   !< run-total snow accumulation on the ground with variable snow density over land
+    real (kind=kind_phys), _ALLOCATABLE :: snowfallac_ice (:,:)      _NULL   !< run-total snow accumulation on the ground with variable snow density over ice
+    real (kind=kind_phys), _ALLOCATABLE :: soilm (:,:)      _NULL   !< soil moisture
+    real (kind=kind_phys), _ALLOCATABLE :: evbs (:,:)      _NULL   !< soil upward latent heat flux
+    real (kind=kind_phys), _ALLOCATABLE :: evcw (:,:)      _NULL   !< canopy upward latent heat flux
+    real (kind=kind_phys), _ALLOCATABLE :: drain_lnd (:,:)      _NULL   !< subsurface runoff flux over land for coupling
+    real (kind=kind_phys), _ALLOCATABLE :: runoff (:,:)      _NULL   !< total water runoff
+    real (kind=kind_phys), _ALLOCATABLE :: srunoff (:,:)      _NULL   !< surface water runoff (from lsm)
+    real (kind=kind_phys), _ALLOCATABLE :: gflux_lnd (:,:)      _NULL   !< soil heat flux over land for coupling
+    real (kind=kind_phys), _ALLOCATABLE :: qsurf_lnd (:,:)      _NULL   !< surface air saturation specific humidity over land
+    real (kind=kind_phys), _ALLOCATABLE :: clw_surf_land (:,:)      _NULL   !< moist cloud water mixing ratio at surface over land
+    real (kind=kind_phys), _ALLOCATABLE :: qwv_surf_land (:,:)      _NULL   !< water vapor mixing ratio at surface over land
+    real (kind=kind_phys), _ALLOCATABLE :: clw_surf_ice (:,:)      _NULL   !< moist cloud water mixing ratio at surface over ice
+    real (kind=kind_phys), _ALLOCATABLE :: qwv_surf_ice (:,:)      _NULL   !< water vapor mixing ratio at surface over ice
+    real (kind=kind_phys), _ALLOCATABLE :: tsnow_land (:,:)      _NULL   !< snow temperature at the bottom of the first snow layer over land
+    real (kind=kind_phys), _ALLOCATABLE :: tsnow_ice (:,:)      _NULL   !< snow temperature at the bottom of first snow layer over ice
+    real (kind=kind_phys), _ALLOCATABLE :: snodl (:,:)      _NULL   !< water equivalent snow depth over land
+    real (kind=kind_phys), _ALLOCATABLE :: snodi (:,:)      _NULL   !< water equivalent snow depth over ice
+    real (kind=kind_phys), _ALLOCATABLE :: weasdl (:,:)      _NULL   !< water equiv of acc snow depth over land
+    real (kind=kind_phys), _ALLOCATABLE :: weasdi (:,:)      _NULL   !< water equiv of acc snow depth over ice
+    real (kind=kind_phys), _ALLOCATABLE :: rhonewsn1 (:,:)      _NULL   !< surface temperature ice
+    real (kind=kind_phys), _ALLOCATABLE :: smcref2 (:,:)      _NULL   !< soil moisture threshold (volumetric)
+    real (kind=kind_phys), _ALLOCATABLE :: smcwlt2 (:,:)      _NULL   !< wilting point (volumetric)
+    real (kind=kind_phys), _ALLOCATABLE :: srflag (:,:)      _NULL   !< snow/rain flag for precipitation
+    real (kind=kind_phys), _ALLOCATABLE :: zlvl (:,:)      _NULL   !< layer 1 height above ground (not MSL)
+    real (kind=kind_phys), _ALLOCATABLE :: snowprv (:,:)      _NULL   !< snow amount from previous timestep
+    real (kind=kind_phys), _ALLOCATABLE :: graupelprv (:,:)      _NULL   !< graupel amount from previous timestep
+    real (kind=kind_phys), _ALLOCATABLE :: iceprv (:,:)      _NULL   !< ice amount from previous timestep
+    real (kind=kind_phys), _ALLOCATABLE :: raincprv (:,:)      _NULL   !< convective_precipitation_amount from previous timestep
+    real (kind=kind_phys), _ALLOCATABLE :: rainncprv (:,:)      _NULL   !< explicit rainfall from previous timestep
+    real (kind=kind_phys), _ALLOCATABLE :: use_lake_model (:,:) _NULL !< flag indicating lake points using a lake model
+    real (kind=kind_phys), _ALLOCATABLE :: dlwsfci (:,:)    _NULL   !< surface downwelling longwave flux at current time
+    real (kind=kind_phys), _ALLOCATABLE :: dswsfci (:,:)    _NULL   !< surface downwelling shortwave flux at current time
+    real (kind=kind_phys), _ALLOCATABLE :: wetness (:,:)    _NULL   !< normalized soil wetness
     real (kind=kind_phys), _ALLOCATABLE :: tsfc (:,:)       _NULL   !< surface temperature
+    real (kind=kind_phys), _ALLOCATABLE :: fice (:,:)       _NULL   !< ice fraction over open water
+    real (kind=kind_phys), _ALLOCATABLE :: xlaixy (:,:)     _NULL   !< leaf area index
+    real (kind=kind_phys), _ALLOCATABLE :: sncovr (:,:)     _NULL   !< surface snow area fraction
+    real (kind=kind_phys), _ALLOCATABLE :: sncovr_ice (:,:) _NULL   !< surface snow area fraction over ice
     !real (kind=kind_phys), _ALLOCATABLE :: tsfc_radtime (:,:) _NULL !< surface temperature on radiative timestep
 
     real (kind=kind_phys), _ALLOCATABLE :: cv  (:,:)        _NULL   !< fraction of convective cloud
@@ -351,10 +415,11 @@ contains
 
   end subroutine deallocate_fv_moving_nest_prog_type
 
-  subroutine  allocate_fv_moving_nest_physics_type(isd, ied, jsd, jed, npz, move_physics, move_nsst, lsoil, nmtvr, levs, ntot2d, ntot3d, mn_phys)
+  subroutine  allocate_fv_moving_nest_physics_type(isd, ied, jsd, jed, npz, move_physics, move_nsst, lsoil, lsoil_lsm, nvegcat, nsoilcat, kice, nmtvr, levs, ntot2d, ntot3d, mn_phys)
     integer, intent(in)                           :: isd, ied, jsd, jed, npz
     logical, intent(in)                           :: move_physics, move_nsst
-    integer, intent(in)                           :: lsoil, nmtvr, levs, ntot2d, ntot3d    ! From IPD_Control
+    integer, intent(in)                           :: lsoil, kice, nmtvr, levs, ntot2d, ntot3d    ! From IPD_Control
+    integer, intent(in)                           :: lsoil_lsm, nvegcat, nsoilcat                ! From IPD_Control
     type(fv_moving_nest_physics_type), intent(inout) :: mn_phys
 
     ! The local/temporary variables need to be allocated to the larger data (compute + halos) domain so that the nest motion code has halos to use
@@ -366,15 +431,27 @@ contains
       allocate ( mn_phys%stc(isd:ied, jsd:jed, lsoil) )
       allocate ( mn_phys%slc(isd:ied, jsd:jed, lsoil) )
 
+      allocate ( mn_phys%vegtype_frac(isd:ied, jsd:jed, nvegcat) )
+      allocate ( mn_phys%soiltype_frac(isd:ied, jsd:jed, nsoilcat) )
+
+      allocate ( mn_phys%sh2o(isd:ied, jsd:jed, lsoil_lsm) )
+      allocate ( mn_phys%tslb(isd:ied, jsd:jed, lsoil_lsm) )
+      allocate ( mn_phys%smois(isd:ied, jsd:jed, lsoil_lsm) )
+      allocate ( mn_phys%keepsmfr(isd:ied, jsd:jed, lsoil_lsm) )
+      allocate ( mn_phys%flag_frsoil(isd:ied, jsd:jed, lsoil_lsm) )
+
+      allocate ( mn_physics%tiice(isd:ied, jsd:jed, kice) )
+
       allocate ( mn_phys%sfalb_lnd(isd:ied, jsd:jed) )
+      allocate ( mn_phys%sfalb_ice(isd:ied, jsd:jed) )
       allocate ( mn_phys%emis_lnd(isd:ied, jsd:jed) )
       allocate ( mn_phys%emis_ice(isd:ied, jsd:jed) )
       allocate ( mn_phys%emis_wat(isd:ied, jsd:jed) )
       allocate ( mn_phys%sfalb_lnd_bck(isd:ied, jsd:jed) )
 
-      !allocate ( mn_phys%semis(isd:ied, jsd:jed) )
-      !allocate ( mn_phys%semisbase(isd:ied, jsd:jed) )
-      !allocate ( mn_phys%sfalb(isd:ied, jsd:jed) )
+      allocate ( mn_phys%semis(isd:ied, jsd:jed) )
+      allocate ( mn_phys%semisbase(isd:ied, jsd:jed) )
+      allocate ( mn_phys%sfalb(isd:ied, jsd:jed) )
 
       allocate ( mn_phys%u10m(isd:ied, jsd:jed) )
       allocate ( mn_phys%v10m(isd:ied, jsd:jed) )
@@ -384,6 +461,7 @@ contains
 
       allocate ( mn_phys%zorl(isd:ied, jsd:jed) )
       allocate ( mn_phys%zorll(isd:ied, jsd:jed) )
+      allocate ( mn_phys%zorli(isd:ied, jsd:jed) )
       allocate ( mn_phys%zorlwav(isd:ied, jsd:jed) )
       allocate ( mn_phys%zorlw(isd:ied, jsd:jed) )
 
@@ -402,19 +480,72 @@ contains
       allocate ( mn_phys%lakedepth(isd:ied, jsd:jed) )
 
       allocate ( mn_phys%canopy(isd:ied, jsd:jed) )
+      allocate ( mn_phys%trans(isd:ied, jsd:jed) )
       allocate ( mn_phys%vegfrac(isd:ied, jsd:jed) )
       allocate ( mn_phys%uustar(isd:ied, jsd:jed) )
       allocate ( mn_phys%shdmin(isd:ied, jsd:jed) )
       allocate ( mn_phys%shdmax(isd:ied, jsd:jed) )
       allocate ( mn_phys%tsfco(isd:ied, jsd:jed) )
       allocate ( mn_phys%tsfcl(isd:ied, jsd:jed) )
+      allocate ( mn_phys%tisfc(isd:ied, jsd:jed) )
+      allocate ( mn_phys%chh(isd:ied, jsd:jed) )
+      allocate ( mn_phys%cmm(isd:ied, jsd:jed) )
+      allocate ( mn_phys%sbsno(isd:ied, jsd:jed) )
+      allocate ( mn_phys%rhofr(isd:ied, jsd:jed) )
+      allocate ( mn_phys%snowmt_land(isd:ied, jsd:jed) )
+      allocate ( mn_phys%acsnow_land(isd:ied, jsd:jed) )
+      allocate ( mn_phys%snowmt_ice(isd:ied, jsd:jed) )
+      allocate ( mn_phys%acsnow_ice(isd:ied, jsd:jed) )
+      allocate ( mn_phys%snowfallac_land(isd:ied, jsd:jed) )
+      allocate ( mn_phys%snowfallac_ice(isd:ied, jsd:jed) )
+      allocate ( mn_phys%soilm(isd:ied, jsd:jed) )
+      allocate ( mn_phys%evbs(isd:ied, jsd:jed) )
+      allocate ( mn_phys%evcw(isd:ied, jsd:jed) )
+      allocate ( mn_phys%drain_lnd(isd:ied, jsd:jed) )
+      allocate ( mn_phys%runoff(isd:ied, jsd:jed) )
+      allocate ( mn_phys%srunoff(isd:ied, jsd:jed) )
+      allocate ( mn_phys%gflux_lnd(isd:ied, jsd:jed) )
+      allocate ( mn_phys%qsurf_lnd(isd:ied, jsd:jed) )
+      allocate ( mn_phys%clw_surf_land(isd:ied, jsd:jed) )
+      allocate ( mn_phys%qwv_surf_land(isd:ied, jsd:jed) )
+      allocate ( mn_phys%clw_surf_ice(isd:ied, jsd:jed) )
+      allocate ( mn_phys%qwv_surf_ice(isd:ied, jsd:jed) )
+      allocate ( mn_phys%tsnow_land(isd:ied, jsd:jed) )
+      allocate ( mn_phys%tsnow_ice(isd:ied, jsd:jed) )
+      allocate ( mn_phys%snodl(isd:ied, jsd:jed) )
+      allocate ( mn_phys%snodi(isd:ied, jsd:jed) )
+      allocate ( mn_phys%weasdl(isd:ied, jsd:jed) )
+      allocate ( mn_phys%weasdi(isd:ied, jsd:jed) )
+      allocate ( mn_phys%rhonewsn1(isd:ied, jsd:jed) )
+      allocate ( mn_phys%smcref2(isd:ied, jsd:jed) )
+      allocate ( mn_phys%smcwlt2(isd:ied, jsd:jed) )
+      allocate ( mn_phys%srflag(isd:ied, jsd:jed) )
+      allocate ( mn_phys%zlvl(isd:ied, jsd:jed) )
+      allocate ( mn_phys%snowprv(isd:ied, jsd:jed) )
+      allocate ( mn_phys%graupelprv(isd:ied, jsd:jed) )
+      allocate ( mn_phys%iceprv(isd:ied, jsd:jed) )
+      allocate ( mn_phys%raincprv(isd:ied, jsd:jed) )
+      allocate ( mn_phys%rainncprv(isd:ied, jsd:jed) )
+      allocate ( mn_phys%use_lake_model(isd:ied, jsd:jed) )
+      allocate ( mn_phys%dlwsfci(isd:ied, jsd:jed) )
+      allocate ( mn_phys%dswsfci(isd:ied, jsd:jed) )
+      allocate ( mn_phys%wetness(isd:ied, jsd:jed) )
       allocate ( mn_phys%tsfc(isd:ied, jsd:jed) )
+      allocate ( mn_phys%fice(isd:ied, jsd:jed) )
+      allocate ( mn_phys%xlaixy(isd:ied, jsd:jed) )
+      allocate ( mn_phys%sncovr_ice(isd:ied, jsd:jed) )
+      allocate ( mn_phys%sncovr(isd:ied, jsd:jed) )
       !allocate ( mn_phys%tsfc_radtime(isd:ied, jsd:jed) )
 
       allocate ( mn_phys%albdirvis_lnd (isd:ied, jsd:jed) )
       allocate ( mn_phys%albdirnir_lnd (isd:ied, jsd:jed) )
       allocate ( mn_phys%albdifvis_lnd (isd:ied, jsd:jed) )
       allocate ( mn_phys%albdifnir_lnd (isd:ied, jsd:jed) )
+
+      allocate ( mn_phys%albdirvis_ice (isd:ied, jsd:jed) )
+      allocate ( mn_phys%albdirnir_ice (isd:ied, jsd:jed) )
+      allocate ( mn_phys%albdifvis_ice (isd:ied, jsd:jed) )
+      allocate ( mn_phys%albdifnir_ice (isd:ied, jsd:jed) )
 
       allocate ( mn_phys%cv(isd:ied, jsd:jed) )
       allocate ( mn_phys%cvt(isd:ied, jsd:jed) )
@@ -452,16 +583,27 @@ contains
       mn_phys%stc = +99999.9
       mn_phys%slc = +99999.9
 
+      mn_phys%vegtype_frac = +99999.9
+      mn_phys%soiltype_frac = +99999.9
+
+      mn_phys%sh2o = +99999.9
+      mn_phys%keepsmfr = +99999.9
+      mn_phys%tslb = +99999.9
+      mn_phys%smois = +99999.9
+      mn_phys%keepsmfr = +99999.9
+      mn_phys%flag_frsoil = +99999.9
+      mn_phys%tiice = +99999.9
 
       mn_phys%sfalb_lnd = +99999.9
+      mn_phys%sfalb_ice = +99999.9
       mn_phys%emis_lnd = +99999.9
       mn_phys%emis_ice = +99999.9
       mn_phys%emis_wat = +99999.9
       mn_phys%sfalb_lnd_bck = +99999.9
 
-      !mn_phys%semis = +99999.9
-      !mn_phys%semisbase = +99999.9
-      !mn_phys%sfalb = +99999.9
+      mn_phys%semis = +99999.9
+      mn_phys%semisbase = +99999.9
+      mn_phys%sfalb = +99999.9
 
       mn_phys%u10m = +99999.9
       mn_phys%v10m = +99999.9
@@ -471,6 +613,7 @@ contains
 
       mn_phys%zorl = +99999.9
       mn_phys%zorll = +99999.9
+      mn_phys%zorli = +99999.9
       mn_phys%zorlwav = +99999.9
       mn_phys%zorlw = +99999.9
 
@@ -489,19 +632,72 @@ contains
       mn_phys%lakedepth = +99999.9
 
       mn_phys%canopy = +99999.9
+      mn_phys%trans = +99999.9
       mn_phys%vegfrac = +99999.9
       mn_phys%uustar = +99999.9
       mn_phys%shdmin = +99999.9
       mn_phys%shdmax = +99999.9
       mn_phys%tsfco = +99999.9
       mn_phys%tsfcl = +99999.9
+      mn_phys%tisfc = +99999.9
+      mn_phys%chh = +99999.9
+      mn_phys%cmm = +99999.9
+      mn_phys%sbsno = +99999.9
+      mn_phys%rhofr = +99999.9
+      mn_phys%snowmt_land = +99999.9
+      mn_phys%acsnow_land = +99999.9
+      mn_phys%snowmt_ice = +99999.9
+      mn_phys%acsnow_ice = +99999.9
+      mn_phys%snowfallac_land = +99999.9
+      mn_phys%snowfallac_ice = +99999.9
+      mn_phys%soilm = +99999.9
+      mn_phys%evbs = +99999.9
+      mn_phys%evcw = +99999.9
+      mn_phys%drain_lnd= +99999.9
+      mn_phys%runoff = +99999.9
+      mn_phys%srunoff = +99999.9
+      mn_phys%gflux_lnd = +99999.9
+      mn_phys%qsurf_lnd = +99999.9
+      mn_phys%clw_surf_land = +99999.9
+      mn_phys%qwv_surf_land = +99999.9
+      mn_phys%clw_surf_ice = +99999.9
+      mn_phys%qwv_surf_ice = +99999.9
+      mn_phys%tsnow_land = +99999.9
+      mn_phys%tsnow_ice = +99999.9
+      mn_phys%snodl = +99999.9
+      mn_phys%snodi = +99999.9
+      mn_phys%weasdl = +99999.9
+      mn_phys%weasdi = +99999.9
+      mn_phys%rhonewsn1 = +99999.9
+      mn_phys%smcref2 = +99999.9
+      mn_phys%smcwlt2 = +99999.9
+      mn_phys%srflag = +99999.9
+      mn_phys%zlvl = +99999.9
+      mn_phys%snowprv = +99999.9
+      mn_phys%graupelprv = +99999.9
+      mn_phys%iceprv = +99999.9
+      mn_phys%raincprv = +99999.9
+      mn_phys%rainncprv = +99999.9
+      mn_phys%use_lake_model = +99999.9
+      mn_phys%dlwsfci = +99999.9
+      mn_phys%dswsfci = +99999.9
+      mn_phys%wetness = +99999.9
       mn_phys%tsfc = +99999.9
+      mn_phys%fice = +99999.9
+      mn_phys%xlaixy = +99999.9
+      mn_phys%sncovr = +99999.9
+      mn_phys%sncovr_ice = +99999.9
       !mn_phys%tsfc_radtime = +99999.9
 
       mn_phys%albdirvis_lnd = +99999.9
       mn_phys%albdirnir_lnd = +99999.9
       mn_phys%albdifvis_lnd = +99999.9
       mn_phys%albdifnir_lnd = +99999.9
+
+      mn_phys%albdirvis_ice = +99999.9
+      mn_phys%albdirnir_ice = +99999.9
+      mn_phys%albdifvis_ice = +99999.9
+      mn_phys%albdifnir_ice = +99999.9
 
       mn_phys%cv = +99999.9
       mn_phys%cvt = +99999.9
@@ -552,15 +748,27 @@ contains
       deallocate( mn_phys%stc )
       deallocate( mn_phys%slc )
 
+      deallocate( mn_phys%vegtype_frac )
+      deallocate( mn_phys%soiltype_frac )
+
+      deallocate( mn_phys%sh2o )
+      deallocate( mn_phys%tslb )
+      deallocate( mn_phys%smois )
+      deallocate( mn_phys%keepsmfr )
+      deallocate( mn_phys%flag_frsoil )
+
+      deallocate( mn_phys%tiice )
+
       deallocate( mn_phys%sfalb_lnd )
+      deallocate( mn_phys%sfalb_ice )
       deallocate( mn_phys%emis_lnd )
       deallocate( mn_phys%emis_ice )
       deallocate( mn_phys%emis_wat )
       deallocate( mn_phys%sfalb_lnd_bck )
 
-      !deallocate( mn_phys%semis )
-      !deallocate( mn_phys%semisbase )
-      !deallocate( mn_phys%sfalb )
+      deallocate( mn_phys%semis )
+      deallocate( mn_phys%semisbase )
+      deallocate( mn_phys%sfalb )
 
       deallocate( mn_phys%u10m )
       deallocate( mn_phys%v10m )
@@ -570,6 +778,7 @@ contains
 
       deallocate( mn_phys%zorl )
       deallocate( mn_phys%zorll )
+      deallocate( mn_phys%zorli )
       deallocate( mn_phys%zorlwav )
       deallocate( mn_phys%zorlw )
 
@@ -588,19 +797,72 @@ contains
       deallocate( mn_phys%lakedepth )
 
       deallocate( mn_phys%canopy )
+      deallocate( mn_phys%trans )
       deallocate( mn_phys%vegfrac )
       deallocate( mn_phys%uustar )
       deallocate( mn_phys%shdmin )
       deallocate( mn_phys%shdmax )
       deallocate( mn_phys%tsfco )
       deallocate( mn_phys%tsfcl )
+      deallocate( mn_phys%tisfc )
+      deallocate( mn_phys%chh )
+      deallocate( mn_phys%cmm )
+      deallocate( mn_phys%sbsno )
+      deallocate( mn_phys%rhofr )
+      deallocate( mn_phys%snowmt_land )
+      deallocate( mn_phys%acsnow_land )
+      deallocate( mn_phys%snowmt_ice )
+      deallocate( mn_phys%acsnow_ice )
+      deallocate( mn_phys%snowfallac_land )
+      deallocate( mn_phys%snowfallac_ice )
+      deallocate( mn_phys%soilm )
+      deallocate( mn_phys%evbs )
+      deallocate( mn_phys%evcw )
+      deallocate( mn_phys%drain_lnd )
+      deallocate( mn_phys%runoff )
+      deallocate( mn_phys%srunoff )
+      deallocate( mn_phys%gflux_lnd )
+      deallocate( mn_phys%qsurf_lnd )
+      deallocate( mn_phys%clw_surf_land )
+      deallocate( mn_phys%qwv_surf_land )
+      deallocate( mn_phys%clw_surf_ice )
+      deallocate( mn_phys%qwv_surf_ice )
+      deallocate( mn_phys%tsnow_land )
+      deallocate( mn_phys%tsnow_ice )
+      deallocate( mn_phys%snodl )
+      deallocate( mn_phys%snodi )
+      deallocate( mn_phys%weasdl )
+      deallocate( mn_phys%weasdi )
+      deallocate( mn_phys%rhonewsn1 )
+      deallocate( mn_phys%smcref2 )
+      deallocate( mn_phys%smcwlt2 )
+      deallocate( mn_phys%srflag )
+      deallocate( mn_phys%zlvl )
+      deallocate( mn_phys%snowprv )
+      deallocate( mn_phys%graupelprv )
+      deallocate( mn_phys%iceprv )
+      deallocate( mn_phys%raincprv )
+      deallocate( mn_phys%rainncprv )
+      deallocate( mn_phys%use_lake_model )
+      deallocate( mn_phys%dlwsfci )
+      deallocate( mn_phys%dswsfci )
+      deallocate( mn_phys%wetness )
       deallocate( mn_phys%tsfc )
+      deallocate( mn_phys%sncovr )
+      deallocate( mn_phys%sncovr_ice )
+      deallocate( mn_phys%fice )
+      deallocate( mn_phys%xlaixy )
       !deallocate( mn_phys%tsfc_radtime )
 
       deallocate( mn_phys%albdirvis_lnd )
       deallocate( mn_phys%albdirnir_lnd )
       deallocate( mn_phys%albdifvis_lnd )
       deallocate( mn_phys%albdifnir_lnd )
+
+      deallocate( mn_phys%albdirvis_ice )
+      deallocate( mn_phys%albdirnir_ice )
+      deallocate( mn_phys%albdifvis_ice )
+      deallocate( mn_phys%albdifnir_ice )
 
       deallocate( mn_phys%cv )
       deallocate( mn_phys%cvt )

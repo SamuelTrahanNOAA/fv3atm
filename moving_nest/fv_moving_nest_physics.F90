@@ -351,20 +351,36 @@ contains
             mn_phys%slc(i,j,k) = IPD_Data(nb)%Sfcprop%slc(ix,k)
           enddo
 
+          do k = 1, IPD_Control%nvegcat
+            mn_phys%vegtype_frac(i,j,k) = IPD_Data(nb)%Sfcprop%vegtype_frac(ix,k)
+          enddo
+
+          do k = 1, IPD_Control%nsoilcat
+            mn_phys%soiltype_frac(i,j,k) = IPD_Data(nb)%Sfcprop%soiltype_frac(ix,k)
+          enddo
+
+          do k = 1, IPD_Control%lsoil_lsm
+            mn_phys%sh2o(i,j,k) = IPD_Data(nb)%Sfcprop%sh2o(ix,k)
+            mn_phys%tslb(i,j,k) = IPD_Data(nb)%Sfcprop%tslb(ix,k)
+            mn_phys%smois(i,j,k) = IPD_Data(nb)%Sfcprop%smois(ix,k)
+            mn_phys%keepsmfr(i,j,k) = IPD_Data(nb)%Sfcprop%keepsmfr(ix,k)
+            mn_phys%flag_frsoil(i,j,k) = IPD_Data(nb)%Sfcprop%flag_frsoil(ix,k)
+          enddo
+
+          do k = 1, IPD_Control%kice
+            mn_physics%tiice(i,j,k) = IPD_Data(nb)%Sfcprop%tiice(ix,k)
+          enddo
+
           mn_phys%emis_lnd(i,j)      = IPD_Data(nb)%Sfcprop%emis_lnd(ix)
           mn_phys%emis_ice(i,j)      = IPD_Data(nb)%Sfcprop%emis_ice(ix)
           mn_phys%emis_wat(i,j)      = IPD_Data(nb)%Sfcprop%emis_wat(ix)
 
-          !mn_phys%sfalb_lnd(i,j)     = IPD_Data(nb)%Sfcprop%sfalb_lnd(ix)
-          !mn_phys%sfalb_lnd_bck(i,j) = IPD_Data(nb)%Sfcprop%sfalb_lnd_bck(ix)
-          !mn_phys%semis(i,j)      = IPD_Data(nb)%Radtend%semis(ix)
-          !mn_phys%semisbase(i,j)      = IPD_Data(nb)%Sfcprop%semisbase(ix)
-          !mn_phys%sfalb(i,j)      = IPD_Data(nb)%Radtend%sfalb(ix)
-
-          mn_phys%albdirvis_lnd(i,j) = IPD_Data(nb)%Sfcprop%albdirvis_lnd(ix)
-          mn_phys%albdirnir_lnd(i,j) = IPD_Data(nb)%Sfcprop%albdirnir_lnd(ix)
-          mn_phys%albdifvis_lnd(i,j) = IPD_Data(nb)%Sfcprop%albdifvis_lnd(ix)
-          mn_phys%albdifnir_lnd(i,j) = IPD_Data(nb)%Sfcprop%albdifnir_lnd(ix)
+          mn_phys%sfalb_ice(i,j)     = IPD_Data(nb)%Sfcprop%sfalb_ice(ix)
+          mn_phys%sfalb_lnd(i,j)     = IPD_Data(nb)%Sfcprop%sfalb_lnd(ix)
+          mn_phys%sfalb_lnd_bck(i,j) = IPD_Data(nb)%Sfcprop%sfalb_lnd_bck(ix)
+          mn_phys%semis(i,j)      = IPD_Data(nb)%Radtend%semis(ix)
+          mn_phys%semisbase(i,j)      = IPD_Data(nb)%Sfcprop%semisbase(ix)
+          mn_phys%sfalb(i,j)      = IPD_Data(nb)%Radtend%sfalb(ix)
 
           mn_phys%u10m(i,j)  = IPD_Data(nb)%IntDiag%u10m(ix)
           mn_phys%v10m(i,j)  = IPD_Data(nb)%IntDiag%v10m(ix)
@@ -378,24 +394,96 @@ contains
           mn_phys%lakedepth(i,j) = IPD_Data(nb)%Sfcprop%lakedepth(ix)
 
           mn_phys%canopy(i,j) = IPD_Data(nb)%Sfcprop%canopy(ix)
+          mn_phys%trans(i,j) = IPD_Data(nb)%Diag%trans(ix)
           mn_phys%vegfrac(i,j)= IPD_Data(nb)%Sfcprop%vfrac(ix)
           mn_phys%uustar(i,j) = IPD_Data(nb)%Sfcprop%uustar(ix)
           mn_phys%shdmin(i,j) = IPD_Data(nb)%Sfcprop%shdmin(ix)
           mn_phys%shdmax(i,j) = IPD_Data(nb)%Sfcprop%shdmax(ix)
           mn_phys%zorl(i,j)   = IPD_Data(nb)%Sfcprop%zorl(ix)
           mn_phys%zorll(i,j)  = IPD_Data(nb)%Sfcprop%zorll(ix)
+          mn_phys%zorli(i,j)  = IPD_Data(nb)%Sfcprop%zorli(ix)
           mn_phys%zorlwav(i,j)= IPD_Data(nb)%Sfcprop%zorlwav(ix)
           mn_phys%zorlw(i,j)  = IPD_Data(nb)%Sfcprop%zorlw(ix)
+
           mn_phys%usfco(i,j)  = IPD_Data(nb)%Sfcprop%usfco(ix)
           mn_phys%vsfco(i,j)  = IPD_Data(nb)%Sfcprop%vsfco(ix)
           mn_phys%tsfco(i,j)  = IPD_Data(nb)%Sfcprop%tsfco(ix)
           mn_phys%tsfcl(i,j)  = IPD_Data(nb)%Sfcprop%tsfcl(ix)
-          mn_phys%tsfc(i,j)   = IPD_Data(nb)%Sfcprop%tsfc(ix)
 
-          mn_phys%albdirvis_lnd(i,j)   = IPD_Data(nb)%Sfcprop%albdirvis_lnd(ix)
-          mn_phys%albdirnir_lnd(i,j)   = IPD_Data(nb)%Sfcprop%albdirnir_lnd(ix)
-          mn_phys%albdifvis_lnd(i,j)   = IPD_Data(nb)%Sfcprop%albdifvis_lnd(ix)
-          mn_phys%albdifnir_lnd(i,j)   = IPD_Data(nb)%Sfcprop%albdifnir_lnd(ix)
+          mn_phys%smcref2(i,j)  = IPD_Data(nb)%Diag%smcref2(ix)
+          mn_phys%smcwlt2(i,j)  = IPD_Data(nb)%Diag%smcwlt2(ix)
+          mn_phys%srflag(i,j)  = IPD_Data(nb)%Sfcprop%srflag(ix)
+          mn_phys%zlvl(i,j)  = IPD_Data(nb)%Diag%zlvl(ix)
+          mn_phys%snowprv(i,j)  = IPD_Data(nb)%Sfcprop%snowprv(ix)
+          mn_phys%graupelprv(i,j)  = IPD_Data(nb)%Sfcprop%graupelprv(ix)
+          mn_phys%iceprv(i,j)  = IPD_Data(nb)%Sfcprop%iceprv(ix)
+          mn_phys%raincprv(i,j)  = IPD_Data(nb)%Sfcprop%raincprv(ix)
+          mn_phys%rainncprv(i,j) = IPD_Data(nb)%Sfcprop%rainncprv(ix)
+          mn_phys%use_lake_model(i,j) = IPD_Data(nb)%Sfcprop%use_lake_model(ix)
+          mn_phys%dswsfci(i,j) = IPD_Data(nb)%Diag%dswsfci(ix)
+          mn_phys%dlwsfci(i,j) = IPD_Data(nb)%Diag%dlwsfci(ix)
+          mn_phys%wetness(i,j) = IPD_Data(nb)%Sfcprop%wetness(ix)
+          mn_phys%fice(i,j)   = IPD_Data(nb)%Sfcprop%fice(ix)
+          mn_phys%qwv_surf_land(i,j)   = IPD_Data(nb)%Sfcprop%qwv_surf_land(ix)
+          mn_phys%qwv_surf_ice(i,j)   = IPD_Data(nb)%Sfcprop%qwv_surf_ice(ix)
+          mn_phys%tsfc(i,j)   = IPD_Data(nb)%Sfcprop%tsfc(ix)
+          mn_phys%xlaixy(i,j)   = IPD_Data(nb)%Sfcprop%xlaixy(ix)
+          mn_phys%sncovr(i,j) = IPD_Data(nb)%Sfcprop%sncovr(ix)
+          mn_phys%sncovr_ice(i,j) = IPD_Data(nb)%Sfcprop%sncovr_ice(ix)
+
+          mn_phys%tisfc(i,j) = IPD_Data(nb)%Sfcprop%tisfc(ix) 
+          mn_phys%chh(i,j) = IPD_Data(nb)%IntDiag%chh(ix) 
+          mn_phys%cmm(i,j) = IPD_Data(nb)%IntDiag%cmm(ix) 
+          mn_phys%sbsno(i,j) = IPD_Data(nb)%Sfcprop%sbsno(ix) 
+          mn_phys%rhofr(i,j) = IPD_Data(nb)%Sfcprop%rhofr(ix) 
+          mn_phys%snowmt_land(i,j) = IPD_Data(nb)%Sfcprop%snowmt_land(ix) 
+          mn_phys%acsnow_land(i,j) = IPD_Data(nb)%Sfcprop%acsnow_land(ix) 
+          mn_phys%snowmt_ice(i,j) = IPD_Data(nb)%Sfcprop%snowmt_ice(ix) 
+          mn_phys%acsnow_ice(i,j) = IPD_Data(nb)%Sfcprop%acsnow_ice(ix) 
+          mn_phys%snowfallac_land(i,j) = IPD_Data(nb)%Sfcprop%snowfallac_land(ix) 
+          mn_phys%snowfallac_ice(i,j) = IPD_Data(nb)%Sfcprop%snowfallac_ice(ix) 
+          mn_phys%soilm(i,j) = IPD_Data(nb)%Sfcprop%soilm(ix) 
+          mn_phys%evbs(i,j) = IPD_Data(nb)%Sfcprop%evbs(ix) 
+          mn_phys%evcw(i,j) = IPD_Data(nb)%Sfcprop%evcw(ix) 
+          mn_phys%drain_lnd(i,j) = IPD_Data(nb)%Sfcprop%drain_lnd(ix) 
+          mn_phys%runoff(i,j) = IPD_Data(nb)%Sfcprop%runoff(ix) 
+          mn_phys%srunoff(i,j) = IPD_Data(nb)%Sfcprop%srunoff(ix) 
+          mn_phys%gflux_lnd(i,j) = IPD_Data(nb)%Sfcprop%gflux_lnd(ix) 
+          mn_phys%qsurf_lnd(i,j) = IPD_Data(nb)%Sfcprop%qsurf_lnd(ix) 
+          mn_phys%tsnow_land(i,j) = IPD_Data(nb)%Sfcprop%tsnow_land(ix) 
+          mn_phys%tsnow_ice(i,j) = IPD_Data(nb)%Sfcprop%tsnow_ice(ix) 
+          mn_phys%clw_surf_land(i,j) = IPD_Data(nb)%Sfcprop%clw_surf_land(ix) 
+          mn_phys%qwv_surf_land(i,j) = IPD_Data(nb)%Sfcprop%qwv_surf_land(ix) 
+          mn_phys%clw_surf_ice(i,j) = IPD_Data(nb)%Sfcprop%clw_surf_ice(ix) 
+          mn_phys%qwv_surf_ice(i,j) = IPD_Data(nb)%Sfcprop%qwv_surf_ice(ix) 
+
+          mn_phys%snodl(i,j) = IPD_Data(nb)%Sfcprop%snodl(ix) 
+          mn_phys%snodi(i,j) = IPD_Data(nb)%Sfcprop%snodi(ix) 
+          mn_phys%weasdl(i,j) = IPD_Data(nb)%Sfcprop%weasdl(ix) 
+          mn_phys%weasdi(i,j) = IPD_Data(nb)%Sfcprop%weasdi(ix) 
+          mn_phys%rhonewsn1(i,j) = IPD_Data(nb)%Sfcprop%rhonewsn1(ix) 
+
+          mn_phys%smcref2(i,j) = IPD_Data(nb)%IntDiag%smcref2(ix) 
+          mn_phys%smcwlt2(i,j) = IPD_Data(nb)%IntDiag%smcwlt2(ix) 
+          mn_phys%srflag(i,j) = IPD_Data(nb)%Sfcprop%srflag(ix) 
+          mn_phys%zlvl(i,j) = IPD_Data(nb)%IntDiag%zlvl(ix) 
+          mn_phys%snowprv(i,j) = IPD_Data(nb)%Sfcprop%snowprv(ix) 
+          mn_phys%graupelprv(i,j) = IPD_Data(nb)%Sfcprop%graupelprv(ix) 
+          mn_phys%iceprv(i,j) = IPD_Data(nb)%Sfcprop%iceprv(ix) 
+          mn_phys%raincprv(i,j) = IPD_Data(nb)%Sfcprop%raincprv(ix) 
+          mn_phys%rainncprv(i,j) = IPD_Data(nb)%Sfcprop%rainncprv(ix) 
+          mn_phys%use_lake_model(i,j) = IPD_Data(nb)%Sfcprop%use_lake_model(ix) 
+          mn_phys%dswsfci(i,j) = IPD_Data(nb)%IntDiag%dswsfci(ix)
+          mn_phys%dlwsfci(i,j) = IPD_Data(nb)%IntDiag%dlwsfci(ix)
+          mn_phys%wetness(i,j) = IPD_Data(nb)%Sfcprop%wetness(ix)
+          mn_phys%tsfc(i,j) = IPD_Data(nb)%Sfcprop%tsfc(ix)  
+          mn_phys%fice(i,j) = IPD_Data(nb)%Sfcprop%fice(ix)  
+          mn_phys%xlaixy(i,j) = IPD_Data(nb)%Sfcprop%xlaixy(ix)
+
+          mn_phys%sncovr(i,j) = IPD_Data(nb)%Sfcprop%sncovr(ix)
+          mn_phys%sncovr_ice(i,j) = IPD_Data(nb)%Sfcprop%sncovr_ice(ix)
+          mn_phys%qwv_surf_land(i,j) = IPD_Data(nb)%Sfcprop%qwv_surf_land(ix)
+          mn_phys%qwv_surf_ice(i,j) = IPD_Data(nb)%Sfcprop%qwv_surf_ice(ix)
 
           do nv = 1, IPD_Control%ntot2d
             mn_phys%phy_f2d(i,j,nv) = IPD_Data(nb)%Tbd%phy_f2d(ix, nv)
@@ -482,6 +570,26 @@ contains
               IPD_Data(nb)%Sfcprop%slc(ix,k) = mn_phys%slc(i,j,k)
             enddo
 
+            do k = 1, IPD_Control%nvegcat
+              IPD_Data(nb)%Sfcprop%vegtype_frac(ix,k) = mn_phys%vegtype_frac(i,j,k)
+            enddo
+
+            do k = 1, IPD_Control%nsoilcat
+              IPD_Data(nb)%Sfcprop%soiltype_frac(ix,k) = mn_phys%soiltype_frac(i,j,k)
+            enddo
+
+            do k = 1, IPD_Control%lsoil_lsm
+              IPD_Data(nb)%Sfcprop%sh2o(ix,k) = mn_phys%sh2o(i,j,k)
+              IPD_Data(nb)%Sfcprop%tslb(ix,k) = mn_phys%tslb(i,j,k)
+              IPD_Data(nb)%Sfcprop%smois(ix,k) = mn_phys%smois(i,j,k)
+              IPD_Data(nb)%Sfcprop%keepsmfr(ix,k) = mn_phys%keepsmfr(i,j,k)
+              IPD_Data(nb)%Sfcprop%flag_frsoil(ix,k) = mn_phys%flag_frsoil(i,j,k)
+            enddo
+
+            do k = 1, IPD_Control%kice
+              IPD_Data(nb)%Sfcprop%tiice(ix,k) = mn_phys%tiice(i,j,k)
+            enddo
+
             ! EMIS PATCH - Force to positive at all locations.
             if (mn_phys%emis_lnd(i,j) .ge. 0.0) then
               IPD_Data(nb)%Sfcprop%emis_lnd(ix) = mn_phys%emis_lnd(i,j)
@@ -499,11 +607,22 @@ contains
               IPD_Data(nb)%Sfcprop%emis_wat(ix) = 0.5
             endif
 
-            !IPD_Data(nb)%Sfcprop%sfalb_lnd(ix) = mn_phys%sfalb_lnd(i,j)
-            !IPD_Data(nb)%Sfcprop%sfalb_lnd_bck(ix) = mn_phys%sfalb_lnd_bck(i,j)
-            !IPD_Data(nb)%Radtend%semis(ix) = mn_phys%semis(i,j)
-            !IPD_Data(nb)%Sfcprop%semisbase(ix) = mn_phys%semisbase(i,j)
-            !IPD_Data(nb)%Radtend%sfalb(ix) = mn_phys%sfalb(i,j)
+            IPD_Data(nb)%Sfcprop%sfalb_ice(ix) = mn_phys%sfalb_ice(i,j)
+            IPD_Data(nb)%Sfcprop%sfalb_lnd(ix) = mn_phys%sfalb_lnd(i,j)
+            IPD_Data(nb)%Sfcprop%sfalb_lnd_bck(ix) = mn_phys%sfalb_lnd_bck(i,j)
+            IPD_Data(nb)%Radtend%semis(ix) = mn_phys%semis(i,j)
+            IPD_Data(nb)%Sfcprop%semisbase(ix) = mn_phys%semisbase(i,j)
+            IPD_Data(nb)%Radtend%sfalb(ix) = mn_phys%sfalb(i,j)
+
+            IPD_Data(nb)%Sfcprop%albdirvis_lnd(ix) = mn_phys%albdirvis_lnd(i,j)
+            IPD_Data(nb)%Sfcprop%albdirnir_lnd(ix) = mn_phys%albdirnir_lnd(i,j)
+            IPD_Data(nb)%Sfcprop%albdifvis_lnd(ix) = mn_phys%albdifvis_lnd(i,j)
+            IPD_Data(nb)%Sfcprop%albdifnir_lnd(ix) = mn_phys%albdifnir_lnd(i,j)
+
+            IPD_Data(nb)%Sfcprop%albdirvis_ice(ix) = mn_phys%albdirvis_ice(i,j)
+            IPD_Data(nb)%Sfcprop%albdirnir_ice(ix) = mn_phys%albdirnir_ice(i,j)
+            IPD_Data(nb)%Sfcprop%albdifvis_ice(ix) = mn_phys%albdifvis_ice(i,j)
+            IPD_Data(nb)%Sfcprop%albdifnir_ice(ix) = mn_phys%albdifnir_ice(i,j)
 
             IPD_Data(nb)%IntDiag%u10m(ix) = mn_phys%u10m(i,j)
             IPD_Data(nb)%IntDiag%v10m(ix) = mn_phys%v10m(i,j)
@@ -517,10 +636,13 @@ contains
             IPD_Data(nb)%Sfcprop%lakedepth(ix) = mn_phys%lakedepth(i,j)
 
             IPD_Data(nb)%Sfcprop%canopy(ix) = mn_phys%canopy(i,j)
+            IPD_Data(nb)%IntDiag%trans(ix) = mn_phys%trans(i,j)
             IPD_Data(nb)%Sfcprop%vfrac(ix)  = mn_phys%vegfrac(i,j)
             IPD_Data(nb)%Sfcprop%uustar(ix) = mn_phys%uustar(i,j)
             IPD_Data(nb)%Sfcprop%shdmin(ix) = mn_phys%shdmin(i,j)
             IPD_Data(nb)%Sfcprop%shdmax(ix) = mn_phys%shdmax(i,j)
+
+            IPD_Data(nb)%Sfcprop%zorli(ix) = mn_phys%zorli(i,j) 
 
             ! Set roughness lengths to physically reasonable values if they have fill value (possible at coastline)
             ! sea/land mask array (sea:0,land:1,sea-ice:2)
@@ -559,9 +681,83 @@ contains
               IPD_Data(nb)%Sfcprop%vsfco(ix)  = mn_phys%vsfco(i,j)
             endif
 
-            IPD_Data(nb)%Sfcprop%tsfco(ix)  = mn_phys%tsfco(i,j)
-            IPD_Data(nb)%Sfcprop%tsfcl(ix)  = mn_phys%tsfcl(i,j)
+            IPD_Data(nb)%Sfcprop%usfco(ix) = mn_phys%usfco(i,j) 
+            IPD_Data(nb)%Sfcprop%vsfco(ix) = mn_phys%vsfco(i,j) 
+            IPD_Data(nb)%Sfcprop%tsfco(ix) = mn_phys%tsfco(i,j) 
+            IPD_Data(nb)%Sfcprop%tsfcl(ix) = mn_phys%tsfcl(i,j) 
+
+            IPD_Data(nb)%Diag%smcref2(ix) = mn_phys%smcref2(i,j) 
+            IPD_Data(nb)%Diag%smcwlt2(ix) = mn_phys%smcwlt2(i,j) 
+            IPD_Data(nb)%Sfcprop%srflag(ix) = mn_phys%srflag(i,j) 
+            IPD_Data(nb)%Diag%zlvl(ix) = mn_phys%zlvl(i,j) 
+            IPD_Data(nb)%Sfcprop%snowprv(ix) = mn_phys%snowprv(i,j) 
+            IPD_Data(nb)%Sfcprop%graupelprv(ix) = mn_phys%graupelprv(i,j) 
+            IPD_Data(nb)%Sfcprop%iceprv(ix) = mn_phys%iceprv(i,j) 
+            IPD_Data(nb)%Sfcprop%raincprv(ix) = mn_phys%raincprv(i,j) 
+            IPD_Data(nb)%Sfcprop%rainncprv(ix) = mn_phys%rainncprv(i,j)
+            IPD_Data(nb)%Sfcprop%use_lake_model(ix) = mn_phys%use_lake_model(i,j)
+            IPD_Data(nb)%Diag%dswsfci(ix) = mn_phys%dswsfci(i,j)
+            IPD_Data(nb)%Diag%dlwsfci(ix) = mn_phys%dlwsfci(i,j)
+            IPD_Data(nb)%Sfcprop%wetness(ix) = mn_phys%wetness(i,j)
+            IPD_Data(nb)%Sfcprop%fice(ix) = mn_phys%fice(i,j)  
+            IPD_Data(nb)%Sfcprop%qwv_surf_land(ix) = mn_phys%qwv_surf_land(i,j)  
+            IPD_Data(nb)%Sfcprop%qwv_surf_ice(ix) = mn_phys%qwv_surf_ice(i,j)  
+            IPD_Data(nb)%Sfcprop%tsfc(ix) = mn_phys%tsfc(i,j)  
+            IPD_Data(nb)%Sfcprop%xlaixy(ix) = mn_phys%xlaixy(i,j)  
+            IPD_Data(nb)%Sfcprop%sncovr(ix) = mn_phys%sncovr(i,j)
+            IPD_Data(nb)%Sfcprop%sncovr_ice(ix) = mn_phys%sncovr_ice(i,j)
+
+            IPD_Data(nb)%Sfcprop%tisfc(ix)  = mn_phys%tisfc(i,j)
+            IPD_Data(nb)%IntDiag%chh(ix)  = mn_phys%chh(i,j)
+            IPD_Data(nb)%IntDiag%cmm(ix)  = mn_phys%cmm(i,j)
+            IPD_Data(nb)%Sfcprop%sbsno(ix)  = mn_phys%sbsno(i,j)
+            IPD_Data(nb)%Sfcprop%rhofr(ix)  = mn_phys%rhofr(i,j)
+            IPD_Data(nb)%Sfcprop%snowmt_land(ix)  = mn_phys%snowmt_land(i,j)
+            IPD_Data(nb)%Sfcprop%acsnow_land(ix)  = mn_phys%acsnow_land(i,j)
+            IPD_Data(nb)%Sfcprop%snowmt_ice(ix)  = mn_phys%snowmt_ice(i,j)
+            IPD_Data(nb)%Sfcprop%acsnow_ice(ix)  = mn_phys%acsnow_ice(i,j)
+            IPD_Data(nb)%Sfcprop%snowfallac_land(ix)  = mn_phys%snowfallac_land(i,j)
+            IPD_Data(nb)%Sfcprop%snowfallac_ice(ix)  = mn_phys%snowfallac_ice(i,j)
+            IPD_Data(nb)%Sfcprop%soilm(ix)  = mn_phys%soilm(i,j)
+            IPD_Data(nb)%Sfcprop%evbs(ix)  = mn_phys%evbs(i,j)
+            IPD_Data(nb)%Sfcprop%evcw(ix)  = mn_phys%evcw(i,j)
+            IPD_Data(nb)%Sfcprop%drain_lnd(ix)  = mn_phys%drain_lnd(i,j)
+            IPD_Data(nb)%Sfcprop%runoff(ix)  = mn_phys%runoff(i,j)
+            IPD_Data(nb)%Sfcprop%srunoff(ix)  = mn_phys%srunoff(i,j)
+            IPD_Data(nb)%Sfcprop%gflux_lnd(ix)  = mn_phys%gflux_lnd(i,j)
+            IPD_Data(nb)%Sfcprop%qsurf_lnd(ix)  = mn_phys%qsurf_lnd(i,j)
+            IPD_Data(nb)%Sfcprop%tsnow_land(ix)  = mn_phys%tsnow_land(i,j)
+            IPD_Data(nb)%Sfcprop%tsnow_ice(ix)  = mn_phys%tsnow_ice(i,j)
+            IPD_Data(nb)%Sfcprop%clw_surf_land(ix)  = mn_phys%clw_surf_land(i,j)
+            IPD_Data(nb)%Sfcprop%qwv_surf_land(ix)  = mn_phys%qwv_surf_land(i,j)
+            IPD_Data(nb)%Sfcprop%clw_surf_ice(ix)  = mn_phys%clw_surf_ice(i,j)
+            IPD_Data(nb)%Sfcprop%qwv_surf_ice(ix)  = mn_phys%qwv_surf_ice(i,j)
+            IPD_Data(nb)%Sfcprop%snodl(ix)  = mn_phys%snodl(i,j)
+            IPD_Data(nb)%Sfcprop%snodi(ix)  = mn_phys%snodi(i,j)
+            IPD_Data(nb)%Sfcprop%weasdl(ix)  = mn_phys%weasdl(i,j)
+            IPD_Data(nb)%Sfcprop%weasdi(ix)  = mn_phys%weasdi(i,j)
+            IPD_Data(nb)%Sfcprop%rhonewsn1(ix)  = mn_phys%rhonewsn1(i,j)
+            IPD_Data(nb)%IntDiag%smcref2(ix)  = mn_phys%smcref2(i,j)
+            IPD_Data(nb)%IntDiag%smcwlt2(ix)  = mn_phys%smcwlt2(i,j)
+            IPD_Data(nb)%Sfcprop%srflag(ix)  = mn_phys%srflag(i,j)
+            IPD_Data(nb)%IntDiag%zlvl(ix)  = mn_phys%zlvl(i,j)
+            IPD_Data(nb)%Sfcprop%snowprv(ix)  = mn_phys%snowprv(i,j)
+            IPD_Data(nb)%Sfcprop%graupelprv(ix)  = mn_phys%graupelprv(i,j)
+            IPD_Data(nb)%Sfcprop%iceprv(ix)  = mn_phys%iceprv(i,j)
+            IPD_Data(nb)%Sfcprop%raincprv(ix)  = mn_phys%raincprv(i,j)
+            IPD_Data(nb)%Sfcprop%rainncprv(ix)  = mn_phys%rainncprv(i,j)
+            IPD_Data(nb)%Sfcprop%use_lake_model(ix)  = mn_phys%use_lake_model(i,j)
+            IPD_Data(nb)%IntDiag%dswsfci(ix)= mn_phys%dswsfci(i,j)
+            IPD_Data(nb)%IntDiag%dlwsfci(ix)= mn_phys%dlwsfci(i,j)
+            IPD_Data(nb)%Sfcprop%wetness(ix)= mn_phys%wetness(i,j)
             IPD_Data(nb)%Sfcprop%tsfc(ix)   = mn_phys%tsfc(i,j)
+            IPD_Data(nb)%Sfcprop%fice(ix)   = mn_phys%fice(i,j)
+            IPD_Data(nb)%Sfcprop%xlaixy(ix) = mn_phys%xlaixy(i,j)
+
+            IPD_Data(nb)%Sfcprop%sncovr(ix) = mn_phys%sncovr(i,j)
+            IPD_Data(nb)%Sfcprop%sncovr_ice(ix) = mn_phys%sncovr_ice(i,j)
+            IPD_Data(nb)%Sfcprop%qwv_surf_land(ix) = mn_phys%qwv_surf_land(i,j)
+            IPD_Data(nb)%Sfcprop%qwv_surf_ice(ix) = mn_phys%qwv_surf_ice(i,j)
 
             ! Set albedo values to physically reasonable values if they have negative fill values.
             if (mn_phys%albdirvis_lnd (i,j) .ge. 0.0) then
@@ -586,6 +782,30 @@ contains
               IPD_Data(nb)%Sfcprop%albdifnir_lnd (ix)   = mn_phys%albdifnir_lnd (i,j)
             else
               IPD_Data(nb)%Sfcprop%albdifnir_lnd (ix)   = 0.5
+            endif
+
+            if (mn_phys%albdirvis_ice (i,j) .ge. 0.0) then
+              IPD_Data(nb)%Sfcprop%albdirvis_ice (ix)   = mn_phys%albdirvis_ice (i,j)
+            else
+              IPD_Data(nb)%Sfcprop%albdirvis_ice (ix)   = 0.5
+            endif
+
+            if (mn_phys%albdirnir_ice (i,j) .ge. 0.0) then
+              IPD_Data(nb)%Sfcprop%albdirnir_ice (ix)   = mn_phys%albdirnir_ice (i,j)
+            else
+              IPD_Data(nb)%Sfcprop%albdirnir_ice (ix)   = 0.5
+            endif
+
+            if (mn_phys%albdifvis_ice (i,j) .ge. 0.0) then
+              IPD_Data(nb)%Sfcprop%albdifvis_ice (ix)   = mn_phys%albdifvis_ice (i,j)
+            else
+              IPD_Data(nb)%Sfcprop%albdifvis_ice (ix)   = 0.5
+            endif
+
+            if (mn_phys%albdifnir_ice (i,j) .ge. 0.0) then
+              IPD_Data(nb)%Sfcprop%albdifnir_ice (ix)   = mn_phys%albdifnir_ice (i,j)
+            else
+              IPD_Data(nb)%Sfcprop%albdifnir_ice (ix)   = 0.5
             endif
 
             ! Cloud properties
@@ -689,6 +909,42 @@ contains
         is_fine_pe, nest_domain, position)
 
     if (move_physics) then
+      call fill_nest_halos_from_parent("vegtype_frac", mn_phys%vegtype_frac, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position, IPD_Control%nvegcat)
+
+      call fill_nest_halos_from_parent("soiltype_frac", mn_phys%soiltype_frac, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position, IPD_Control%nsoilcat)
+
+      call fill_nest_halos_from_parent("sh2o", mn_phys%sh2o, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position, IPD_Control%lsoil_lsm)
+      call fill_nest_halos_from_parent("tslb", mn_phys%tslb, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position, IPD_Control%lsoil_lsm)
+      call fill_nest_halos_from_parent("smois", mn_phys%smois, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position, IPD_Control%lsoil_lsm)
+      call fill_nest_halos_from_parent("keepsmfr", mn_phys%keepsmfr, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position, IPD_Control%lsoil_lsm)
+      call fill_nest_halos_from_parent("flag_frsoil", mn_phys%flag_frsoil, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position, IPD_Control%lsoil_lsm)
+
+      call fill_nest_halos_from_parent("tiice", mn_phys%tiice, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position, IPD_Control%kice)
+
       call fill_nest_halos_from_parent("smc", mn_phys%smc, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
           Atm(child_grid_num)%neststruct%ind_h, &
           x_refine, y_refine, &
@@ -714,10 +970,14 @@ contains
 
       !!  Surface variables
 
-      !call fill_nest_halos_from_parent("sfalb_lnd", mn_phys%sfalb_lnd, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
-      !     Atm(child_grid_num)%neststruct%ind_h, &
-      !     x_refine, y_refine, &
-      !     is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("sfalb_lnd", mn_phys%sfalb_lnd, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("sfalb_ice", mn_phys%sfalb_lnd, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
 
       ! sea/land mask array (sea:0,land:1,sea-ice:2)
 
@@ -736,24 +996,24 @@ contains
           x_refine, y_refine, &
           is_fine_pe, nest_domain, position, mn_phys%slmsk, 0, 0.5D0)
 
-      !call fill_nest_halos_from_parent("sfalb_lnd_bck", mn_phys%sfalb_lnd_bck, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
-      !     Atm(child_grid_num)%neststruct%ind_h, &
-      !     x_refine, y_refine, &
-      !     is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("sfalb_lnd_bck", mn_phys%sfalb_lnd_bck, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+           Atm(child_grid_num)%neststruct%ind_h, &
+           x_refine, y_refine, &
+           is_fine_pe, nest_domain, position)
 
 
-      !call fill_nest_halos_from_parent("semis", mn_phys%semis, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
-      !     Atm(child_grid_num)%neststruct%ind_h, &
-      !     x_refine, y_refine, &
-      !     is_fine_pe, nest_domain, position)
-      !call fill_nest_halos_from_parent("semisbase", mn_phys%semisbase, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
-      !     Atm(child_grid_num)%neststruct%ind_h, &
-      !     x_refine, y_refine, &
-      !     is_fine_pe, nest_domain, position)
-      !call fill_nest_halos_from_parent("sfalb", mn_phys%sfalb, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
-      !     Atm(child_grid_num)%neststruct%ind_h, &
-      !     x_refine, y_refine, &
-      !     is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("semis", mn_phys%semis, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("semisbase", mn_phys%semisbase, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("sfalb", mn_phys%sfalb, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
 
 
       call fill_nest_halos_from_parent("u10m", mn_phys%u10m, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
@@ -787,6 +1047,10 @@ contains
           Atm(child_grid_num)%neststruct%ind_h, &
           x_refine, y_refine, &
           is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("trans", mn_phys%trans, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
       call fill_nest_halos_from_parent("vegfrac", mn_phys%vegfrac, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
           Atm(child_grid_num)%neststruct%ind_h, &
           x_refine, y_refine, &
@@ -808,6 +1072,10 @@ contains
           x_refine, y_refine, &
           is_fine_pe, nest_domain, position)
 
+      call fill_nest_halos_from_parent_masked("zorli", mn_phys%zorli, interp_type_lmask, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position, mn_phys%slmsk, 1, 86.0D0)
       call fill_nest_halos_from_parent_masked("zorll", mn_phys%zorll, interp_type_lmask, Atm(child_grid_num)%neststruct%wt_h, &
           Atm(child_grid_num)%neststruct%ind_h, &
           x_refine, y_refine, &
@@ -838,7 +1106,203 @@ contains
           Atm(child_grid_num)%neststruct%ind_h, &
           x_refine, y_refine, &
           is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("tisfc", mn_phys%tisfc, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("chh", mn_phys%chh, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("cmm", mn_phys%cmm, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("sbsno", mn_phys%sbsno, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("rhofr", mn_phys%rhofr, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("snowmt_land", mn_phys%snowmt_land, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("acsnow_land", mn_phys%acsnow_land, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("snowmt_ice", mn_phys%snowmt_ice, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("acsnow_ice", mn_phys%acsnow_ice, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("snowfallac_land", mn_phys%snowfallac_land, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("snowfallac_ice", mn_phys%snowfallac_ice, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("soilm", mn_phys%soilm, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("evbs", mn_phys%evbs, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("evcw", mn_phys%evcw, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("drain_lnd", mn_phys%drain_lnd, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("runoff", mn_phys%runoff, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("srunoff", mn_phys%srunoff, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("gflux_lnd", mn_phys%gflux_lnd, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("qsurf_lnd", mn_phys%qsurf_lnd, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("tsnow_land", mn_phys%tsnow_land, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("tsnow_ice", mn_phys%tsnow_ice, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("clw_surf_land", mn_phys%clw_surf_land, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("qwv_surf_land", mn_phys%qwv_surf_land, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("clw_surf_ice", mn_phys%clw_surf_ice, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("qwv_surf_ice", mn_phys%qwv_surf_ice, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("snodl", mn_phys%snodl, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("snodi", mn_phys%snodi, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("weasdl", mn_phys%weasdl, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("weasdi", mn_phys%weasdi, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("rhonewsn1", mn_phys%rhonewsn1, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("smcref2", mn_phys%smcref2, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("smcwlt2", mn_phys%smcwlt2, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("srflag", mn_phys%srflag, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("zlvl", mn_phys%zlvl, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("snowprv", mn_phys%snowprv, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("graupelprv", mn_phys%graupelprv, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("iceprv", mn_phys%iceprv, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("raincprv", mn_phys%raincprv, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("rainncprv", mn_phys%rainncprv, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("use_lake_model", mn_phys%use_lake_model, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("dswsfci", mn_phys%dswsfci, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("dlwsfci", mn_phys%dlwsfci, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("wetness", mn_phys%wetness, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("fice", mn_phys%fice, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("qwv_surf_land", mn_phys%qwv_surf_land, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("qwv_surf_ice", mn_phys%qwv_surf_ice, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
       call fill_nest_halos_from_parent("tsfc", mn_phys%tsfc, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("xlaixy", mn_phys%xlaixy, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("sncovr", mn_phys%sncovr, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position)
+      call fill_nest_halos_from_parent("sncovr_ice", mn_phys%sncovr_ice, interp_type, Atm(child_grid_num)%neststruct%wt_h, &
           Atm(child_grid_num)%neststruct%ind_h, &
           x_refine, y_refine, &
           is_fine_pe, nest_domain, position)
@@ -856,6 +1320,23 @@ contains
           x_refine, y_refine, &
           is_fine_pe, nest_domain, position, mn_phys%slmsk, 1, 0.5D0)
       call fill_nest_halos_from_parent_masked("albdifnir_lnd", mn_phys%albdifnir_lnd, interp_type_lmask, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position, mn_phys%slmsk, 1, 0.5D0)
+
+      call fill_nest_halos_from_parent_masked("albdirvis_ice", mn_phys%albdirvis_ice, interp_type_lmask, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position, mn_phys%slmsk, 1, 0.5D0)
+      call fill_nest_halos_from_parent_masked("albdirnir_ice", mn_phys%albdirnir_ice, interp_type_lmask, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position, mn_phys%slmsk, 1, 0.5D0)
+      call fill_nest_halos_from_parent_masked("albdifvis_ice", mn_phys%albdifvis_ice, interp_type_lmask, Atm(child_grid_num)%neststruct%wt_h, &
+          Atm(child_grid_num)%neststruct%ind_h, &
+          x_refine, y_refine, &
+          is_fine_pe, nest_domain, position, mn_phys%slmsk, 1, 0.5D0)
+      call fill_nest_halos_from_parent_masked("albdifnir_ice", mn_phys%albdifnir_ice, interp_type_lmask, Atm(child_grid_num)%neststruct%wt_h, &
           Atm(child_grid_num)%neststruct%ind_h, &
           x_refine, y_refine, &
           is_fine_pe, nest_domain, position, mn_phys%slmsk, 1, 0.5D0)
@@ -966,9 +1447,20 @@ contains
 
     call mn_var_fill_intern_nest_halos(mn_phys%ts, domain_fine, is_fine_pe)   !! Skin Temp/SST
     if (move_physics) then
+      call mn_var_fill_intern_nest_halos(mn_phys%vegtype_frac, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%soiltype_frac, domain_fine, is_fine_pe)
+
       call mn_var_fill_intern_nest_halos(mn_phys%smc, domain_fine, is_fine_pe)
       call mn_var_fill_intern_nest_halos(mn_phys%stc, domain_fine, is_fine_pe)
       call mn_var_fill_intern_nest_halos(mn_phys%slc, domain_fine, is_fine_pe)
+
+      call mn_var_fill_intern_nest_halos(mn_phys%sh2o, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%tslb, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%smois, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%keepsmfr, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%flag_frsoil, domain_fine, is_fine_pe)
+
+      call mn_var_fill_intern_nest_halos(mn_phys%tiice, domain_fine, is_fine_pe)
 
       call mn_var_fill_intern_nest_halos(mn_phys%phy_f2d, domain_fine, is_fine_pe)
       call mn_var_fill_intern_nest_halos(mn_phys%phy_f3d, domain_fine, is_fine_pe)
@@ -977,11 +1469,12 @@ contains
       call mn_var_fill_intern_nest_halos(mn_phys%emis_ice, domain_fine, is_fine_pe)
       call mn_var_fill_intern_nest_halos(mn_phys%emis_wat, domain_fine, is_fine_pe)
 
-      !call mn_var_fill_intern_nest_halos(mn_phys%sfalb_lnd, domain_fine, is_fine_pe)
-      !call mn_var_fill_intern_nest_halos(mn_phys%sfalb_lnd_bck, domain_fine, is_fine_pe)
-      !call mn_var_fill_intern_nest_halos(mn_phys%semis, domain_fine, is_fine_pe)
-      !call mn_var_fill_intern_nest_halos(mn_phys%semisbase, domain_fine, is_fine_pe)
-      !call mn_var_fill_intern_nest_halos(mn_phys%sfalb, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%sfalb_lnd, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%sfalb_ice, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%sfalb_lnd_bck, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%semis, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%semisbase, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%sfalb, domain_fine, is_fine_pe)
 
       call mn_var_fill_intern_nest_halos(mn_phys%u10m, domain_fine, is_fine_pe)
       call mn_var_fill_intern_nest_halos(mn_phys%v10m, domain_fine, is_fine_pe)
@@ -993,11 +1486,13 @@ contains
       call mn_var_fill_intern_nest_halos(mn_phys%lakedepth, domain_fine, is_fine_pe)
 
       call mn_var_fill_intern_nest_halos(mn_phys%canopy, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%trans, domain_fine, is_fine_pe)
       call mn_var_fill_intern_nest_halos(mn_phys%vegfrac, domain_fine, is_fine_pe)
       call mn_var_fill_intern_nest_halos(mn_phys%uustar, domain_fine, is_fine_pe)
       call mn_var_fill_intern_nest_halos(mn_phys%shdmin, domain_fine, is_fine_pe)
       call mn_var_fill_intern_nest_halos(mn_phys%shdmax, domain_fine, is_fine_pe)
       call mn_var_fill_intern_nest_halos(mn_phys%zorl, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%zorli, domain_fine, is_fine_pe)
       call mn_var_fill_intern_nest_halos(mn_phys%zorll, domain_fine, is_fine_pe)
       call mn_var_fill_intern_nest_halos(mn_phys%zorlwav, domain_fine, is_fine_pe)
       call mn_var_fill_intern_nest_halos(mn_phys%zorlw, domain_fine, is_fine_pe)
@@ -1005,12 +1500,66 @@ contains
       call mn_var_fill_intern_nest_halos(mn_phys%vsfco, domain_fine, is_fine_pe)
       call mn_var_fill_intern_nest_halos(mn_phys%tsfco, domain_fine, is_fine_pe)
       call mn_var_fill_intern_nest_halos(mn_phys%tsfcl, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%tisfc, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%chh, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%cmm, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%sbsno, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%rhofr, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%snowmt_land, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%acsnow_land, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%snowmt_ice, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%acsnow_ice, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%snowfallac_land, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%snowfallac_ice, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%soilm, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%evbs, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%evcw, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%drain_lnd, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%runoff, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%srunoff, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%gflux_lnd, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%qsurf_lnd, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%tsnow_land, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%tsnow_ice, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%clw_surf_land, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%qwv_surf_land, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%clw_surf_ice, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%qwv_surf_ice, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%snodl, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%snodi, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%weasdl, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%weasdi, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%rhonewsn1, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%smcref2, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%smcwlt2, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%srflag, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%zlvl, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%snowprv, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%graupelprv, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%iceprv, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%raincprv, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%rainncprv, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%use_lake_model, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%dlwsfci, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%dswsfci, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%wetness, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%fice, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%qwv_surf_land, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%qwv_surf_ice, domain_fine, is_fine_pe)
       call mn_var_fill_intern_nest_halos(mn_phys%tsfc, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%xlaixy, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%sncovr, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%sncovr_ice, domain_fine, is_fine_pe)
 
       call mn_var_fill_intern_nest_halos(mn_phys%albdirvis_lnd, domain_fine, is_fine_pe)
       call mn_var_fill_intern_nest_halos(mn_phys%albdirnir_lnd, domain_fine, is_fine_pe)
       call mn_var_fill_intern_nest_halos(mn_phys%albdifvis_lnd, domain_fine, is_fine_pe)
       call mn_var_fill_intern_nest_halos(mn_phys%albdifnir_lnd, domain_fine, is_fine_pe)
+
+      call mn_var_fill_intern_nest_halos(mn_phys%albdirvis_ice, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%albdirnir_ice, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%albdifvis_ice, domain_fine, is_fine_pe)
+      call mn_var_fill_intern_nest_halos(mn_phys%albdifnir_ice, domain_fine, is_fine_pe)
 
       call mn_var_fill_intern_nest_halos(mn_phys%cv, domain_fine, is_fine_pe)
       call mn_var_fill_intern_nest_halos(mn_phys%cvt, domain_fine, is_fine_pe)
@@ -1071,12 +1620,28 @@ contains
 
     if (move_physics) then
       !! Soil variables
+      call mn_var_shift_data(mn_phys%vegtype_frac, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position, IPD_Control%nvegcat)
+      call mn_var_shift_data(mn_phys%soiltype_frac, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position, IPD_Control%nsoilcat)
+
       call mn_var_shift_data(mn_phys%smc, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
           delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position, IPD_Control%lsoil)
       call mn_var_shift_data(mn_phys%stc, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
           delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position, IPD_Control%lsoil)
       call mn_var_shift_data(mn_phys%slc, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
           delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position, IPD_Control%lsoil)
+
+      call mn_var_shift_data(mn_phys%sh2o, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position, IPD_Control%lsoil_lsm)
+      call mn_var_shift_data(mn_phys%tslb, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position, IPD_Control%lsoil_lsm)
+      call mn_var_shift_data(mn_phys%smois, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position, IPD_Control%lsoil_lsm)
+      call mn_var_shift_data(mn_phys%keepsmfr, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position, IPD_Control%lsoil_lsm)
+      call mn_var_shift_data(mn_phys%flag_frsoil, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position, IPD_Control%lsoil_lsm)
 
       !! Physics arrays
       call mn_var_shift_data(mn_phys%phy_f2d, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
@@ -1095,16 +1660,18 @@ contains
           delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
 
 
-      !call mn_var_shift_data(mn_phys%sfalb_lnd, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
-      !  delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
-      !call mn_var_shift_data(mn_phys%sfalb_lnd_bck, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
-      !  delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
-      !call mn_var_shift_data(mn_phys%semis, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
-      !  delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
-      !call mn_var_shift_data(mn_phys%semisbase, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
-      !  delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
-      !call mn_var_shift_data(mn_phys%sfalb, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
-      !  delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%sfalb_ice, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+        delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%sfalb_lnd, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+        delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%sfalb_lnd_bck, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+        delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%semis, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+        delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%semisbase, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+        delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%sfalb, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+        delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
 
       call mn_var_shift_data(mn_phys%u10m, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
           delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
@@ -1120,6 +1687,8 @@ contains
           delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
       call mn_var_shift_data(mn_phys%canopy, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
           delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%trans, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
       call mn_var_shift_data(mn_phys%vegfrac, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
           delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
       call mn_var_shift_data(mn_phys%uustar, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
@@ -1129,6 +1698,8 @@ contains
       call mn_var_shift_data(mn_phys%shdmax, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
           delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
       call mn_var_shift_data(mn_phys%zorl, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%zorli, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
           delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
       call mn_var_shift_data(mn_phys%zorll, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
           delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
@@ -1144,7 +1715,107 @@ contains
           delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
       call mn_var_shift_data(mn_phys%tsfcl, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
           delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%tisfc, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%chh, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%cmm, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%sbsno, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%rhofr, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%snowmt_land, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%acsnow_land, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%snowmt_ice, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%acsnow_ice, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%snowfallac_land, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%snowfallac_ice, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%soilm, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%evbs, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%evcw, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%drain_lnd, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%runoff, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%srunoff, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%gflux_lnd, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%qsurf_lnd, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%clw_surf_land, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%qwv_surf_land, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%clw_surf_ice, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%qwv_surf_ice, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%tsnow_land, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%tsnow_ice, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%snodl, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%snodi, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%weasdl, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%weasdi, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%rhonewsn1, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%smcref2, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%smcwlt2, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%srflag, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%zlvl, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%snowprv, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%graupelprv, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%iceprv, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%raincprv, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%rainncprv, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%use_lake_model, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%dswsfci, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%dlwsfci, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%wetness, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
       call mn_var_shift_data(mn_phys%tsfc, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%fice, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%xlaixy, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%sncovr, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%sncovr_ice, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%qwv_surf_land, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%qwv_surf_ice, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%xlaixy, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
           delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
       call mn_var_shift_data(mn_phys%albdirvis_lnd, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
           delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
@@ -1153,6 +1824,14 @@ contains
       call mn_var_shift_data(mn_phys%albdifvis_lnd, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
           delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
       call mn_var_shift_data(mn_phys%albdifnir_lnd, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%albdirvis_ice, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%albdirnir_ice, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%albdifvis_ice, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
+          delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
+      call mn_var_shift_data(mn_phys%albdifnir_ice, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
           delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
       call mn_var_shift_data(mn_phys%cv, interp_type, wt_h, Atm(child_grid_num)%neststruct%ind_h, &
           delta_i_c, delta_j_c, x_refine, y_refine, is_fine_pe, nest_domain, position)
