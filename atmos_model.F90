@@ -120,6 +120,7 @@ use fv_tracker_mod,           only: check_is_moving_nest, execute_tracker
 implicit none
 private
 
+public write_intermediate_restart
 public update_atmos_radiation_physics
 public update_atmos_model_state
 public update_atmos_model_dynamics
@@ -858,6 +859,40 @@ subroutine atmos_model_init (Atmos, Time_init, Time, Time_step)
 !-----------------------------------------------------------------------
 end subroutine atmos_model_init
 ! </SUBROUTINE>
+
+
+   subroutine write_intermediate_restart(Atmos, date_init)
+     use time_manager_mod, only: date_to_string, get_calendar_type
+     use get_stochy_pattern_mod, only: write_stoch_restart_atm
+     implicit none
+
+     type(atmos_data_type), intent(inout) :: Atmos
+     integer, intent(in) :: date_init(6)
+     ! Locals
+     character(len=64)          :: timestamp
+     integer :: unit, calendar_type
+     integer :: date(6)
+
+     timestamp = date_to_string (Atmos%Time)
+     calendar_type = get_calendar_type()
+
+     call atmos_model_restart(Atmos, timestamp)
+     call write_stoch_restart_atm('RESTART/'//trim(timestamp)//'.atm_stoch.res.nc')
+     
+     !----- write coupler.res file ------
+     if (.not. quilting_restart .and. mpp_pe() == mpp_root_pe()) then
+        call get_date (Atmos%Time, date(1), date(2), date(3), date(4), date(5), date(6))
+        open( newunit=unit, file='RESTART/'//trim(timestamp)//'.coupler.res' )
+        write( unit, '(i6,8x,a)' )calendar_type, &
+             '(Calendar: no_calendar=0, thirty_day_months=1, julian=2, gregorian=3, noleap=4)'
+        
+        write( unit, '(6i6,8x,a)' )date_init, &
+             'Model start time:   year, month, day, hour, minute, second'
+        write( unit, '(6i6,8x,a)' )date, &
+             'Current model time: year, month, day, hour, minute, second'
+        close( unit )
+     endif
+    end subroutine write_intermediate_restart
 
 
 !#######################################################################

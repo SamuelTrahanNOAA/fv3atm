@@ -36,6 +36,7 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
                                 atmos_data_type, atmos_model_restart,      &
                                 atmos_model_exchange_phase_1,              &
                                 atmos_model_exchange_phase_2,              &
+                                write_intermediate_restart,                &
                                 addLsmask2grid, atmos_model_get_nth_domain_info
 
   use GFS_typedefs,       only: kind_phys, kind_sngl_prec
@@ -72,7 +73,7 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
                                 calendar, cpl_grid_id,                     &
                                 cplprint_flag
 
-  use get_stochy_pattern_mod, only: write_stoch_restart_atm
+  !use get_stochy_pattern_mod, only: write_stoch_restart_atm
   use module_cplfields,       only: nExportFields, exportFields, exportFieldsInfo, &
                                     nImportFields, importFields, importFieldsInfo
   use module_cplfields,       only: realizeConnectedCplFields
@@ -104,7 +105,7 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
   integer :: numLevels     = 0
   integer :: numSoilLayers = 0
   integer :: numTracers    = 0
-
+  logical :: atm_mid_timestep_restart = .false.
   integer :: frestart(999)
 
   integer :: mype
@@ -638,6 +639,11 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
                                  count=num_restart_interval, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
     if (mype == 0) print *,'af ufs config,restart_interval=',restart_interval
+!
+    atm_mid_timestep_restart = .false.
+    call ESMF_ConfigGetAttribute(config=CF, value=atm_mid_timestep_restart, default=.true., label='atm_mid_timestep_restart:', rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+    if (mype == 0) print *,'af ufs config,atm_mid_timestep_restart=',atm_mid_timestep_restart
 !
     call fms_init(fcst_mpi_comm%mpi_val)
     call mpp_init()
@@ -1327,7 +1333,16 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
 !-----------------------------------------------------------------------
 ! *** call fcst integration subroutines
 
+
       call update_atmos_model_dynamics (Atmos)
+      !--- intermediate restart
+      call get_time(Atmos%Time - Atmos%Time_init, seconds)
+      if (atm_mid_timestep_restart .and. ANY(frestart(:) == seconds)) then
+          if (mype == 0) write(*,*)'write restart before physics at n_atmsteps=',n_atmsteps,' seconds=',seconds,  &
+                                   'integration length=',n_atmsteps*dt_atmos/3600.
+
+          call write_intermediate_restart(Atmos, date_init)
+       endif
 
       call update_atmos_radiation_physics (Atmos)
 
@@ -1387,27 +1402,11 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
 
       !--- intermediate restart
       call get_time(Atmos%Time - Atmos%Time_init, seconds)
-      if (ANY(frestart(:) == seconds)) then
+      if (.not.atm_mid_timestep_restart .and. ANY(frestart(:) == seconds)) then
           if (mype == 0) write(*,*)'write out restart at n_atmsteps=',n_atmsteps,' seconds=',seconds,  &
                                    'integration length=',n_atmsteps*dt_atmos/3600.
 
-          timestamp = date_to_string (Atmos%Time)
-          call atmos_model_restart(Atmos, timestamp)
-          call write_stoch_restart_atm('RESTART/'//trim(timestamp)//'.atm_stoch.res.nc')
-
-          !----- write coupler.res file ------
-          if (.not. quilting_restart .and. mpp_pe() == mpp_root_pe()) then
-              call get_date (Atmos%Time, date(1), date(2), date(3), date(4), date(5), date(6))
-              open( newunit=unit, file='RESTART/'//trim(timestamp)//'.coupler.res' )
-              write( unit, '(i6,8x,a)' )calendar_type, &
-                   '(Calendar: no_calendar=0, thirty_day_months=1, julian=2, gregorian=3, noleap=4)'
-
-              write( unit, '(6i6,8x,a)' )date_init, &
-                   'Model start time:   year, month, day, hour, minute, second'
-              write( unit, '(6i6,8x,a)' )date, &
-                   'Current model time: year, month, day, hour, minute, second'
-              close( unit )
-          endif
+          call write_intermediate_restart(Atmos, date_init)
       endif
 
       ! update fhzero
