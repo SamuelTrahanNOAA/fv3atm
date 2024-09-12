@@ -641,7 +641,7 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
     if (mype == 0) print *,'af ufs config,restart_interval=',restart_interval
 !
     atm_mid_timestep_restart = .false.
-    call ESMF_ConfigGetAttribute(config=CF, value=atm_mid_timestep_restart, default=.true., label='atm_mid_timestep_restart:', rc=rc)
+    call ESMF_ConfigGetAttribute(config=CF, value=atm_mid_timestep_restart, default=.false., label='atm_mid_timestep_restart:', rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
     if (mype == 0) print *,'af ufs config,atm_mid_timestep_restart=',atm_mid_timestep_restart
 !
