@@ -30,6 +30,7 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
 
   use  atmos_model_mod,   only: atmos_model_init, atmos_model_end,         &
                                 get_atmos_model_ungridded_dim,             &
+                                update_atmos_model_nest_motion,            &
                                 update_atmos_model_dynamics,               &
                                 update_atmos_radiation_physics,            &
                                 update_atmos_model_state,                  &
@@ -105,7 +106,7 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
   integer :: numLevels     = 0
   integer :: numSoilLayers = 0
   integer :: numTracers    = 0
-  logical :: atm_mid_timestep_restart = .false.
+  character(len=20) :: atm_write_restart_after = 'update_state'
   integer :: frestart(999)
 
   integer :: mype
@@ -589,6 +590,8 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
     integer, pointer      :: pelist(:) => null()
     logical               :: top_parent_is_global
     logical               :: history_file_on_native_grid
+    real                  :: last_value
+    integer               :: count_repeat
 
     integer                       :: num_restart_interval, restart_starttime
     real,dimension(:),allocatable :: restart_interval
@@ -631,19 +634,19 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
 
     num_restart_interval = ESMF_ConfigGetLen(config=CF, label ='restart_interval:',rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
-    if (mype == 0) print *,'af ufs config,num_restart_interval=',num_restart_interval
+    if (mype == 0) write(0,*) 'af ufs config,num_restart_interval=',num_restart_interval
     if (num_restart_interval<=0) num_restart_interval = 1
     allocate(restart_interval(num_restart_interval))
     restart_interval = 0
     call ESMF_ConfigGetAttribute(CF,valueList=restart_interval,label='restart_interval:', &
                                  count=num_restart_interval, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
-    if (mype == 0) print *,'af ufs config,restart_interval=',restart_interval
+    if (mype == 0) write(0,*) 'af ufs config,restart_interval=',restart_interval
 !
-    atm_mid_timestep_restart = .false.
-    call ESMF_ConfigGetAttribute(config=CF, value=atm_mid_timestep_restart, default=.false., label='atm_mid_timestep_restart:', rc=rc)
+    atm_write_restart_after = 'default'
+    call ESMF_ConfigGetAttribute(config=CF, value=atm_write_restart_after, default='default', &
+         label='atm_write_restart_after:', rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
-    if (mype == 0) print *,'af ufs config,atm_mid_timestep_restart=',atm_mid_timestep_restart
 !
     call fms_init(fcst_mpi_comm%mpi_val)
     call mpp_init()
@@ -652,6 +655,26 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
 
     call constants_init
     call sat_vapor_pres_init
+
+    ! Any unrecognized restart write steps are set to the expected step: write restart after update_state
+    if(trim(atm_write_restart_after) == 'default') then
+       atm_write_restart_after='update_state'
+       if(mpp_pe() == mpp_root_pe()) then
+          write(0,*) 'af ufs config,atm_write_restart_after=default (update_state)'
+       endif
+    elseif(trim(atm_write_restart_after) /= 'nest_motion' &
+         .and. trim(atm_write_restart_after) /= 'dynamics' &
+         .and. trim(atm_write_restart_after) /= 'radiation_physics' &
+         .and. trim(atm_write_restart_after) /= 'exchange_phase_1' &
+         .and. trim(atm_write_restart_after) /= 'exchange_phase_2' &
+         .and. trim(atm_write_restart_after) /= 'update_state') then
+       if(mpp_pe() == mpp_root_pe()) then
+          write(0,*)  'replacing invalid atm_write_restart_after with "update_state" to write restart at default step'
+       endif
+       atm_write_restart_after = 'update_state'
+    else if (mpp_pe() == mpp_root_pe()) then
+       write(0,*) 'af ufs config,atm_write_restart_after=',atm_write_restart_after
+    endif
 
     select case( uppercase(trim(calendar)) )
     case( 'JULIAN' )
@@ -807,10 +830,40 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
         do i=1,num_restart_interval
           frestart(i) = restart_interval(i) * 3600. + restart_starttime
         enddo
+        do i=num_restart_interval+1,size(frestart)
+          frestart(i) = -999
+       enddo
       endif
     endif
-! if to write out restart at the end of forecast
-    if (mype == 0) print *,'frestart=',frestart(1:10)/3600, 'total_inttime=',total_inttime
+
+! Round to nearest timestep
+    do k=1,size(frestart)
+       frestart(k) = nint(real(dt_atmos, 8) * real(nint(real(frestart(k), 8) / real(dt_atmos, 8)), 8))
+    enddo
+
+! When will we write restart files?
+    if (mpp_pe() == mpp_root_pe()) then
+       last_value = -999
+       count_repeat = 0
+       do k=1,size(frestart)
+          if(last_value == frestart(k)) then
+             count_repeat = count_repeat + 1
+          else
+             if(count_repeat > 1) then
+                write(0,*) 'frestart seconds = ',last_value,' (repeated ',count_repeat,' times)'
+             else if(count_repeat > 0) then
+                write(0,*) 'frestart seconds = ',last_value
+             endif
+             last_value = frestart(k)
+             count_repeat = 1
+          endif
+       enddo
+       if(count_repeat > 1) then
+          write(0,*) 'frestart seconds = ',last_value,' (repeated ',count_repeat,' times)'
+       else if(count_repeat > 0) then
+          write(0,*) 'frestart seconds = ',last_value
+       endif
+    endif
 
 !------ initialize component models ------
 
@@ -1312,7 +1365,7 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
 !-----------------------------------------------------------------------
 !
       call get_time(Atmos%Time - Atmos%Time_init, seconds)
-      n_atmsteps = seconds/dt_atmos
+      n_atmsteps = nint(real(seconds, 8)/real(dt_atmos, 8))
 
       if (first) then
         call ESMF_ClockGet(clock, currTime=currTime, stopTime=stopTime, rc=rc)
@@ -1334,20 +1387,40 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
 ! *** call fcst integration subroutines
 
 
-      call update_atmos_model_dynamics (Atmos)
+      call update_atmos_model_nest_motion (Atmos)
       !--- intermediate restart
       call get_time(Atmos%Time - Atmos%Time_init, seconds)
-      if (atm_mid_timestep_restart .and. ANY(frestart(:) == seconds)) then
-          if (mype == 0) write(*,*)'write restart before physics at n_atmsteps=',n_atmsteps,' seconds=',seconds,  &
-                                   'integration length=',n_atmsteps*dt_atmos/3600.
+      if(mpp_pe() == mpp_root_pe()) then
+         write(0,*) 'Restart check seconds = ',seconds, 'nest_motion'
+      endif
+      if (trim(atm_write_restart_after) == 'nest_motion' .and. ANY(frestart(:) == seconds)) then
+          call write_intermediate_restart(Atmos, date_init, 'restart after update_atmos_model_nest_motion')
+      endif
 
-          call write_intermediate_restart(Atmos, date_init)
-       endif
+      call update_atmos_model_dynamics (Atmos)
+      if(mpp_pe() == mpp_root_pe()) then
+         write(0,*) 'Restart check seconds = ',seconds, 'dynamics'
+      endif
+      if (trim(atm_write_restart_after) == 'dynamics' .and. ANY(frestart(:) == seconds)) then
+          call write_intermediate_restart(Atmos, date_init, 'restart after update_atmos_model_dynamics')
+      endif
 
       call update_atmos_radiation_physics (Atmos)
+      if(mpp_pe() == mpp_root_pe()) then
+         write(0,*) 'Restart check seconds = ',seconds, 'radiation_physics'
+      endif
+      if (trim(atm_write_restart_after) == 'radiation_physics' .and. ANY(frestart(:) == seconds)) then
+          call write_intermediate_restart(Atmos, date_init, 'update_atmos_radiation_physics')
+      endif
 
       call atmos_model_exchange_phase_1 (Atmos, rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+      if(mpp_pe() == mpp_root_pe()) then
+         write(0,*) 'Restart check seconds = ',seconds, 'exchange_phase_1'
+      endif
+      if (trim(atm_write_restart_after) == 'exchange_phase_1' .and. ANY(frestart(:) == seconds)) then
+          call write_intermediate_restart(Atmos, date_init, 'atmos_model_exchange_phase_1')
+      endif
 
       if (mype == 0) write(*,'(A,I16,A,F16.6)')'PASS: fcstRUN phase 1, n_atmsteps = ', &
                                                n_atmsteps,' time is ',mpi_wtime()-tbeg1
@@ -1396,17 +1469,24 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
 
       call atmos_model_exchange_phase_2 (Atmos, rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+      call get_time(Atmos%Time - Atmos%Time_init, seconds)
+      if(mpp_pe() == mpp_root_pe()) then
+         write(0,*) 'Restart check seconds = ',seconds, 'exchange_phase_2'
+      endif
+      if (trim(atm_write_restart_after) == 'exchange_phase_2' .and. ANY(frestart(:) == seconds)) then
+          call write_intermediate_restart(Atmos, date_init, 'restart after atmos_model_exchange_phase_2')
+      endif
 
       call update_atmos_model_state (Atmos, rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
       !--- intermediate restart
       call get_time(Atmos%Time - Atmos%Time_init, seconds)
-      if (.not.atm_mid_timestep_restart .and. ANY(frestart(:) == seconds)) then
-          if (mype == 0) write(*,*)'write out restart at n_atmsteps=',n_atmsteps,' seconds=',seconds,  &
-                                   'integration length=',n_atmsteps*dt_atmos/3600.
-
-          call write_intermediate_restart(Atmos, date_init)
+      if(mpp_pe() == mpp_root_pe()) then
+         write(0,*) 'Restart check seconds = ',seconds, 'update_state'
+      endif
+      if (trim(atm_write_restart_after) == 'update_state' .and. ANY(frestart(:) == seconds)) then
+          call write_intermediate_restart(Atmos, date_init, 'update_atmos_model_state')
       endif
 
       ! update fhzero

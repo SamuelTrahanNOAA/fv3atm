@@ -123,6 +123,7 @@ private
 public write_intermediate_restart
 public update_atmos_radiation_physics
 public update_atmos_model_state
+public update_atmos_model_nest_motion
 public update_atmos_model_dynamics
 public atmos_model_init, atmos_model_end, atmos_data_type
 public atmos_model_exchange_phase_1, atmos_model_exchange_phase_2
@@ -861,20 +862,30 @@ end subroutine atmos_model_init
 ! </SUBROUTINE>
 
 
-   subroutine write_intermediate_restart(Atmos, date_init)
+   subroutine write_intermediate_restart(Atmos, date_init, why)
+     use module_fv3_config,  only: dt_atmos
      use time_manager_mod, only: date_to_string, get_calendar_type
      use get_stochy_pattern_mod, only: write_stoch_restart_atm
      implicit none
 
+     character(len=*), intent(in) :: why
      type(atmos_data_type), intent(inout) :: Atmos
      integer, intent(in) :: date_init(6)
      ! Locals
      character(len=64)          :: timestamp
-     integer :: unit, calendar_type
+     integer :: unit, calendar_type, seconds, n_atmsteps
      integer :: date(6)
 
      timestamp = date_to_string (Atmos%Time)
      calendar_type = get_calendar_type()
+
+     call get_time(Atmos%Time - Atmos%Time_init, seconds)
+     n_atmsteps = seconds/dt_atmos
+
+     if (mpp_pe() == mpp_root_pe()) then ! Write message for each domain
+        write(0,*)'write out', why, ' at n_atmsteps=',n_atmsteps,' seconds=',seconds,  &
+             'integration length=',n_atmsteps*dt_atmos/3600.
+     endif
 
      call atmos_model_restart(Atmos, timestamp)
      call write_stoch_restart_atm('RESTART/'//trim(timestamp)//'.atm_stoch.res.nc')
@@ -896,11 +907,11 @@ end subroutine atmos_model_init
 
 
 !#######################################################################
-! <SUBROUTINE NAME="update_atmos_model_dynamics"
+! <SUBROUTINE NAME="update_atmos_model_nest_motion"
 !
 ! <OVERVIEW>
-subroutine update_atmos_model_dynamics (Atmos)
-! run the atmospheric dynamics to advect the properties
+subroutine update_atmos_model_nest_motion (Atmos)
+! Evaluate whether to move the nest, and performs move it needed.
   type (atmos_data_type), intent(in) :: Atmos
 
     call set_atmosphere_pelist()
@@ -911,6 +922,19 @@ subroutine update_atmos_model_dynamics (Atmos)
       call update_moving_nest (Atm_block, GFS_control, GFS_data, Atmos%Time)
     endif
 #endif
+
+end subroutine update_atmos_model_nest_motion
+! </SUBROUTINE>
+
+
+!#######################################################################
+! <SUBROUTINE NAME="update_atmos_model_dynamics"
+!
+! <OVERVIEW>
+subroutine update_atmos_model_dynamics (Atmos)
+! run the atmospheric dynamics to advect the properties
+  type (atmos_data_type), intent(in) :: Atmos
+
     call mpp_clock_begin(fv3Clock)
     call atmosphere_dynamics (Atmos%Time)
 #ifdef MOVING_NEST
