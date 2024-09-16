@@ -862,13 +862,13 @@ end subroutine atmos_model_init
 ! </SUBROUTINE>
 
 
-   subroutine write_intermediate_restart(Atmos, date_init, why)
+   subroutine write_intermediate_restart(Atmos, date_init, what)
      use module_fv3_config,  only: dt_atmos
      use time_manager_mod, only: date_to_string, get_calendar_type
      use get_stochy_pattern_mod, only: write_stoch_restart_atm
      implicit none
 
-     character(len=*), intent(in) :: why
+     character(len=*), intent(in) :: what
      type(atmos_data_type), intent(inout) :: Atmos
      integer, intent(in) :: date_init(6)
      ! Locals
@@ -883,7 +883,7 @@ end subroutine atmos_model_init
      n_atmsteps = seconds/dt_atmos
 
      if (mpp_pe() == mpp_root_pe()) then ! Write message for each domain
-        write(0,*)'write out', why, ' at n_atmsteps=',n_atmsteps,' seconds=',seconds,  &
+        write(0,*)'write out', what, ' at n_atmsteps=',n_atmsteps,' seconds=',seconds,  &
              'integration length=',n_atmsteps*dt_atmos/3600.
      endif
 

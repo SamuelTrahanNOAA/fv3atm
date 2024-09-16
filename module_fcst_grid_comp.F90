@@ -1390,36 +1390,24 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
       call update_atmos_model_nest_motion (Atmos)
       !--- intermediate restart
       call get_time(Atmos%Time - Atmos%Time_init, seconds)
-      if(mpp_pe() == mpp_root_pe()) then
-         write(0,*) 'Restart check seconds = ',seconds, 'nest_motion'
-      endif
       if (trim(atm_write_restart_after) == 'nest_motion' .and. ANY(frestart(:) == seconds)) then
           call write_intermediate_restart(Atmos, date_init, 'restart after update_atmos_model_nest_motion')
       endif
 
       call update_atmos_model_dynamics (Atmos)
-      if(mpp_pe() == mpp_root_pe()) then
-         write(0,*) 'Restart check seconds = ',seconds, 'dynamics'
-      endif
       if (trim(atm_write_restart_after) == 'dynamics' .and. ANY(frestart(:) == seconds)) then
           call write_intermediate_restart(Atmos, date_init, 'restart after update_atmos_model_dynamics')
       endif
 
       call update_atmos_radiation_physics (Atmos)
-      if(mpp_pe() == mpp_root_pe()) then
-         write(0,*) 'Restart check seconds = ',seconds, 'radiation_physics'
-      endif
       if (trim(atm_write_restart_after) == 'radiation_physics' .and. ANY(frestart(:) == seconds)) then
-          call write_intermediate_restart(Atmos, date_init, 'update_atmos_radiation_physics')
+          call write_intermediate_restart(Atmos, date_init, 'restart after update_atmos_radiation_physics')
       endif
 
       call atmos_model_exchange_phase_1 (Atmos, rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
-      if(mpp_pe() == mpp_root_pe()) then
-         write(0,*) 'Restart check seconds = ',seconds, 'exchange_phase_1'
-      endif
       if (trim(atm_write_restart_after) == 'exchange_phase_1' .and. ANY(frestart(:) == seconds)) then
-          call write_intermediate_restart(Atmos, date_init, 'atmos_model_exchange_phase_1')
+          call write_intermediate_restart(Atmos, date_init, 'restart after atmos_model_exchange_phase_1')
       endif
 
       if (mype == 0) write(*,'(A,I16,A,F16.6)')'PASS: fcstRUN phase 1, n_atmsteps = ', &
@@ -1470,9 +1458,6 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
       call atmos_model_exchange_phase_2 (Atmos, rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
       call get_time(Atmos%Time - Atmos%Time_init, seconds)
-      if(mpp_pe() == mpp_root_pe()) then
-         write(0,*) 'Restart check seconds = ',seconds, 'exchange_phase_2'
-      endif
       if (trim(atm_write_restart_after) == 'exchange_phase_2' .and. ANY(frestart(:) == seconds)) then
           call write_intermediate_restart(Atmos, date_init, 'restart after atmos_model_exchange_phase_2')
       endif
@@ -1482,11 +1467,8 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
 
       !--- intermediate restart
       call get_time(Atmos%Time - Atmos%Time_init, seconds)
-      if(mpp_pe() == mpp_root_pe()) then
-         write(0,*) 'Restart check seconds = ',seconds, 'update_state'
-      endif
       if (trim(atm_write_restart_after) == 'update_state' .and. ANY(frestart(:) == seconds)) then
-          call write_intermediate_restart(Atmos, date_init, 'update_atmos_model_state')
+          call write_intermediate_restart(Atmos, date_init, 'restart')
       endif
 
       ! update fhzero
