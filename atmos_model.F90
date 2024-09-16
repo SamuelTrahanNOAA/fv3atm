@@ -883,7 +883,7 @@ end subroutine atmos_model_init
      n_atmsteps = seconds/dt_atmos
 
      if (mpp_pe() == mpp_root_pe()) then ! Write message for each domain
-        write(0,*)'write out', what, ' at n_atmsteps=',n_atmsteps,' seconds=',seconds,  &
+        write(0,*)'write out ', what, ' at n_atmsteps=',n_atmsteps,' seconds=',seconds,  &
              'integration length=',n_atmsteps*dt_atmos/3600.
      endif
 
