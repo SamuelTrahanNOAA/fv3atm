@@ -171,7 +171,7 @@ contains
   !>@details This subroutine evaluates the automatic storm tracker (or prescribed motion configuration), then decides
   !!  if the nest should be moved.  If it should be moved, it calls fv_moving_nest_exec() to perform the nest move.
   subroutine update_moving_nest(Atm_block, IPD_control, IPD_data, time_step)
-    type(block_control_type), intent(in) :: Atm_block     !< Physics block layout
+    type(block_control_type), intent(inout):: Atm_block     !< Physics block layout
     type(IPD_control_type), intent(in)   :: IPD_control   !< Physics metadata
     type(IPD_data_type), intent(inout)   :: IPD_data(:)   !< Physics variable data
     type(time_type), intent(in)          :: time_step     !< Current timestep
@@ -215,10 +215,12 @@ contains
 
 
 
-  subroutine moving_nest_end()
+  subroutine moving_nest_end(IPD_Control)
+    implicit none
+    type(IPD_control_type), intent(in)   :: IPD_control   !< Physics metadata
     integer :: n
 
-    call deallocate_fv_moving_nests(ngrids)
+    call deallocate_fv_moving_nests(IPD_Control, ngrids)
 
     ! From fv_grid_utils.F90
     n = mygrid
@@ -486,7 +488,7 @@ contains
   subroutine fv_moving_nest_exec(Atm, Atm_block, IPD_control, IPD_data, delta_i_c, delta_j_c, n, nest_num, parent_grid_num, child_grid_num, dt_atmos)
     implicit none
     type(fv_atmos_type), allocatable, target, intent(inout) :: Atm(:)                !< Atmospheric variables
-    type(block_control_type), intent(in)                    :: Atm_block             !< Physics block
+    type(block_control_type), intent(inout)                 :: Atm_block             !< Physics block
     type(IPD_control_type), intent(in)                      :: IPD_control           !< Physics metadata
     type(IPD_data_type), intent(inout)                      :: IPD_data(:)           !< Physics variable data
     integer, intent(in)                                     :: delta_i_c, delta_j_c  !< Nest motion increments
@@ -625,9 +627,7 @@ contains
       !  The others can safely remain unallocated.
 
       call allocate_fv_moving_nest_prog_type(isd, ied, jsd, jed, npz, Moving_nest(n)%mn_prog)
-      call allocate_fv_moving_nest_physics_type(isd, ied, jsd, jed, npz, move_physics, move_nsst, &
-          IPD_Control%lsoil, IPD_Control%nmtvr, IPD_Control%levs, IPD_Control%ntot2d, IPD_Control%ntot3d, &
-          Moving_nest(n)%mn_phys)
+      call allocate_fv_moving_nest_physics_type(isd, ied, jsd, jed, npz, IPD_Control, move_physics, move_nsst, Moving_nest(n)%mn_phys)
 
     endif
 
@@ -769,7 +769,8 @@ contains
 
 
           !! TODO investigate reading high-resolution veg_frac and veg_greenness
-          !call mn_static_read_hires(Atm(1)%npx, Atm(1)%npy, x_refine, trim(Moving_nest(child_grid_num)%mn_flag%surface_dir), "", mn_static%veg_frac_grid)
+          !call mn_static_read_hires(Atm(1)%npx, Atm(1)%npy, x_refine, Atm(2)%pelist, trim(Moving_nest(child_grid_num)%mn_flag%surface_dir), "vegitation_frac", "vegitation_frac", mn_static%veg_frac_grid,  parent_tile)
+          !call mn_replace_low_values(mn_static%veg_frac_grid, -100.0, 0.0)
 
           call mn_static_read_hires(Atm(1)%npx, Atm(1)%npy, x_refine, Atm(2)%pelist, trim(Moving_nest(child_grid_num)%mn_flag%surface_dir), "vegetation_type", "vegetation_type", mn_static%veg_type_grid,  parent_tile)
           ! To match initialization behavior, set any -999s to 0 in veg_type

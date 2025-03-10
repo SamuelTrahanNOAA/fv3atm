@@ -100,10 +100,11 @@ module fv_moving_nest_utils_mod
   logical :: debug_log = .false.
 
 
-#include <fms_platform.h>
+
 
 
   interface alloc_read_data
+    module procedure alloc_read_data_int_2d
 #ifdef OVERLOAD_R8
     module procedure alloc_read_data_r4_2d
 #endif
@@ -111,6 +112,9 @@ module fv_moving_nest_utils_mod
   end interface alloc_read_data
 
   interface fill_nest_halos_from_parent
+    module procedure fill_nest_halos_from_parent_int_2d
+    module procedure fill_nest_halos_from_parent_int_3d
+
     module procedure fill_nest_halos_from_parent_r4_2d
     module procedure fill_nest_halos_from_parent_r4_3d
     module procedure fill_nest_halos_from_parent_r4_4d
@@ -121,6 +125,9 @@ module fv_moving_nest_utils_mod
   end interface fill_nest_halos_from_parent
 
   interface alloc_halo_buffer
+    module procedure alloc_halo_buffer_int_2d
+    module procedure alloc_halo_buffer_int_3d
+
     module procedure alloc_halo_buffer_r4_2d
     module procedure alloc_halo_buffer_r4_3d
     module procedure alloc_halo_buffer_r4_4d
@@ -131,6 +138,9 @@ module fv_moving_nest_utils_mod
   end interface alloc_halo_buffer
 
   interface fill_nest_from_buffer
+    module procedure fill_nest_from_buffer_int_2d
+    module procedure fill_nest_from_buffer_int_3d
+
     module procedure fill_nest_from_buffer_r4_2d
     module procedure fill_nest_from_buffer_r4_3d
     module procedure fill_nest_from_buffer_r4_4d
@@ -141,6 +151,9 @@ module fv_moving_nest_utils_mod
   end interface fill_nest_from_buffer
 
   interface fill_nest_from_buffer_cell_center
+    module procedure fill_nest_from_buffer_cell_center_int_2d
+    module procedure fill_nest_from_buffer_cell_center_int_3d
+
     module procedure fill_nest_from_buffer_cell_center_r4_2d
     module procedure fill_nest_from_buffer_cell_center_r4_3d
     module procedure fill_nest_from_buffer_cell_center_r4_4d
@@ -156,6 +169,8 @@ module fv_moving_nest_utils_mod
   end interface output_grid_to_nc
 
   interface fill_grid_from_supergrid
+    module procedure fill_grid_from_supergrid_int_3d
+
     module procedure fill_grid_from_supergrid_r4_3d
     module procedure fill_grid_from_supergrid_r8_3d
     module procedure fill_grid_from_supergrid_r8_4d
@@ -366,6 +381,69 @@ contains
   !
   !==================================================================================================
 
+  subroutine fill_nest_halos_from_parent_int_2d(var_name, data_var, interp_type, wt, ind, x_refine, y_refine, is_fine_pe, nest_domain, position)
+    character(len=*), intent(in)                :: var_name
+    integer, allocatable, intent(inout)          :: data_var(:,:)
+    integer, intent(in)                         :: interp_type
+    real, allocatable, intent(in)               :: wt(:,:,:)
+    integer, allocatable, intent(in)            :: ind(:,:,:)
+    integer, intent(in)                         :: x_refine, y_refine
+    logical, intent(in)                         :: is_fine_pe
+    type(nest_domain_type), intent(inout)       :: nest_domain
+    integer, intent(in)                         :: position
+
+    integer, dimension(:,:), allocatable :: nbuffer, sbuffer, ebuffer, wbuffer
+    type(bbox)                          :: north_fine, north_coarse
+    type(bbox)                          :: south_fine, south_coarse
+    type(bbox)                          :: east_fine, east_coarse
+    type(bbox)                          :: west_fine, west_coarse
+    integer                             :: this_pe
+    integer                             :: nest_level = 1  ! TODO allow to vary
+
+    this_pe = mpp_pe()
+
+    !!===========================================================
+    !!
+    !! Fill halo buffers
+    !!
+    !!===========================================================
+
+    call alloc_halo_buffer(nbuffer, north_fine, north_coarse, nest_domain, NORTH,  position)
+    call alloc_halo_buffer(sbuffer, south_fine, south_coarse, nest_domain, SOUTH,  position)
+    call alloc_halo_buffer(ebuffer, east_fine,  east_coarse,  nest_domain, EAST,   position)
+    call alloc_halo_buffer(wbuffer, west_fine,  west_coarse,  nest_domain, WEST,   position)
+
+    ! Passes data from coarse grid to fine grid's halo
+    call mpp_update_nest_fine(data_var, nest_domain, wbuffer, sbuffer, ebuffer, nbuffer, nest_level, position=position)
+
+    if (is_fine_pe) then
+
+      !!===========================================================
+      !!
+      !! Apply halo data
+      !!
+      !!===========================================================
+
+      call fill_nest_from_buffer(interp_type, data_var, nbuffer, north_fine, north_coarse, NORTH, x_refine, y_refine, wt, ind)
+      call fill_nest_from_buffer(interp_type, data_var, sbuffer, south_fine, south_coarse, SOUTH, x_refine, y_refine, wt, ind)
+      call fill_nest_from_buffer(interp_type, data_var, ebuffer, east_fine, east_coarse, EAST, x_refine, y_refine, wt, ind)
+      call fill_nest_from_buffer(interp_type, data_var, wbuffer, west_fine, west_coarse, WEST, x_refine, y_refine, wt, ind)
+
+    endif
+
+    deallocate(nbuffer)
+    deallocate(sbuffer)
+    deallocate(ebuffer)
+    deallocate(wbuffer)
+
+  end subroutine fill_nest_halos_from_parent_int_2d
+
+  !==================================================================================================
+  !
+  !  Fill Nest Halos from Parent
+  !
+  !==================================================================================================
+
   subroutine fill_nest_halos_from_parent_r4_2d(var_name, data_var, interp_type, wt, ind, x_refine, y_refine, is_fine_pe, nest_domain, position)
     character(len=*), intent(in)                :: var_name
     real*4, allocatable, intent(inout)          :: data_var(:,:)
@@ -542,6 +620,64 @@ contains
     deallocate(wbuffer)
 
   end subroutine fill_nest_halos_from_parent_masked
+
+
+  subroutine fill_nest_halos_from_parent_int_3d(var_name, data_var, interp_type, wt, ind, x_refine, y_refine, is_fine_pe, nest_domain, position, nz)
+    character(len=*), intent(in)                :: var_name
+    integer, allocatable, intent(inout)          :: data_var(:,:,:)
+    integer, intent(in)                         :: interp_type
+    real, allocatable, intent(in)               :: wt(:,:,:)
+    integer, allocatable, intent(in)            :: ind(:,:,:)
+    integer, intent(in)                         :: x_refine, y_refine
+    logical, intent(in)                         :: is_fine_pe
+    type(nest_domain_type), intent(inout)       :: nest_domain
+    integer, intent(in)                         :: position, nz
+
+    integer, dimension(:,:,:), allocatable :: nbuffer, sbuffer, ebuffer, wbuffer
+    type(bbox)                          :: north_fine, north_coarse
+    type(bbox)                          :: south_fine, south_coarse
+    type(bbox)                          :: east_fine, east_coarse
+    type(bbox)                          :: west_fine, west_coarse
+    integer                             :: this_pe
+    integer                             :: nest_level = 1  ! TODO allow to vary
+
+    this_pe = mpp_pe()
+
+    !!===========================================================
+    !!
+    !! Fill halo buffers
+    !!
+    !!===========================================================
+
+    call alloc_halo_buffer(nbuffer, north_fine, north_coarse, nest_domain, NORTH,  position, nz)
+    call alloc_halo_buffer(sbuffer, south_fine, south_coarse, nest_domain, SOUTH,  position, nz)
+    call alloc_halo_buffer(ebuffer, east_fine,  east_coarse,  nest_domain, EAST,   position, nz)
+    call alloc_halo_buffer(wbuffer, west_fine,  west_coarse,  nest_domain, WEST,   position, nz)
+
+    ! Passes data from coarse grid to fine grid's halo
+    call mpp_update_nest_fine(data_var, nest_domain, wbuffer, sbuffer, ebuffer, nbuffer, nest_level, position=position)
+
+    if (is_fine_pe) then
+
+      !!===========================================================
+      !!
+      !! Apply halo data
+      !!
+      !!===========================================================
+
+      call fill_nest_from_buffer(interp_type, data_var, nbuffer, north_fine, north_coarse, nz, NORTH, x_refine, y_refine, wt, ind)
+      call fill_nest_from_buffer(interp_type, data_var, sbuffer, south_fine, south_coarse, nz, SOUTH, x_refine, y_refine, wt, ind)
+      call fill_nest_from_buffer(interp_type, data_var, ebuffer, east_fine, east_coarse, nz, EAST, x_refine, y_refine, wt, ind)
+      call fill_nest_from_buffer(interp_type, data_var, wbuffer, west_fine, west_coarse, nz, WEST, x_refine, y_refine, wt, ind)
+
+    endif
+
+    deallocate(nbuffer)
+    deallocate(sbuffer)
+    deallocate(ebuffer)
+    deallocate(wbuffer)
+
+  end subroutine fill_nest_halos_from_parent_int_3d
 
 
   subroutine fill_nest_halos_from_parent_r4_3d(var_name, data_var, interp_type, wt, ind, x_refine, y_refine, is_fine_pe, nest_domain, position, nz)
@@ -804,8 +940,8 @@ contains
 
     call bbox_get_C2F_index(nest_domain, bbox_fine, bbox_coarse, direction,  position)
 
-    if( bbox_coarse.ie .GE. bbox_coarse.is .AND. bbox_coarse.je .GE. bbox_coarse.js ) then
-      allocate(buffer(bbox_coarse.is:bbox_coarse.ie, bbox_coarse.js:bbox_coarse.je))
+    if( bbox_coarse%ie .GE. bbox_coarse%is .AND. bbox_coarse%je .GE. bbox_coarse%js ) then
+      allocate(buffer(bbox_coarse%is:bbox_coarse%ie, bbox_coarse%js:bbox_coarse%je))
     else
       ! The buffer must have some storage allocated, whether it's a useful buffer or just a dummy.
       allocate(buffer(1,1))
@@ -816,6 +952,26 @@ contains
   end subroutine alloc_halo_buffer_r8_2d
 
 
+  subroutine alloc_halo_buffer_int_2d(buffer, bbox_fine, bbox_coarse, nest_domain, direction, position)
+    integer, dimension(:,:), allocatable, intent(out) :: buffer
+    type(bbox), intent(out)                          :: bbox_fine, bbox_coarse
+    type(nest_domain_type), intent(in)               :: nest_domain
+    integer, intent(in)                              :: direction, position
+
+    call bbox_get_C2F_index(nest_domain, bbox_fine, bbox_coarse, direction,  position)
+
+    if( bbox_coarse%ie .GE. bbox_coarse%is .AND. bbox_coarse%je .GE. bbox_coarse%js ) then
+      allocate(buffer(bbox_coarse%is:bbox_coarse%ie, bbox_coarse%js:bbox_coarse%je))
+    else
+      ! The buffer must have some storage allocated, whether it's a useful buffer or just a dummy.
+      allocate(buffer(1,1))
+    endif
+
+    buffer = 0
+
+  end subroutine alloc_halo_buffer_int_2d
+
+
   subroutine alloc_halo_buffer_r4_2d(buffer, bbox_fine, bbox_coarse, nest_domain, direction, position)
     real*4, dimension(:,:), allocatable, intent(out) :: buffer
     type(bbox), intent(out)                          :: bbox_fine, bbox_coarse
@@ -824,8 +980,8 @@ contains
 
     call bbox_get_C2F_index(nest_domain, bbox_fine, bbox_coarse, direction,  position)
 
-    if( bbox_coarse.ie .GE. bbox_coarse.is .AND. bbox_coarse.je .GE. bbox_coarse.js ) then
-      allocate(buffer(bbox_coarse.is:bbox_coarse.ie, bbox_coarse.js:bbox_coarse.je))
+    if( bbox_coarse%ie .GE. bbox_coarse%is .AND. bbox_coarse%je .GE. bbox_coarse%js ) then
+      allocate(buffer(bbox_coarse%is:bbox_coarse%ie, bbox_coarse%js:bbox_coarse%je))
     else
       ! The buffer must have some storage allocated, whether it's a useful buffer or just a dummy.
       allocate(buffer(1,1))
@@ -834,6 +990,26 @@ contains
     buffer = 0
 
   end subroutine alloc_halo_buffer_r4_2d
+
+
+  subroutine alloc_halo_buffer_int_3d(buffer, bbox_fine, bbox_coarse, nest_domain, direction, position, nz)
+    integer, dimension(:,:,:), allocatable, intent(out) :: buffer
+    type(bbox), intent(out)                            :: bbox_fine, bbox_coarse
+    type(nest_domain_type), intent(in)                 :: nest_domain
+    integer, intent(in)                                :: direction, position, nz
+
+    call bbox_get_C2F_index(nest_domain, bbox_fine, bbox_coarse, direction,  position)
+
+    if( bbox_coarse%ie .GE. bbox_coarse%is .AND. bbox_coarse%je .GE. bbox_coarse%js ) then
+      allocate(buffer(bbox_coarse%is:bbox_coarse%ie, bbox_coarse%js:bbox_coarse%je,1:nz))
+    else
+      ! The buffer must have some storage allocated, whether it's a useful buffer or just a dummy.
+      allocate(buffer(1,1,1))
+    endif
+
+    buffer = 0
+
+  end subroutine alloc_halo_buffer_int_3d
 
 
   subroutine alloc_halo_buffer_r4_3d(buffer, bbox_fine, bbox_coarse, nest_domain, direction, position, nz)
@@ -845,8 +1021,8 @@ contains
 
     call bbox_get_C2F_index(nest_domain, bbox_fine, bbox_coarse, direction,  position)
 
-    if( bbox_coarse.ie .GE. bbox_coarse.is .AND. bbox_coarse.je .GE. bbox_coarse.js ) then
-      allocate(buffer(bbox_coarse.is:bbox_coarse.ie, bbox_coarse.js:bbox_coarse.je,1:nz))
+    if( bbox_coarse%ie .GE. bbox_coarse%is .AND. bbox_coarse%je .GE. bbox_coarse%js ) then
+      allocate(buffer(bbox_coarse%is:bbox_coarse%ie, bbox_coarse%js:bbox_coarse%je,1:nz))
     else
       ! The buffer must have some storage allocated, whether it's a useful buffer or just a dummy.
       allocate(buffer(1,1,1))
@@ -865,8 +1041,8 @@ contains
 
     call bbox_get_C2F_index(nest_domain, bbox_fine, bbox_coarse, direction,  position)
 
-    if( bbox_coarse.ie .GE. bbox_coarse.is .AND. bbox_coarse.je .GE. bbox_coarse.js ) then
-      allocate(buffer(bbox_coarse.is:bbox_coarse.ie, bbox_coarse.js:bbox_coarse.je,1:nz))
+    if( bbox_coarse%ie .GE. bbox_coarse%is .AND. bbox_coarse%je .GE. bbox_coarse%js ) then
+      allocate(buffer(bbox_coarse%is:bbox_coarse%ie, bbox_coarse%js:bbox_coarse%je,1:nz))
     else
       ! The buffer must have some storage allocated, whether it's a useful buffer or just a dummy.
       allocate(buffer(1,1,1))
@@ -885,8 +1061,8 @@ contains
 
     call bbox_get_C2F_index(nest_domain, bbox_fine, bbox_coarse, direction,  position)
 
-    if( bbox_coarse.ie .GE. bbox_coarse.is .AND. bbox_coarse.je .GE. bbox_coarse.js ) then
-      allocate(buffer(bbox_coarse.is:bbox_coarse.ie, bbox_coarse.js:bbox_coarse.je, 1:nz, 1:n4d))
+    if( bbox_coarse%ie .GE. bbox_coarse%is .AND. bbox_coarse%je .GE. bbox_coarse%js ) then
+      allocate(buffer(bbox_coarse%is:bbox_coarse%ie, bbox_coarse%js:bbox_coarse%je, 1:nz, 1:n4d))
     else
       ! The buffer must have some storage allocated, whether it's a useful buffer or just a dummy.
       allocate(buffer(1,1,1,1))
@@ -905,8 +1081,8 @@ contains
 
     call bbox_get_C2F_index(nest_domain, bbox_fine, bbox_coarse, direction,  position)
 
-    if( bbox_coarse.ie .GE. bbox_coarse.is .AND. bbox_coarse.je .GE. bbox_coarse.js ) then
-      allocate(buffer(bbox_coarse.is:bbox_coarse.ie, bbox_coarse.js:bbox_coarse.je, 1:nz, 1:n4d))
+    if( bbox_coarse%ie .GE. bbox_coarse%is .AND. bbox_coarse%je .GE. bbox_coarse%js ) then
+      allocate(buffer(bbox_coarse%is:bbox_coarse%ie, bbox_coarse%js:bbox_coarse%je, 1:nz, 1:n4d))
     else
       ! The buffer must have some storage allocated, whether it's a useful buffer or just a dummy.
       allocate(buffer(1,1,1,1))
@@ -1027,6 +1203,45 @@ contains
     fp_tile_geo%lons = fp_tile_geo%lons * deg2rad
 
   end subroutine load_nest_latlons_from_nc
+
+  subroutine alloc_read_data_int_2d(nc_filename, var_name, x_size, y_size, data_array, pes, time)
+    character(len=*), intent(in)           :: nc_filename, var_name
+    integer, intent(in)                    :: x_size, y_size
+    integer, allocatable, intent(inout)     :: data_array(:,:)
+    integer, allocatable, intent(in)       :: pes(:)
+    integer, intent(in),optional           :: time
+
+    type(FmsNetcdfFile_t)        :: fileobj        !< Fms2_io fileobj
+    integer, allocatable         :: time_array(:,:,:)
+    integer                      :: this_pe
+
+    ! Allocate data_array to match the expected data size, then read in the data
+    ! This subroutine consolidates the allocation and reading of data to ensure consistency of data sizing and simplify code
+    ! Could later extend this function to determine data size based on netCDF file metadata
+
+    this_pe = mpp_pe()
+
+    allocate(data_array(x_size, y_size))
+    data_array = -9999.9
+
+    if (present(time)) then
+      allocate(time_array(x_size, y_size, 12)) ! assume monthly data; allocate 12 slots
+      if (open_file(fileobj, nc_filename, "read", pelist=pes, is_restart=.false.)) then
+        call read_data(fileobj, var_name, time_array)
+        call close_file(fileobj)
+      endif
+
+      data_array = time_array(:,:,time)
+      deallocate(time_array)
+    else
+      ! Following transition documents at https://github.com/NOAA-GFDL/FMS/tree/2021.03.01/fms2_io
+      if (open_file(fileobj, nc_filename, "read", pelist=pes, is_restart=.false.)) then
+        call read_data(fileobj, var_name, data_array)
+        call close_file(fileobj)
+      endif
+    endif
+
+  end subroutine alloc_read_data_int_2d
 
 #ifdef OVERLOAD_R8
   subroutine alloc_read_data_r4_2d(nc_filename, var_name, x_size, y_size, data_array, pes, time)
@@ -1321,6 +1536,71 @@ contains
 
   end subroutine fill_grid_from_supergrid_r4_3d
 
+  subroutine fill_grid_from_supergrid_int_3d(in_grid, stagger_type, fp_super_tile_geo, ioffset, joffset, x_refine, y_refine)
+    implicit none
+    integer, allocatable, intent(inout)  :: in_grid(:,:,:)
+    integer, intent(in)                 :: stagger_type   ! CENTER, CORNER
+    type(grid_geometry), intent(in)     :: fp_super_tile_geo
+    integer, intent(in)                 :: ioffset, joffset, x_refine, y_refine
+
+    integer           :: nest_x, nest_y, parent_x, parent_y
+    type(bbox)        :: tile_bbox, fp_tile_bbox
+    integer           :: i, j, fp_i, fp_j
+    character(len=64) :: errstring
+
+    ! tile_geo is cell-centered, at nest refinement
+    ! fp_super_tile_geo is a supergrid, at nest refinement
+
+    !call find_nest_alignment(tile_geo, fp_super_tile_geo, nest_x, nest_y, parent_x, parent_y)
+
+    !  There are a few different offsets operating here:
+    !  1. ioffset,joffset is how far the start of the (centered/corner?) grid is from the start of the parent grid
+    !      i.e. the index of the parent center cell (not supergrid!) where the nest compute domain begins
+    !  2. nest_x, nest_y are the initial indices of this tile of the nest (the patch running on the PE)
+    !  2. parent_x, parent_y are the initial indices of this tile of the parent supergrid (the patch running on the PE)
+    !  3. parent_x = ((ioffset -1) * x_refine + nest_x) * 2
+    !
+
+    call fill_bbox(tile_bbox, in_grid)
+    call fill_bbox(fp_tile_bbox, fp_super_tile_geo%lats)
+
+    ! Calculate new parent alignment -- supergrid at the refine ratio
+    nest_x = tile_bbox%is
+    nest_y = tile_bbox%js
+
+    parent_x = ((ioffset - 1) * x_refine + nest_x) * 2
+    parent_y = ((joffset - 1) * y_refine + nest_y) * 2
+
+    do i = tile_bbox%is, tile_bbox%ie
+      do j = tile_bbox%js, tile_bbox%je
+        if (stagger_type == CENTER) then
+          fp_i = (i - nest_x) * 2 + parent_x
+          fp_j = (j - nest_y) * 2 + parent_y
+        elseif (stagger_type == CORNER) then
+          fp_i = (i - nest_x) * 2 + parent_x - 1
+          fp_j = (j - nest_y) * 2 + parent_y - 1
+        endif
+
+        ! Make sure we don't run off the edge of the parent supergrid
+        if (fp_i < fp_tile_bbox%is .or. fp_i > fp_tile_bbox%ie) then
+          write(errstring, "(A,I0,A,I0,A,I0)") "fp_i=", fp_i," is=",fp_tile_bbox%is," ie=",fp_tile_bbox%ie
+          call mpp_error(FATAL, "fill_grid_from_supergrid_r4_3d invalid bounds i " // errstring)
+        endif
+        if (fp_j < fp_tile_bbox%js .or. fp_j > fp_tile_bbox%je) then
+          write(errstring, "(A,I0,A,I0,A,I0)") "fp_j=", fp_j," js=",fp_tile_bbox%js," je=",fp_tile_bbox%je
+          call mpp_error(FATAL, "fill_grid_from_supergrid_r4_3d invalid bounds j " // errstring)
+        endif
+
+        in_grid(i,j,2) = fp_super_tile_geo%lats(fp_i, fp_j)
+        in_grid(i,j,1) = fp_super_tile_geo%lons(fp_i, fp_j)
+      enddo
+    enddo
+
+    ! Validate at the end
+    !call find_nest_alignment(tile_geo, fp_super_tile_geo, nest_x, nest_y, parent_x, parent_y)
+
+  end subroutine fill_grid_from_supergrid_int_3d
+
 
   subroutine fill_grid_from_supergrid_r8_3d(in_grid, stagger_type, fp_super_tile_geo, ioffset, joffset, x_refine, y_refine)
     implicit none
@@ -1491,6 +1771,40 @@ contains
   !>@brief  This subroutine fills the nest halo data from the coarse grid data by downscaling.
   !>@details  Applicable to any interpolation type
 
+  subroutine fill_nest_from_buffer_int_2d(interp_type, x, buffer, bbox_fine, bbox_coarse, dir, x_refine, y_refine, wt, ind)
+    implicit none
+
+    integer, intent(in)                         :: interp_type
+    integer,  allocatable, intent(inout)         :: x(:,:)
+    integer,  allocatable, intent(in)            :: buffer(:,:)
+    type(bbox), intent(in)                      :: bbox_fine, bbox_coarse
+    integer, intent(in)                         :: dir, x_refine, y_refine
+    real, allocatable, intent(in)               :: wt(:,:,:)    ! The final dimension is always 4
+    integer, allocatable, intent(in)            :: ind(:,:,:)
+
+    integer   :: this_pe
+    this_pe = mpp_pe()
+
+    ! Output the interpolation type
+    select case (interp_type)
+    case (1)
+      call fill_nest_from_buffer_cell_center("A", x, buffer, bbox_fine, bbox_coarse, dir, x_refine, y_refine, wt, ind)
+      !     case (3)    ! C grid staggered
+    case (4)
+      call fill_nest_from_buffer_cell_center("D", x, buffer, bbox_fine, bbox_coarse, dir, x_refine, y_refine, wt, ind)
+    case (9)
+      !call fill_nest_from_buffer_nearest_neighbor(x, buffer, bbox_fine, bbox_coarse, dir, wt)
+      call mpp_error(FATAL, '2D fill_nest_from_buffer_nearest_neighbor not yet implemented.')
+    case default
+      call mpp_error(FATAL, 'interp_single_nest got invalid value for interp_type from namelist.')
+    end select
+
+  end subroutine fill_nest_from_buffer_int_2d
+
+
+  !>@brief  This subroutine fills the nest halo data from the coarse grid data by downscaling.
+  !>@details  Applicable to any interpolation type
+
   subroutine fill_nest_from_buffer_r8_2d(interp_type, x, buffer, bbox_fine, bbox_coarse, dir, x_refine, y_refine, wt, ind)
     implicit none
 
@@ -1591,6 +1905,39 @@ contains
   end subroutine fill_nest_from_buffer_r4_3d
 
 
+
+  subroutine fill_nest_from_buffer_int_3d(interp_type, x, buffer, bbox_fine, bbox_coarse, nz, dir, x_refine, y_refine, wt, ind)
+    implicit none
+
+    integer, intent(in)                         :: interp_type
+    integer, allocatable, intent(inout)         :: x(:,:,:)
+    integer, allocatable, intent(in)            :: buffer(:,:,:)
+    type(bbox), intent(in)                      :: bbox_fine, bbox_coarse
+    integer, intent(in)                         :: nz
+    integer, intent(in)                         :: dir, x_refine, y_refine
+    real, allocatable, intent(in)               :: wt(:,:,:)    ! The final dimension is always 4
+    integer, allocatable, intent(in)            :: ind(:,:,:)
+
+    integer   :: this_pe
+    this_pe = mpp_pe()
+
+    ! Output the interpolation type
+    select case (interp_type)
+    case (1)
+      call fill_nest_from_buffer_cell_center("A", x, buffer, bbox_fine, bbox_coarse, nz, dir, x_refine, y_refine, wt, ind)
+      !     case (3) ! C grid staggered
+    case (4)
+      call fill_nest_from_buffer_cell_center("D", x, buffer, bbox_fine, bbox_coarse, nz, dir, x_refine, y_refine, wt, ind)
+    case (9)
+      !call fill_nest_from_buffer_nearest_neighbor(x, buffer, bbox_fine, bbox_coarse, nz, dir, wt)
+      call mpp_error(FATAL, 'fill_nest_from_buffer_nearest_neighbor is not yet implemented.')
+    case default
+      call mpp_error(FATAL, 'interp_single_nest got invalid value for interp_type from namelist.')
+    end select
+
+  end subroutine fill_nest_from_buffer_int_3d
+
+
   subroutine fill_nest_from_buffer_r8_3d(interp_type, x, buffer, bbox_fine, bbox_coarse, nz, dir, x_refine, y_refine, wt, ind)
     implicit none
 
@@ -1689,6 +2036,114 @@ contains
 
   end subroutine fill_nest_from_buffer_r8_4d
 
+
+  !>@brief  This subroutine fills the nest halo data from the coarse grid data by downscaling.  It can accommodate all grid staggers, using the stagger variable.  [The routine needs to be renamed since "_from_cell_center" has become incorrect.)
+  !>@details  Applicable to any interpolation type
+  subroutine fill_nest_from_buffer_cell_center_int_3d(stagger, x, buffer, bbox_fine, bbox_coarse, nz, dir, x_refine, y_refine, wt, ind)
+    implicit none
+    character ( len = 1 ), intent(in)             :: stagger
+    integer, allocatable, intent(inout)           :: x(:,:,:)
+    integer, allocatable, intent(in)              :: buffer(:,:,:)
+    type(bbox), intent(in)                        :: bbox_fine, bbox_coarse
+    integer, intent(in)                           :: nz, dir, x_refine, y_refine
+    real, allocatable, intent(in)                 :: wt(:,:,:)    ! The final dimension is always 4
+    integer, allocatable, intent(in)              :: ind(:,:,:)
+
+    character(len=8)       :: dir_str
+    integer                :: i, j, k, ic, jc
+
+    select case(dir)
+    case (NORTH)
+      dir_str = "NORTH"
+    case (SOUTH)
+      dir_str = "SOUTH"
+    case (EAST)
+      dir_str = "EAST"
+    case (WEST)
+      dir_str = "WEST"
+    case default
+      dir_str = "ERR DIR"
+    end select
+
+
+    if( bbox_coarse%ie .GE. bbox_coarse%is .AND. bbox_coarse%je .GE. bbox_coarse%js ) then
+     do k=1,nz
+      do j=bbox_fine%js, bbox_fine%je
+        do i=bbox_fine%is, bbox_fine%ie
+          !if (stagger == "A") then
+          !else if (stagger == "C") then
+          !else if (stagger == "D") then
+          !endif
+
+          ic = ind(i,j,1)
+          jc = ind(i,j,2)
+
+          x(i,j,k) = nint(&
+              wt(i,j,1)*buffer(ic,  jc  ,k) +  &
+              wt(i,j,2)*buffer(ic,  jc+1,k) +  &
+              wt(i,j,3)*buffer(ic+1,jc+1,k) +  &
+              wt(i,j,4)*buffer(ic+1,jc  ,k))
+
+        enddo
+      enddo
+     enddo
+    endif
+
+  end subroutine fill_nest_from_buffer_cell_center_int_3d
+
+
+  !>@brief  This subroutine fills the nest halo data from the coarse grid data by downscaling.  It can accommodate all grid staggers, using the stagger variable.  [The routine needs to be renamed since "_from_cell_center" has become incorrect.)
+  !>@details  Applicable to any interpolation type
+
+  subroutine fill_nest_from_buffer_cell_center_int_2d(stagger, x, buffer, bbox_fine, bbox_coarse, dir, x_refine, y_refine, wt, ind)
+    implicit none
+    character ( len = 1 ), intent(in)             :: stagger
+    integer, allocatable, intent(inout)            :: x(:,:)
+    integer, allocatable, intent(in)               :: buffer(:,:)
+    type(bbox), intent(in)                        :: bbox_fine, bbox_coarse
+    integer, intent(in)                           :: dir, x_refine, y_refine
+    real, allocatable, intent(in)                 :: wt(:,:,:)    ! The final dimension is always 4
+    integer, allocatable, intent(in)              :: ind(:,:,:)
+
+    character(len=8)       :: dir_str
+    integer                :: i, j, k, ic, jc
+
+    select case(dir)
+    case (NORTH)
+      dir_str = "NORTH"
+    case (SOUTH)
+      dir_str = "SOUTH"
+    case (EAST)
+      dir_str = "EAST"
+    case (WEST)
+      dir_str = "WEST"
+    case default
+      dir_str = "ERR DIR"
+    end select
+
+
+    if( bbox_coarse%ie .GE. bbox_coarse%is .AND. bbox_coarse%je .GE. bbox_coarse%js ) then
+      do j=bbox_fine%js, bbox_fine%je
+        do i=bbox_fine%is, bbox_fine%ie
+          !if (stagger == "A") then
+          !else if (stagger == "C") then
+          !else if (stagger == "D") then
+          !endif
+
+          ic = ind(i,j,1)
+          jc = ind(i,j,2)
+
+          x(i,j) = nint(&
+              wt(i,j,1)*buffer(ic,  jc  ) +  &
+              wt(i,j,2)*buffer(ic,  jc+1) +  &
+              wt(i,j,3)*buffer(ic+1,jc+1) +  &
+              wt(i,j,4)*buffer(ic+1,jc  ))
+
+        enddo
+      enddo
+    endif
+
+  end subroutine fill_nest_from_buffer_cell_center_int_2d
 
   !>@brief  This subroutine fills the nest halo data from the coarse grid data by downscaling.  It can accommodate all grid staggers, using the stagger variable.  [The routine needs to be renamed since "_from_cell_center" has become incorrect.)
   !>@details  Applicable to any interpolation type
