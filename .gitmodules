@@ -9,7 +9,7 @@
 [submodule "ccpp/physics"]
   path = ccpp/physics
   url = https://github.com/SamuelTrahanNOAA/ccpp-physics
-  branch = bugfix/good-wet-tsfco-sijie
+  branch = move-stochy-sijie
 [submodule "upp"]
   path = upp
   url = https://github.com/NOAA-EMC/UPP
