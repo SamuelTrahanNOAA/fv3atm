@@ -73,6 +73,24 @@ module stochastic_physics_wrapper_mod
     call MPI_Comm_split(GFS_Control%communicator, color, key, stochy_communicator, ierror)
   end subroutine stochastic_physics_comm_split
 
+  subroutine stochastic_physics_stub(GFS_Control)
+    use GFS_typedefs,       only: GFS_control_type
+    use stochastic_physics, only: init_stochastic_physics_stub
+    implicit none
+    type(GFS_control_type),   intent(inout) :: GFS_Control
+    integer :: ierr
+    initalize_stochastic_physics: if (.not. is_initialized) then
+      ! Call the comm splitter in case another mosaic is using stochastic physics.
+      call stochastic_physics_comm_split(GFS_Control)
+      call init_stochastic_physics_stub(stochy_comm_root, stochy_communicator, ierr)
+      if (ierr/=0)  then
+        write(6,*) 'call to init_stochastic_physics_stub failed'
+        return
+      endif
+      is_initialized = .true.
+    endif initalize_stochastic_physics
+  end subroutine stochastic_physics_stub
+
 !-------------------------------
 !  CCPP step
 !-------------------------------
@@ -87,7 +105,8 @@ module stochastic_physics_wrapper_mod
     use block_control_mod,  only: block_control_type
     use atmosphere_mod,     only: Atm, mygrid
 
-    use stochastic_physics,           only: init_stochastic_physics, run_stochastic_physics
+    use stochastic_physics,           only: init_stochastic_physics, run_stochastic_physics, &
+                                            init_stochastic_physics_stub
     use cellular_automata_global_mod, only: cellular_automata_global
     use cellular_automata_sgs_mod,    only: cellular_automata_sgs
     use lndp_apply_perts_mod,         only: lndp_apply_perts
@@ -138,6 +157,12 @@ module stochastic_physics_wrapper_mod
                     write(6,*) 'call to init_stochastic_physics failed'
                     return
             endif
+      else
+        call init_stochastic_physics_stub(stochy_comm_root, stochy_communicator, ierr)
+        if (ierr/=0)  then
+          write(6,*) 'call to init_stochastic_physics_stub failed'
+          return
+        endif
       end if
       if (GFS_Control%do_sppt) then
          allocate(sppt_wts(1:nblks,maxblk,1:levs))
