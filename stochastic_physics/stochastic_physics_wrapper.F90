@@ -265,10 +265,8 @@ module stochastic_physics_wrapper_mod
 
     else initalize_stochastic_physics
       if (GFS_Control%do_sppt .OR. GFS_Control%do_shum .OR. GFS_Control%do_skeb .OR. (GFS_Control%lndp_type == 2) .OR. GFS_Control%do_spp) then
-         do nb=1,nblks
-            xlat(nb,1:GFS_Control%blksz(nb)) = GFS_Data(nb)%Grid%xlat(:)
-            xlon(nb,1:GFS_Control%blksz(nb)) = GFS_Data(nb)%Grid%xlon(:)
-         end do
+         call transfer_field_to_stochastics(GFS_Control%blksz, GFS_Grid%xlat, xlat)
+         call transfer_field_to_stochastics(GFS_Control%blksz, GFS_Grid%xlon, xlon)
          call run_stochastic_physics(levs, GFS_Control%kdt, GFS_Control%fhour, GFS_Control%blksz, xlon, xlat, &
                                  sppt_wts=sppt_wts, shum_wts=shum_wts, skebu_wts=skebu_wts, skebv_wts=skebv_wts, sfc_wts=sfc_wts, &
                                  spp_wts=spp_wts, nthreads=nthreads)
